@@ -1,2 +1,2 @@
 # Nukleus-Language
-New AI, GUI, Cross Platform Programming language for Cordis Terrarum
+New AI, GUI, Cross Platform Programming language
