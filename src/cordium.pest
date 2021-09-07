@@ -1,0 +1,36 @@
+program = _{ SOI ~ top_cmnd* ~ EOI }
+top_cmnd = { func }
+expr = _{ cmnd | top_cmnd }
+vtype = { "number" | "string" | "set" | "boolean" }
+parm_with_type = { ident ~ ":" ~ vtype ~ ","? }
+block = { cmnd* }
+numeric_ops = { "-" | "+" | "/" | "*" | "%" | "&" | "|" | "^" | "<<" | ">>" }
+order_ops = { "<=" | ">=" | "<" | ">" }
+eq_ops = { "==" | "!=" }
+logic_ops = { eq_ops | order_ops }
+boolean_ops = { "&&" | "||" }
+assign_ops = { "=" }
+ops = _{ numeric_ops | logic_ops | assign_ops }
+boolean_constant = { "true" | "false" }
+constants = { number | boolean_constant }
+value = _{ constants | ident }
+boolean = _{ term ~ eq_ops ~ term | boolean_term ~ (boolean_ops ~ boolean_term)* }
+boolean_term = { value | "(" ~ boolean ~ ")" }
+numeric = _{ numeric_term ~ (numeric_ops ~ numeric_term)* }
+numeric_term = { value | "(" ~ numeric ~ ")" }
+term = _{ boolean_term | numeric_term }
+boolean_block = { boolean }
+func = { "func" ~ ident ~ "(" ~ parm_with_type* ~ ")" ~ "{" ~ block ~ "}" }
+parm = { term ~ ","? }
+cdm_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
+cdm_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
+cdm_call = { "call" ~ ident ~ "(" ~  parm* ~ ")" }
+cdm_assign = { ident ~ assign_ops ~ value }
+cdm_return = { "return" }
+cmnd = { block | nblock }
+block = _{ (cdm_call | cdm_assign | cdm_return) ~ ";" }
+nblock = _{ cdm_for | cdm_if }
+number = @{ "-"? ~ ASCII_DIGIT+ }
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{ "NB." ~ (!"\n" ~ ANY)* }
