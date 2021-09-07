@@ -8,4 +8,4 @@ edition = "2018"
 [dependencies]
 pest = "2.0"
 pest_derive = "2.0"
-z3 = "0.11.1"
+z3 = "0.11.2"
