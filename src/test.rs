@@ -1,8 +1,8 @@
-use crate::bin::parser::CdmParser;
+use crate::core::parser::parser;
 
 #[test]
 fn parse_numeric_with_boolean() {
-    let mut ast: CdmParser = CdmParser::new();
+    let mut ast: parser = parser::new();
     ast.run(
         "
         func fib(n: number) {

@@ -1,5 +1,5 @@
 [package]
-name = "Nukleus-Language"
+name = "nukleus"
 version = "0.1.0"
 edition = "2018"
 
@@ -8,4 +8,9 @@ edition = "2018"
 [dependencies]
 pest = "2.0"
 pest_derive = "2.0"
-z3 = "0.11.2"
+cfg-if = "0.1"
+anyhow = "1.0"
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "llvm10-0" }
+
+[lib]
+path = "src/lib.rs"
