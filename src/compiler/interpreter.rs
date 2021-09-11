@@ -54,6 +54,17 @@ mod tests {
 
     #[test]
     fn basics() {
-        assert_eq!(Interpreter::from_source("1 + 2").unwrap() as i64, 3);
+        assert_eq!(
+            Interpreter::from_source(
+                "
+                func fib(n: int) {
+                    n=3;
+                    return;
+                }
+                ",
+            )
+            .unwrap() as i64,
+            0
+        );
     }
 }

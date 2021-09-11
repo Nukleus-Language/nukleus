@@ -21,19 +21,4 @@ pub trait Compile {
 }
 
 #[cfg(test)]
-//mod test;
-mod tests {
-    use super::*;
-
-    #[test]
-    fn basics() {
-        assert_eq!(Interpreter::from_source("1 + 2").unwrap() as i64, 3);
-        // assert_eq!(Interpreter::source("(1 + 2)").unwrap() as i64, 3);
-        assert_eq!(Interpreter::from_source("2 + (2 - 1)").unwrap() as i64, 3);
-        assert_eq!(Interpreter::from_source("(2 + 3) - 1").unwrap() as i64, 4);
-        assert_eq!(
-            Interpreter::from_source("1 + ((2 + 3) - (2 + 3))").unwrap() as i64,
-            1
-        );
-    }
-}
+mod test;

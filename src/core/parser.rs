@@ -32,7 +32,7 @@ fn parse_expr(expr: pest::iterators::Pair<Rule>) -> Node {
         Rule::cdm_for => parse_for(pair),
         Rule::cdm_call => parse_call(pair),
         Rule::cdm_return => parse_return(pair),
-        unknown => panic!("Unknown expr: {:?}", unknown),
+        _ => Node::Todo,
     }
 }
 fn parse_call(call: pest::iterators::Pair<Rule>) -> Node {
@@ -72,6 +72,10 @@ pub fn parse_func_parm(parm: pest::iterators::Pair<Rule>) -> Variable {
         Box::new(Node::Ident(var_name.to_string())),
         VType::from_str(type_name),
     )
+}
+pub fn parse_return(_: pest::iterators::Pair<Rule>) -> Node {
+    // TODO
+    Node::Return
 }
 pub fn parse_numeric(expr: pest::iterators::Pair<Rule>) -> Node {
     let pairs: Vec<pest::iterators::Pair<Rule>> = expr.into_inner().collect();
@@ -186,8 +190,4 @@ pub fn parse_top_cmnd(expr: pest::iterators::Pair<Rule>) {
         }
         _ => {}
     }
-}
-pub fn parse_return(_: pest::iterators::Pair<Rule>) -> Node {
-    // TODO
-    Node::Return
 }
