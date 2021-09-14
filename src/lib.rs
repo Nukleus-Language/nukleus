@@ -2,6 +2,7 @@ pub mod compiler;
 pub mod core;
 
 pub use crate::compiler::interpreter::Interpreter;
+pub use crate::compiler::jit_inkwell::Jit;
 pub use crate::core::ast::{Node, Ops};
 
 pub type Result<T> = anyhow::Result<T>;
