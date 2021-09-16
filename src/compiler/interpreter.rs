@@ -23,6 +23,7 @@ impl Eval {
     // ANCHOR: interpreter_eval
     pub fn eval(&self, node: &Node) -> i64 {
         match node {
+            Node::Int(n) => *n,
             Node::NumericTerm(lhs, rhs, op) => {
                 let lhs_eval = self.eval(lhs);
                 let rhs_eval = self.eval(rhs);
@@ -57,7 +58,7 @@ mod tests {
         assert_eq!(
             Interpreter::from_source(
                 "
-                func fib(n: int) {
+                class fib(n: int) {
                     n=3;
                     return;
                 }
@@ -66,5 +67,7 @@ mod tests {
             .unwrap() as i64,
             0
         );
+        assert_eq!(
+            Interpreter::from_source("n=2;").unwrap() as i64,2);
     }
 }

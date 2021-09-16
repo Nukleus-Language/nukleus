@@ -3,20 +3,24 @@ use pest::{self, Parser};
 use crate::core::ast::{Constant, Node, Ops, VType, Variable};
 
 #[derive(pest_derive::Parser)]
-#[grammar = "cordium.pest"]
-struct Cdmparser {
-    pub funcs: Vec<Box<Node>>,
+#[grammar = "nukleus.pest"]
+struct Nksparser {
+    pub class: Vec<Box<Node>>,
     variables: Vec<Vec<String>>,
 }
 
 pub fn parse(source: &str) -> std::result::Result<Vec<Node>, pest::error::Error<Rule>> {
     let ast = vec![];
-    let pairs = Cdmparser::parse(Rule::program, source)?;
+    let pairs = Nksparser::parse(Rule::program, source)?;
     for pair in pairs {
         match pair.as_rule() {
             Rule::top_cmnd => {
                 let mut pair = pair.into_inner();
                 parse_top_cmnd(pair.next().unwrap());
+            }
+            Rule::block=> {
+                let mut pair = pair.into_inner();
+                parse_block(pair.next().unwrap());
             }
             _ => {
                 // TODO: unexpected
@@ -28,10 +32,10 @@ pub fn parse(source: &str) -> std::result::Result<Vec<Node>, pest::error::Error<
 fn parse_expr(expr: pest::iterators::Pair<Rule>) -> Node {
     let pair = expr.into_inner().peek().unwrap();
     match pair.as_rule() {
-        Rule::cdm_if => parse_if(pair),
-        Rule::cdm_for => parse_for(pair),
-        Rule::cdm_call => parse_call(pair),
-        Rule::cdm_return => parse_return(pair),
+        Rule::nks_if => parse_if(pair),
+        Rule::nks_for => parse_for(pair),
+        Rule::nks_call => parse_call(pair),
+        Rule::nks_return => parse_return(pair),
         _ => Node::Todo,
     }
 }
@@ -144,17 +148,17 @@ pub fn parse_boolean(expr: pest::iterators::Pair<Rule>) -> Node {
         res
     }
 }
-impl Cdmparser {
+impl Nksparser {
     pub fn new() -> Self {
         Self {
             variables: vec![],
-            funcs: vec![],
+            class: vec![],
         }
     }
 }
-pub fn register_func(func: pest::iterators::Pair<Rule>) {
+pub fn register_class(func: pest::iterators::Pair<Rule>) {
     // TODO
-    let mut sause = Cdmparser::new();
+    let mut sause = Nksparser::new();
     let mut func = func.into_inner();
     let name = Node::Ident(func.next().unwrap().as_str().to_string());
     let mut variables = vec![];
@@ -165,10 +169,10 @@ pub fn register_func(func: pest::iterators::Pair<Rule>) {
     sause.variables.push(vec![]);
     for var in variables.clone() {
         if let Node::Ident(name) = *var.name {
-            sause.variables[sause.funcs.len()].push(name);
+            sause.variables[sause.class.len()].push(name);
         }
     }
-    sause.funcs.push(Box::new(Node::Func(
+    sause.class.push(Box::new(Node::Class(
         Box::new(name),
         variables,
         Box::new(block),
@@ -185,8 +189,8 @@ pub fn parse_parm(parm: pest::iterators::Pair<Rule>) -> Node {
 }
 pub fn parse_top_cmnd(expr: pest::iterators::Pair<Rule>) {
     match expr.as_rule() {
-        Rule::func => {
-            register_func(expr);
+        Rule::class => {
+            register_class(expr);
         }
         _ => {}
     }

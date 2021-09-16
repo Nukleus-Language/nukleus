@@ -34,12 +34,13 @@ pub enum Node {
     NumericTerm(Box<Node>, Box<Node>, Ops),
     BooleanTerm(Box<Node>, Box<Node>, Ops),
     Block(Vec<Box<Node>>),
-    Func(Box<Node>, Vec<Variable>, Box<Node>),
+    Class(Box<Node>, Vec<Variable>, Box<Node>),
     If(Box<Node>, Box<Node>),
     Loop(Box<Node>, Box<Node>),
     Ident(String),
     Call(Box<Node>, Vec<Box<Node>>),
     Assign(Box<Node>, Box<Node>),
+    Int(i64),
     Return,
 }
 #[derive(PartialEq, Eq, Debug, Clone)]

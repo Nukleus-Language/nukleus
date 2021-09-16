@@ -31,9 +31,9 @@ impl Compile for Jit {
         builder.position_at_end(basic_block);
 
         for node in ast {
-            let recursive_builder = RecursiveBuilder::new(i64_type, &builder);
-            let return_value = recursive_builder.build(&node);
-            builder.build_return(Some(&return_value));
+            //let recursive_builder = RecursiveBuilder::new(i64_type, &builder);
+            //let return_value = recursive_builder.build(&node);
+            //builder.build_return(Some(&return_value));
         }
         /*println!(
             "Generated LLVM IR: {}",
@@ -47,7 +47,7 @@ impl Compile for Jit {
         }
     }
 }
-struct RecursiveBuilder<'a> {
+/*struct RecursiveBuilder<'a> {
     i64_type: IntType<'a>,
     builder: &'a Builder<'a>,
 }
@@ -58,27 +58,30 @@ impl<'a> RecursiveBuilder<'a> {
     }
    pub fn build(&self, ast: &Node) -> IntValue {
         match ast {
+            //Node::Int(n) => self.i64_type.const_int(*n as u64, true),
             Node::NumericTerm(lhs, rhs, op) => {
-                let lhs_eval = self.eval(lhs);
-                let rhs_eval = self.eval(rhs);
+                let lhs = self.build(lhs);
+                let rhs = self.build(rhs);
                 match op {
-                    Ops::Add => lhs_eval + rhs_eval,
-                    Ops::Sub => lhs_eval - rhs_eval,
-                    Ops::Multply => lhs_eval * rhs_eval,
-                    Ops::Divide => lhs_eval / rhs_eval,
-                    Ops::And => lhs_eval & rhs_eval,
-                    Ops::Or => lhs_eval | rhs_eval,
-                    Ops::Xor => lhs_eval ^ rhs_eval,
-                    _ => {
-                        // TODO
-                        0
-                    }
+                    Ops::Add => self.builder.build_int_add(lhs, rhs, "plus_temp"),
+                    Ops::Sub => self.builder.build_int_sub(lhs, rhs, "minus_temp"),
+                    Ops::Multply => self.builder.build_int_mul(lhs, rhs, "multply_temp"),
+                    Ops::Divide => self.builder.build_int_exact_signed_div(lhs, rhs, "div_temp"),
+                    Ops::And => self.builder.build_and(lhs, rhs, "and_temp"),
+                    Ops::Or => self.builder.build_or(lhs, rhs, "or_temp"),
+                    Ops::Xor =>self.builder.build_xor(lhs, rhs, "xor_temp"),
+                    Ops::NotEqual => self.builder.build_int_compare(inkwell::IntPredicate::NE,lhs, rhs, "notequal_temp"),
+                    Ops::Equal => self.builder.build_int_compare(inkwell::IntPredicate::EQ,lhs, rhs, "equal_temp"),
+                    Ops::Leq => self.builder.build_int_compare(inkwell::IntPredicate::SLE,lhs, rhs, "leq_temp"),
+                    Ops::Geq => self.builder.build_int_compare(inkwell::IntPredicate::SGE,lhs, rhs, "req_temp"),
+                    Ops::Less => self.builder.build_int_compare(inkwell::IntPredicate::SLT,lhs, rhs, "less_temp"),
+                    Ops::Greater =>self.builder.build_int_compare(inkwell::IntPredicate::SGT,lhs, rhs, "greater_temp"),
                 }
             }
             _ => {
                 // TODO
-                0
+                "0";
             }
         }
     }
-}
+}*/
