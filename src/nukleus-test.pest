@@ -1,0 +1,213 @@
+module = { statement_list }
+statement_list = _{ statement* }
+statement = {
+    import
+    | func
+    | class
+}
+public = { "public" }
+class = {
+    (public? ~ "class"
+        ~ ident
+        ~ open_brace
+        ~ attribute_list
+        ~ close_brace)
+}
+attribute_list = { attribute ~ (comma ~ attribute)? }
+attribute = { ident ~ colon ~ kind }
+import = {
+    ("import"
+        ~ open_brace ~ ident_list ~ close_brace
+        ~ "from" ~ string_literal)
+    | ("import" ~ string_literal ~ "as" ~ ident)
+    | ("import" ~ string_literal)
+}
+
+func = {
+    (public? ~ "func"
+        ~ ident
+        ~ func_parameter_list?
+        ~ returns?
+        ~ open_brace
+        ~ expression*
+        ~ close_brace)
+}
+
+func_parameter_list = {
+    open_paren ~ func_parameter
+        ~ (comma ~ func_parameter)*
+        ~ close_paren
+}
+func_parameter = { (label ~ ident ~ colon ~ kind) }
+
+returns = { thin_arrow ~ kind ~ (comma ~ kind)* }
+
+label = { ident }
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+//identi = @{ (ASCII_ALPHA ~ ASCII_ALPHANUMERIC*) }
+ident_list = { ident ~ (comma ~ ident)* }
+
+kind = {
+    ident
+    | kind_list
+    | kind_set
+}
+
+kind_list = { (open_bracket ~ ident ~ close_bracket) }
+kind_set = { (open_paren ~ kind ~ (comma ~ kind)* ~ close_paren) }
+const = { "const" }
+assign = {
+  (const? ~"let"
+    ~ ("<" ~ kind ~ ">")?
+    ~ ident
+    ~ "="
+    ~ expression
+    ~ )
+}
+
+func_call = {
+    ident
+    ~ "("
+    ~ func_arg_list?
+    ~ ")"
+}
+
+func_arg_list = { func_arg ~ (comma ~ func_arg)* }
+func_arg = { (label ~ ":")? ~ expression }
+
+return_stmt = { "return" ~ expression }
+cmnd = { wblock | nblock }
+wblock = _{ ( assign ) ~ ";" }
+nblock = _{ nks_for | nks_if }
+nks_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
+nks_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
+expression = {
+    assign
+    | return_stmt
+
+    // Special rule; see below for more information.
+    | op_sequence
+}
+
+comma = _{ ","}
+colon = _{ ":" }
+underscore = _{ "_" }
+open_paren = _{ "(" }
+close_paren = _{ ")" }
+open_bracket = _{ "[" }
+close_bracket = _{ "]" }
+open_brace = _{ "{" }
+close_brace = _{ "}" }
+thin_arrow = _{ "->" }
+wide_arrow = _{ "=>" }
+
+op_eq = { "equals" | "==" }
+op_neq = { "!=" }
+op_add = { "+" }
+op_subtract = { "-" }
+op_pow = { "**" }
+op_multiply = { "*" }
+op_divide = { "/" }
+op_reference = { "@" }
+
+numerical_comp = _{ op_gt | op_gte | op_lt | op_lte }
+    op_gt = { ">" }
+    op_gte = { ">=" }
+    op_lt = { "<" }
+    op_lte = { "<=" }
+
+logic_op = _{ logic_and | logic_or | logic_xor }
+	logic_and = { "and" | "&&" }
+    logic_or = { "or" | "||" }
+    logic_xor = { "xor" }
+    logic_not = { "!" | "not" }
+
+bitwise_op = _{ bitwise_and | bitwise_or | bitwise_xor }
+    bitwise_and = { "&" }
+    bitwise_or = { "|" }
+    bitwise_xor = { "^" }
+
+unary_op = _{ logic_not | op_subtract }
+
+op_sequence = { bitwise_comp ~ ((op_eq | op_neq) ~ bitwise_comp)* }
+bitwise_comp = _{ logic_comp ~ (bitwise_op ~ logic_comp)* }
+logic_comp = _{ num_comp ~ (logic_op ~ num_comp)* }
+num_comp = _{ add_sub ~ (numerical_comp ~ add_sub)* }
+add_sub = _{ mtp_div ~ ((op_add | op_subtract) ~ mtp_div)* }
+mtp_div = _{ unary ~ ((op_pow | op_multiply | op_divide) ~ unary)* }
+unary = _{ unary_op ~ unary | value }
+
+value = _{
+    string_literal
+    | func_call
+    | numeric_value
+    | boolean_value
+    | null_value
+    | reference
+    | ident
+    | "(" ~ expression ~ ")"
+}
+
+numeric_value = @{
+    "-"?
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+    ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
+
+string_literal = ${ "\"" ~ string ~ "\"" }
+string = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+boolean_value = { "true" | "false" }
+null_value = { "null" }
+
+reference = { "@" ~ ident }
+
+
+program = _{ SOI ~ top_cmnd* ~ EOI }
+top_cmnd = { class }
+expr = _{ cmnd | top_cmnd }
+vtype = { "int" | "string" | "set" | "boolean" }
+parm_with_type = { ident ~ ":" ~ vtype ~ ","? }
+block = { cmnd* }
+numeric_ops = { "-" | "+" | "/" | "*" | "%" | "&" | "|" | "^" | "<<" | ">>" }
+order_ops = { "<=" | ">=" | "<" | ">" }
+eq_ops = { "==" | "!=" }
+logic_ops = { eq_ops | order_ops }
+boolean_ops = { "&&" | "||" }
+assign_ops = { "=" }
+ops = _{ numeric_ops | logic_ops | assign_ops }
+boolean_constant = { "true" | "false" }
+constants = { int | boolean_constant }
+value = _{ constants | ident }
+boolean = _{ term ~ eq_ops ~ term | boolean_term ~ (boolean_ops ~ boolean_term)* }
+boolean_term = { value | "(" ~ boolean ~ ")" }
+numeric = _{ numeric_term ~ (numeric_ops ~ numeric_term)* }
+numeric_term = { value | "(" ~ numeric ~ ")" }
+term = _{ boolean_term | numeric_term }
+boolean_block = { boolean }
+class = { "class" ~ ident ~ "(" ~ parm_with_type* ~ ")" ~ "{" ~ block ~ "}" }
+parm = { term ~ ","? }
+nks_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
+nks_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
+nks_sysout = {"sysout" ~"(" ~ strings ~ ")" }
+nks_call = { "call" ~ ident ~ "(" ~  parm* ~ ")" }
+nks_assign = { ident ~ assign_ops ~ value }
+nks_return = { "return" }
+cmnd = { wblock | nblock }
+wblock = _{ (nks_call | nks_assign | nks_return | nks_sysout) ~ ";" }
+nblock = _{ nks_for | nks_if }
+int = @{ "-"? ~ ASCII_DIGIT+ }
+ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+strings = @{ "'" ~ ( "''" | (!"'" ~ ANY) )* ~ "'" }
+
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{
+    ("/*" ~ (!"*/" ~ ANY)* ~ "*/")
+    | ("//" ~ (!"\n" ~ ANY)* ~ "\n")
+}

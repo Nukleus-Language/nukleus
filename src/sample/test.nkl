@@ -1,7 +1,0 @@
-class main()
-{
-  int i,n,m;
-  i=5;
-  n=6;
-  return;
-}
