@@ -1,16 +1,9 @@
 use pest::iterators::Pair;
-use crate::parser::{
+use crate::core::parser::{
     Rule,
-    statement::Statement,
-    expression::{ Expression, parse_expression }
+    expression::parse_expression
 };
-
-#[derive(Clone, Debug)]
-pub struct Parameter {
-    pub label: String,
-    pub name: String,
-    pub kind: String
-}
+use crate::core::ast::{Statement, Expression, Parameter};
 
 fn parse_param(param: Pair<Rule>) -> Parameter {
     let mut label = String::new();
@@ -20,7 +13,7 @@ fn parse_param(param: Pair<Rule>) -> Parameter {
     for node in param.into_inner() {
         match node.as_rule() {
             Rule::label => label = String::from(node.as_str()),
-            Rule::identifier => name = String::from(node.as_str()),
+            Rule::ident => name = String::from(node.as_str()),
             Rule::kind => kind = String::from(node.as_str()),
             _ => println!("UNCHECKED RULE IN PARSE_PARAM: {:?}", node.as_rule())
         }
@@ -34,7 +27,7 @@ fn parse_params(param_list: Pair<Rule>) -> Option<Vec<Parameter>> {
 
     for node in param_list.into_inner() {
         match node.as_rule() {
-            Rule::function_parameter => params.push(parse_param(node)),
+            Rule::func_parameter => params.push(parse_param(node)),
             _ => println!("UNCHECKED RULE IN PARSE_PARAMS: {:?}", node.as_rule())
         }
     }
@@ -65,8 +58,8 @@ pub fn parse(function: Pair<Rule>) -> Statement {
     for node in function.into_inner() {
         match node.as_rule() {
             Rule::public => public = true,
-            Rule::identifier => name = String::from(node.as_str()),
-            Rule::function_parameter_list => parameters = parse_params(node),
+            Rule::ident => name = String::from(node.as_str()),
+            Rule::func_parameter_list => parameters = parse_params(node),
             Rule::returns => returns = parse_returns(node),
             Rule::expression => body.push(parse_expression(node)),
             _ => println!("UNCHECKED RULE IN PARSE: {:?}", node.as_rule())

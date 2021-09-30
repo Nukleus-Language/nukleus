@@ -1,5 +1,6 @@
 use pest::iterators::Pair;
-use crate::parser::{ Rule, statement::Statement };
+use crate::core::parser::Rule;
+use crate::core::ast::Statement;
 
 fn parse_attribute(attr: Pair<Rule>) -> (String, String) {
     let mut name = String::new();
@@ -8,7 +9,7 @@ fn parse_attribute(attr: Pair<Rule>) -> (String, String) {
     for node in attr.into_inner() {
         match node.as_rule() {
             Rule::colon => (),
-            Rule::identifier => name = String::from(node.as_str()),
+            Rule::ident => name = String::from(node.as_str()),
             Rule::kind => kind = String::from(node.as_str()),
             _ => unreachable!()
         }
@@ -38,12 +39,12 @@ pub fn parse(custom_type: Pair<Rule>) -> Statement {
 
     for node in custom_type.into_inner() {
         match node.as_rule() {
-            Rule::identifier => name = String::from(node.as_str()),
+            Rule::ident => name = String::from(node.as_str()),
             Rule::attribute_list => attributes = parse_attr_list(node),
             Rule::public => public = true,
             _ => print!("")
         }
     }
 
-    Statement::Type { name, attributes, public }
+    Statement::Class { name, attributes, public }
 }

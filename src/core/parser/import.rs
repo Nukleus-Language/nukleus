@@ -1,18 +1,14 @@
 use std::path::Path;
 use pest::iterators::Pair;
-use crate::parser::{
-    Rule,
-    string,
-    statement::Statement
-};
-
+use crate::core::parser::{Rule, string};
+use crate::core::ast::Statement;
 pub fn parse(import: Pair<Rule>) -> Statement {
     let mut path: String = String::new();
     let mut name: String = String::new();
     for node in import.clone().into_inner() {
         match node.as_rule() {
             Rule::string_literal => path = string::parse(node),
-            Rule::identifier => name = String::from(node.as_str()),
+            Rule::ident => name = String::from(node.as_str()),
             _ => print!("")
         }
     }
