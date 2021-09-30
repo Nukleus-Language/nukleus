@@ -1,14 +1,14 @@
-use cfg_if::cfg_if;
+// use cfg_if::cfg_if;
 
-use calculator::Compile;
-cfg_if! {
-    if #[cfg(feature = "default")] {
-        use calculator::Jit as Engine;
-    }
-    else {
-        use calculator::Interpreter as Engine;
-    }
-}
+// use calculator::Compile;
+// cfg_if! {
+//     if #[cfg(feature = "default")] {
+//         use calculator::Jit as Engine;
+//     }
+//     else {
+//         use calculator::Interpreter as Engine;
+//     }
+// }
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();

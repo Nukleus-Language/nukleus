@@ -1,4 +1,4 @@
-module = { statement_list }
+apparatus = { statement_list }
 statement_list = _{ statement* }
 statement = {
     import
@@ -55,14 +55,13 @@ kind = {
 
 kind_list = { (open_bracket ~ ident ~ close_bracket) }
 kind_set = { (open_paren ~ kind ~ (comma ~ kind)* ~ close_paren) }
-const = { "const" }
+constant = { "const" }
 assign = {
-  (const? ~"let"
+  (constant? ~"let"
     ~ ("<" ~ kind ~ ">")?
     ~ ident
     ~ "="
-    ~ expression
-    ~ )
+    ~ expression)
 }
 
 func_call = {
@@ -76,11 +75,12 @@ func_arg_list = { func_arg ~ (comma ~ func_arg)* }
 func_arg = { (label ~ ":")? ~ expression }
 
 return_stmt = { "return" ~ expression }
-cmnd = { wblock | nblock }
-wblock = _{ ( assign ) ~ ";" }
-nblock = _{ nks_for | nks_if }
-nks_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
-nks_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
+//cmnd = { wblock | nblock }
+//wblock = _{ ( assign ) ~ ";" }
+//nblock = _{ nks_for | nks_if }
+//nks_for = { "for" ~ boolean_block ~ "{" ~ expression* ~ "}" }
+//nks_if = { "if" ~ boolean_block ~ "{" ~ expression* ~ "}" }
+//nks_sysout = {"sysout" ~"(" ~ string ~ ")" }
 expression = {
     assign
     | return_stmt
@@ -168,42 +168,42 @@ null_value = { "null" }
 reference = { "@" ~ ident }
 
 
-program = _{ SOI ~ top_cmnd* ~ EOI }
-top_cmnd = { class }
-expr = _{ cmnd | top_cmnd }
-vtype = { "int" | "string" | "set" | "boolean" }
-parm_with_type = { ident ~ ":" ~ vtype ~ ","? }
-block = { cmnd* }
-numeric_ops = { "-" | "+" | "/" | "*" | "%" | "&" | "|" | "^" | "<<" | ">>" }
-order_ops = { "<=" | ">=" | "<" | ">" }
-eq_ops = { "==" | "!=" }
-logic_ops = { eq_ops | order_ops }
-boolean_ops = { "&&" | "||" }
-assign_ops = { "=" }
-ops = _{ numeric_ops | logic_ops | assign_ops }
-boolean_constant = { "true" | "false" }
-constants = { int | boolean_constant }
-value = _{ constants | ident }
-boolean = _{ term ~ eq_ops ~ term | boolean_term ~ (boolean_ops ~ boolean_term)* }
-boolean_term = { value | "(" ~ boolean ~ ")" }
-numeric = _{ numeric_term ~ (numeric_ops ~ numeric_term)* }
-numeric_term = { value | "(" ~ numeric ~ ")" }
-term = _{ boolean_term | numeric_term }
-boolean_block = { boolean }
-class = { "class" ~ ident ~ "(" ~ parm_with_type* ~ ")" ~ "{" ~ block ~ "}" }
-parm = { term ~ ","? }
-nks_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
-nks_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
-nks_sysout = {"sysout" ~"(" ~ strings ~ ")" }
-nks_call = { "call" ~ ident ~ "(" ~  parm* ~ ")" }
-nks_assign = { ident ~ assign_ops ~ value }
-nks_return = { "return" }
-cmnd = { wblock | nblock }
-wblock = _{ (nks_call | nks_assign | nks_return | nks_sysout) ~ ";" }
-nblock = _{ nks_for | nks_if }
-int = @{ "-"? ~ ASCII_DIGIT+ }
-ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
-strings = @{ "'" ~ ( "''" | (!"'" ~ ANY) )* ~ "'" }
+// program = _{ SOI ~ top_cmnd* ~ EOI }
+// top_cmnd = { class }
+// expr = _{ cmnd | top_cmnd }
+// vtype = { "int" | "string" | "set" | "boolean" }
+// parm_with_type = { ident ~ ":" ~ vtype ~ ","? }
+// block = { cmnd* }
+// numeric_ops = { "-" | "+" | "/" | "*" | "%" | "&" | "|" | "^" | "<<" | ">>" }
+// order_ops = { "<=" | ">=" | "<" | ">" }
+// eq_ops = { "==" | "!=" }
+// logic_ops = { eq_ops | order_ops }
+// boolean_ops = { "&&" | "||" }
+// assign_ops = { "=" }
+// ops = _{ numeric_ops | logic_ops | assign_ops }
+// boolean_constant = { "true" | "false" }
+// constants = { int | boolean_constant }
+// value = _{ constants | ident }
+// boolean = _{ term ~ eq_ops ~ term | boolean_term ~ (boolean_ops ~ boolean_term)* }
+// boolean_term = { value | "(" ~ boolean ~ ")" }
+// numeric = _{ numeric_term ~ (numeric_ops ~ numeric_term)* }
+// numeric_term = { value | "(" ~ numeric ~ ")" }
+// term = _{ boolean_term | numeric_term }
+// boolean_block = { boolean }
+// class = { "class" ~ ident ~ "(" ~ parm_with_type* ~ ")" ~ "{" ~ block ~ "}" }
+// parm = { term ~ ","? }
+// nks_for = { "for" ~ boolean_block ~ "{" ~ block ~ "}" }
+// nks_if = { "if" ~ boolean_block ~ "{" ~ block ~ "}" }
+
+// nks_call = { "call" ~ ident ~ "(" ~  parm* ~ ")" }
+// nks_assign = { ident ~ assign_ops ~ value }
+// nks_return = { "return" }
+// cmnd = { wblock | nblock }
+// wblock = _{ (nks_call | nks_assign | nks_return | nks_sysout) ~ ";" }
+// nblock = _{ nks_for | nks_if }
+// int = @{ "-"? ~ ASCII_DIGIT+ }
+// ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+// strings = @{ "'" ~ ( "''" | (!"'" ~ ANY) )* ~ "'" }
 
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
