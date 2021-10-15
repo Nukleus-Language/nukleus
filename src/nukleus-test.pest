@@ -55,9 +55,8 @@ kind = {
 
 kind_list = { (open_bracket ~ ident ~ close_bracket) }
 kind_set = { (open_paren ~ kind ~ (comma ~ kind)* ~ close_paren) }
-constant = { "const" }
 assign = {
-  (constant? ~"let"
+      (("let" | "const")
     ~ ("<" ~ kind ~ ">")?
     ~ ident
     ~ "="
