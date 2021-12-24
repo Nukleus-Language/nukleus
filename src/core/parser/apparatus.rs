@@ -1,4 +1,3 @@
-use colored::*;
 use pest::iterators::Pair;
 use std::collections::HashMap;
 
