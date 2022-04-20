@@ -1,0 +1,3 @@
+[submodule "src/tools/organ"]
+	path = src/tools/organ
+	url = https://github.com/Nukleus-Language/organ.git
