@@ -1,9 +1,6 @@
+use crate::core::ast::{Expression, Parameter, Statement};
+use crate::core::parser::{expression::parse_expression, Rule};
 use pest::iterators::Pair;
-use crate::core::parser::{
-    Rule,
-    expression::parse_expression
-};
-use crate::core::ast::{Statement, Expression, Parameter};
 
 fn parse_param(param: Pair<Rule>) -> Parameter {
     let mut label = String::new();
@@ -15,7 +12,7 @@ fn parse_param(param: Pair<Rule>) -> Parameter {
             Rule::label => label = String::from(node.as_str()),
             Rule::ident => name = String::from(node.as_str()),
             Rule::kind => kind = String::from(node.as_str()),
-            _ => println!("UNCHECKED RULE IN PARSE_PARAM: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE IN PARSE_PARAM: {:?}", node.as_rule()),
         }
     }
 
@@ -28,7 +25,7 @@ fn parse_params(param_list: Pair<Rule>) -> Option<Vec<Parameter>> {
     for node in param_list.into_inner() {
         match node.as_rule() {
             Rule::func_parameter => params.push(parse_param(node)),
-            _ => println!("UNCHECKED RULE IN PARSE_PARAMS: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE IN PARSE_PARAMS: {:?}", node.as_rule()),
         }
     }
 
@@ -41,7 +38,7 @@ fn parse_returns(return_list: Pair<Rule>) -> Option<Vec<String>> {
     for node in return_list.into_inner() {
         match node.as_rule() {
             Rule::kind => returns.push(String::from(node.as_str())),
-            _ => println!("UNCHECKED RULE IN PARSE_RETURNS: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE IN PARSE_RETURNS: {:?}", node.as_rule()),
         }
     }
 
@@ -62,9 +59,15 @@ pub fn parse(function: Pair<Rule>) -> Statement {
             Rule::func_parameter_list => parameters = parse_params(node),
             Rule::returns => returns = parse_returns(node),
             Rule::expression => body.push(parse_expression(node)),
-            _ => println!("UNCHECKED RULE IN PARSE: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE IN PARSE: {:?}", node.as_rule()),
         }
     }
 
-    Statement::Function { public, name, parameters, returns, body }
+    Statement::Function {
+        public,
+        name,
+        parameters,
+        returns,
+        body,
+    }
 }

@@ -1,11 +1,11 @@
-use pest::iterators::Pair;
-use crate::core::parser::Rule;
 use crate::core::ast::Expression;
+use crate::core::parser::Rule;
+use pest::iterators::Pair;
 
 #[derive(Clone, Debug)]
 pub struct FuncArgument {
     label: Option<String>,
-    value: Expression
+    value: Expression,
 }
 
 fn parse_fn_arg(arg: Pair<Rule>) -> FuncArgument {
@@ -16,7 +16,7 @@ fn parse_fn_arg(arg: Pair<Rule>) -> FuncArgument {
         match node.as_rule() {
             Rule::label => label = Some(String::from(node.as_str())),
             Rule::expression => value = parse_expression(node),
-            _ => println!("UNCHECKED RULE: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE: {:?}", node.as_rule()),
         }
     }
 
@@ -29,7 +29,7 @@ fn parse_fn_args(arg_list: Pair<Rule>) -> Option<Vec<FuncArgument>> {
     for node in arg_list.into_inner() {
         match node.as_rule() {
             Rule::func_arg => args.push(parse_fn_arg(node)),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -44,11 +44,14 @@ fn parse_function_call(fn_call: Pair<Rule>) -> Expression {
         match node.as_rule() {
             Rule::ident => identifier = String::from(node.as_str()),
             Rule::func_arg_list => arguments = parse_fn_args(node),
-            _ => println!("UNCHECKED RULE: {:?}", node.as_rule())
+            _ => println!("UNCHECKED RULE: {:?}", node.as_rule()),
         }
     }
 
-    Expression::FuncCall { identifier, arguments }
+    Expression::FuncCall {
+        identifier,
+        arguments,
+    }
 }
 
 fn parse_assignment(expr: Pair<Rule>) -> Expression {
@@ -63,12 +66,16 @@ fn parse_assignment(expr: Pair<Rule>) -> Expression {
             Rule::expression => {
                 let parsed_value = parse_expression(node);
                 value = Box::new(parsed_value);
-            },
-            _ => unreachable!()
+            }
+            _ => unreachable!(),
         }
     }
 
-    Expression::Assign { identifier, value, kind }
+    Expression::Assign {
+        identifier,
+        value,
+        kind,
+    }
 }
 
 pub fn parse_expression(expr: Pair<Rule>) -> Expression {
@@ -80,10 +87,10 @@ pub fn parse_expression(expr: Pair<Rule>) -> Expression {
             Rule::assign => new_expr = parse_assignment(node),
             Rule::value => {
                 new_expr = Expression::Value {
-                    as_string: String::from(node.as_str())
+                    as_string: String::from(node.as_str()),
                 }
-            },
-            _ => println!("UNCHECKED RULE: {:?}", node.as_rule())
+            }
+            _ => println!("UNCHECKED RULE: {:?}", node.as_rule()),
         }
     }
 

@@ -1,25 +1,19 @@
 //pub mod compiler;
 pub mod core;
 
-//pub use crate::compiler::interpreter::Interpreter;
-//pub use crate::compiler::jit_inkwell::Jit;
-//pub use crate::core::ast::{Node, Ops};
+use std::fs::File;
+use std::io::prelude::*;
 
-pub type Result<T> = anyhow::Result<T>;
+fn read_file(filename: &str) -> Result<String, std::io::Error> {
+    let mut file = File::open(filename)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents)
+}
 
-//#[cfg(interpriter)]
-//pub trait Compile {
-//     type Output;
-//
-//     fn from_ast(ast: Vec<Node>) -> Self::Output;
-//
-//     fn from_source(source: &str) -> Self::Output {
-//         println!("Compiling the source: {}", source);
-//         let ast: Vec<Node> = core::parser::parse(source).unwrap();
-//         println!("{:?}", ast);
-//         Self::from_ast(ast)
-//     }
-// }
+fn main() {
+    let contents = read_file("input.nkl").unwrap();
 
-//#[cfg(test)]
-//mod test;
+    core::lexer::lexer(&contents);
+    // Pass contents to the lexer here
+}
