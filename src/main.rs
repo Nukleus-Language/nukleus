@@ -1,5 +1,4 @@
-// use cfg_if::cfg_if;
-use crate::core::parser;
+use nukleus::core::parser;
 // use calculator::Compile;
 // cfg_if! {
 //     if #[cfg(feature = "default")] {
@@ -19,6 +18,6 @@ fn main() {
     }
     println!(
         "{:?}",
-        Engine::from_source(&std::fs::read_to_string(&args[1]).unwrap()).unwrap()
+        parser::parse(&args[1])
     );
 }
