@@ -1,7 +1,7 @@
-use std::path::Path;
-use pest::iterators::Pair;
-use crate::core::parser::{Rule, string};
 use crate::core::ast::Statement;
+use crate::core::parser::{string, Rule};
+use pest::iterators::Pair;
+use std::path::Path;
 pub fn parse(import: Pair<Rule>) -> Statement {
     let mut path: String = String::new();
     let mut name: String = String::new();
@@ -9,15 +9,17 @@ pub fn parse(import: Pair<Rule>) -> Statement {
         match node.as_rule() {
             Rule::string_literal => path = string::parse(node),
             Rule::ident => name = String::from(node.as_str()),
-            _ => print!("")
+            _ => print!(""),
         }
     }
 
     // files name is the module name (e.g. "types/dfs.nkl" becomes dfs)
     if name.is_empty() {
         let name_str = Path::new(path.as_str())
-            .file_stem().expect("Error getting module name")
-            .to_str().expect("Error parsing module name");
+            .file_stem()
+            .expect("Error getting module name")
+            .to_str()
+            .expect("Error parsing module name");
         name = String::from(name_str);
     }
 

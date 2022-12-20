@@ -1,12 +1,12 @@
-use pest::iterators::Pair;
 use crate::core::parser::Rule;
+use pest::iterators::Pair;
 
 pub fn parse(import: Pair<Rule>) -> String {
     let mut string = String::new();
     for node in import.clone().into_inner() {
         match node.as_rule() {
             Rule::string => string = String::from(node.as_str()),
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -16,8 +16,8 @@ pub fn parse(import: Pair<Rule>) -> String {
 #[cfg(test)]
 mod tests {
 
+    use crate::core::parser::{string, NklParser, Rule};
     use pest::Parser;
-    use crate::core::parser::{ NklParser, Rule, string };
 
     #[test]
     fn string_literal() {
