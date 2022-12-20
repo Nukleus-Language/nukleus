@@ -12,10 +12,10 @@ pest = "2.1"
 pest_derive = "2.1"
 cfg-if = "0.1"
 anyhow = "1.0"
-cranelift = "0.76.0"
-cranelift-module = "0.76.0"
-cranelift-jit = "0.76.0"
-inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
+#cranelift = "0.76.0"
+#cranelift-module = "0.76.0"
+#cranelift-jit = "0.76.0"
+#inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
 colored = "1.6"
 
 [lib]
