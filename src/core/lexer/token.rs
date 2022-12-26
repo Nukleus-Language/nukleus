@@ -128,7 +128,7 @@ impl fmt::Display for Tokens {
 mod test {
     use super::*;
     #[test]
-    fn test_display() {
+    fn token_display() {
         let tokens = vec![
             Tokens::Identifier("let".to_string()),
             Tokens::Identifier("x".to_string()),
