@@ -103,8 +103,16 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "fn" => Tokens::Function,
                 "->" => Tokens::Arrow,
                 "return" => Tokens::Return,
-
-                " " | "\n" | "\t" => continue,
+                "import" => Tokens::Import,
+                "==" => Tokens::Equals,
+                "public" => Tokens::Public,
+                "if" => Tokens::If,
+                "else" => Tokens::Else,
+                "while" => Tokens::While,
+                "for" => Tokens::For,
+                "void" => Tokens::Void,
+                
+                " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
                 _ => Tokens::Identifier(buffer.to_string()),
             };
             tokens.push(token);
@@ -133,7 +141,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
             ';' => Tokens::Semicolon,
             '/' => Tokens::Slash,
 
-            ' ' | '\n' | '\t' => continue,
+            ' ' | '\n' | '\t' | '\u{20}'| '\r' => continue,
             _ => panic!("Unexpected character: {}", c),
         };
         tokens.push(token);
@@ -143,10 +151,17 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "let" => Tokens::Let,
                 "fn" => Tokens::Function,
                 "->" => Tokens::Arrow,
-                "==" => Tokens::Equals,
                 "return" => Tokens::Return,
+                "import" => Tokens::Import,
+                "==" => Tokens::Equals,
+                "public" => Tokens::Public,
+                "if" => Tokens::If,
+                "else" => Tokens::Else,
+                "while" => Tokens::While,
+                "for" => Tokens::For,
+                "void" => Tokens::Void,
 
-                " " | "\n" | "\t" => continue,
+                " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
                 _ => Tokens::Identifier(buffer.to_string()),
             };
             tokens.push(token);

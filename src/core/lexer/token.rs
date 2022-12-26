@@ -7,12 +7,15 @@ pub enum Tokens {
     Integer(usize),
     Float(f64),
     Decimal(f64),
-
+    
     // Identifiers
     Identifier(String),
 
     // Strings
     String(String),
+
+    // Type
+    Void,
 
     // Symbols
     Asterisk,
@@ -53,6 +56,7 @@ pub enum Tokens {
     True,
     Let,
     Equals,
+    Import,
     // End of file
     EOF,
 }
@@ -102,6 +106,8 @@ impl Tokens {
             Tokens::True => "true",
             Tokens::Let => "let",
             Tokens::Equals => "==",
+            Tokens::Import => "import",
+            Tokens::Void => "void",
             Tokens::EOF => "EOF",
         }
     }
