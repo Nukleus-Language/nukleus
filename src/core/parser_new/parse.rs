@@ -24,19 +24,27 @@ impl Parser {
                             self.pos += 1;
                             if let Some(Tokens::CloseAngle) = self.tokens.get(self.pos) {
                                 self.pos += 1;
-                                if let Some(Tokens::Identifier(variable_name)) = self.tokens.get(self.pos) {
+                                if let Some(Tokens::Identifier(variable_name)) =
+                                    self.tokens.get(self.pos)
+                                {
                                     self.pos += 1;
                                     if let Some(Tokens::Assign) = self.tokens.get(self.pos) {
                                         self.pos += 1;
-                                        if let Some(Tokens::Integer(value)) = self.tokens.get(self.pos) {
+                                        if let Some(Tokens::Integer(value)) =
+                                            self.tokens.get(self.pos)
+                                        {
                                             self.pos += 1;
-                                            if let Some(Tokens::Semicolon) = self.tokens.get(self.pos) {
+                                            if let Some(Tokens::Semicolon) =
+                                                self.tokens.get(self.pos)
+                                            {
                                                 self.pos += 1;
                                                 let type_name = Some(type_name.to_string());
                                                 let let_statement = AST::Let {
                                                     name: variable_name.to_string(),
                                                     type_name,
-                                                    value: Box::new(AST::Token(Tokens::Integer(*value))),
+                                                    value: Box::new(AST::Token(Tokens::Integer(
+                                                        *value,
+                                                    ))),
                                                 };
                                                 statements.push(let_statement);
                                             } else {
@@ -44,7 +52,7 @@ impl Parser {
                                             }
                                         } else {
                                             return Err("Expected integer value after assignment");
-                                        }       
+                                        }
                                     } else {
                                         return Err("Expected assignment operator (=) after type");
                                     }
@@ -78,13 +86,11 @@ mod test {
         let code = "let<int> x = 3;";
         let tokens = lexer(code);
         let mut parser = Parser::new(tokens);
-        let expected = vec![
-            AST::Let {
-                name: "x".to_string(),
-                type_name: Some("int".to_string()),
-                value: Box::new(AST::Token(Tokens::Integer(3))),
-            },
-        ];
+        let expected = vec![AST::Let {
+            name: "x".to_string(),
+            type_name: Some("int".to_string()),
+            value: Box::new(AST::Token(Tokens::Integer(3))),
+        }];
 
         // Compare each element in the vector to the expected value
         for (i, actual) in parser.parse().unwrap().iter().enumerate() {

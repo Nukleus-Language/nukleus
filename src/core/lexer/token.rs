@@ -7,7 +7,7 @@ pub enum Tokens {
     Integer(usize),
     Float(f64),
     Decimal(f64),
-    
+
     // Identifiers
     Identifier(String),
 
