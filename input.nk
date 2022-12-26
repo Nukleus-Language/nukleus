@@ -1,0 +1,4 @@
+public fn main() -> void
+{
+	return;
+}
