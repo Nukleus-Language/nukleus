@@ -14,7 +14,7 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 fn main() {
     //let contents = read_file("input.nk").unwrap();
     let contents = "let<int> a = 3;";
-    let tokens = core::lexer::lexer(&contents);
+    let tokens = core::lexer::lexer(contents);
     println!("{:?}", tokens);
     let ast = core::parser_new::parse::Parser::new(tokens).parse();
     println!("{:?}", ast);
