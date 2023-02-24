@@ -50,7 +50,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
             buffer.push(c);
             if c == '"' {
                 string_flag = false;
-                tokens.push(Tokens::String(buffer.trim_matches('"').to_string()));
+                tokens.push(Tokens::QuotedString(buffer.trim_matches('"').to_string()));
                 buffer.clear();
             }
             continue;
@@ -281,7 +281,7 @@ mod test {
             Tokens::CloseAngle,
             Tokens::Identifier("x".to_string()),
             Tokens::Assign,
-            Tokens::String("hello world".to_string()),
+            Tokens::QuotedString("hello world".to_string()),
             Tokens::Semicolon,
         ];
 
