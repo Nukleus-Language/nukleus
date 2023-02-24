@@ -1,5 +1,5 @@
 public fn main() -> void
 {
-	let<String> a = "Hello World";
+	let: String a = "Hello World";
 	return;
 }
