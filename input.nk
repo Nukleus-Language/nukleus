@@ -1,5 +1,8 @@
 public fn main() -> void
 {
 	let: String a = "Hello World";
+	let:int test = 5324;
+	print(a);
+	println(test);
 	return;
 }

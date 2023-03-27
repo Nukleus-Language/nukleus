@@ -81,9 +81,28 @@ impl<'a> Parser<'a> {
 
         self.expect(Tokens::OpenBrace)?;
         self.consume(); // Consume Tokens::OpenBrace
-
+       
         let statements = self.parse_statements(return_type)?;
-
+        let mut return_value;
+        if return_type != &Tokens::Void {
+            self.expect(Tokens::Return)?;
+            self.consume(); // Consume Tokens::Return
+            return_value = self
+                .tokens
+                .peek()
+                .cloned()
+                .ok_or(AstParseError::ExpectedOther {
+                    token: "Value".to_owned(),
+                })?;
+            self.consume(); // Consume Value
+            self.expect(Tokens::Semicolon)?;
+            self.consume(); // Consume Tokens::Semicolon
+        }
+        else if self.tokens.peek() == Some(&&Tokens::Return) {
+            self.consume(); // Consume Tokens::Return
+            self.expect(Tokens::Semicolon)?;
+            self.consume(); // Consume Tokens::Semicolon
+        }
         if let Some(Tokens::CloseBrace) = self.consume() {
             let function = AST::Function {
                 public: is_public,
@@ -107,15 +126,23 @@ impl<'a> Parser<'a> {
         while let Some(token) = self.tokens.peek() {
             match token {
                 Tokens::Let => {
-                    let let_statement = self.let_parser()?;
+                    let let_statement = self.let_parser()?;        
                     statements.push(let_statement);
-                }
+                },
+                Tokens::Print => {
+                    let print_statement = self.print_parser()?;
+                    statements.push(print_statement);
+                },
+                Tokens::Println => {
+                    let println_statement = self.println_parser()?;
+                    statements.push(println_statement);
+                },
                 _ => break,
             }
         }
         Ok(statements)
     }
-
+    
     fn let_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Let
 
@@ -159,5 +186,80 @@ impl<'a> Parser<'a> {
             value: Box::new(value.clone()),
         };
         Ok(let_statement)
+    }
+
+    fn print_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::Print
+
+        self.expect(Tokens::OpenParen)?;
+        self.consume(); // Consume Tokens::OpenParen
+
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
+
+        self.expect(Tokens::CloseParen)?;
+        self.consume(); // Consume Tokens::CloseParen
+
+        self.expect(Tokens::Semicolon)?;
+        self.consume(); // Consume Tokens::Semicolon
+
+        let print_statement = AST::Print {
+            value: Box::new(value.clone()),
+        };
+        Ok(print_statement)
+    }
+
+    fn println_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::Println
+
+        self.expect(Tokens::OpenParen)?;
+        self.consume(); // Consume Tokens::OpenParen
+
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
+
+        self.expect(Tokens::CloseParen)?;
+        self.consume(); // Consume Tokens::CloseParen
+
+        self.expect(Tokens::Semicolon)?;
+        self.consume(); // Consume Tokens::Semicolon
+
+        let println_statement = AST::Println {
+            value: Box::new(value.clone()),
+        };
+        Ok(println_statement)
+    }
+
+    fn return_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::Return
+
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
+
+        self.expect(Tokens::Semicolon)?;
+        self.consume(); // Consume Tokens::Semicolon
+
+        let return_statement = AST::Return {
+            value: Box::new(value.clone()),
+        };
+        Ok(return_statement)
     }
 }

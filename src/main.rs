@@ -12,13 +12,15 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 }
 
 fn main() {
-    //let contents = read_file("input.nk").unwrap();
-    let contents = "public fn main() -> void\n{\nlet:int a = 3;}";
-    let tokens = core::lexer::lexer(contents);
-    println!("{:?}", tokens);
+    let contents = read_file("input.nk").unwrap();
+    //let contents = "public fn main() -> void\n{\nlet:int a = 3;}";
+    println!("Input: {}", contents);
+
+    let tokens = core::lexer::lexer(&contents);
+    println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here
     let ast = core::parser_new::parse::Parser::new(&tokens).parse();
-    println!("{:?}", ast);
+    println!("AST Tree: {:?}", ast.unwrap());
 }
