@@ -6,7 +6,7 @@ pub enum AST {
     Token(Tokens),
 
     Import {
-        path: String,
+        //path: String,
         name: String,
     },
     // A node representing a statement
@@ -25,7 +25,14 @@ pub enum AST {
         value: Box<Tokens>,
     },
 
+    Print{
+        value: Box<Tokens>,
+    },
+    Println{
+        value: Box<Tokens>,
+    },
+    
     Return {
-        value: Box<AST>,
+        value: Box<Tokens>,
     },
 }

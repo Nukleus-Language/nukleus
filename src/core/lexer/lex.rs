@@ -109,6 +109,8 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "if" => Tokens::If,
                 "else" => Tokens::Else,
                 "while" => Tokens::While,
+                "print" => Tokens::Print,
+                "println" => Tokens::Println,
                 "for" => Tokens::For,
                 "void" => Tokens::Void,
 
@@ -155,6 +157,8 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "import" => Tokens::Import,
                 "==" => Tokens::Equals,
                 "public" => Tokens::Public,
+                "print" => Tokens::Print,
+                "println" => Tokens::Println,
                 "if" => Tokens::If,
                 "else" => Tokens::Else,
                 "while" => Tokens::While,
