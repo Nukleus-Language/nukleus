@@ -22,9 +22,9 @@ pub enum AST {
     Let {
         name: String,
         type_name: Option<String>,
-        value: Box<AST>,
+        value: Box<Tokens>,
     },
-    
+
     Return {
         value: Box<AST>,
     },
