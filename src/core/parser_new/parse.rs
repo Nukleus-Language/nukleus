@@ -81,9 +81,9 @@ impl<'a> Parser<'a> {
 
         self.expect(Tokens::OpenBrace)?;
         self.consume(); // Consume Tokens::OpenBrace
-       
+
         let statements = self.parse_statements(return_type)?;
-        let mut return_value;
+        let return_value;
         if return_type != &Tokens::Void {
             self.expect(Tokens::Return)?;
             self.consume(); // Consume Tokens::Return
@@ -97,8 +97,7 @@ impl<'a> Parser<'a> {
             self.consume(); // Consume Value
             self.expect(Tokens::Semicolon)?;
             self.consume(); // Consume Tokens::Semicolon
-        }
-        else if self.tokens.peek() == Some(&&Tokens::Return) {
+        } else if self.tokens.peek() == Some(&&Tokens::Return) {
             self.consume(); // Consume Tokens::Return
             self.expect(Tokens::Semicolon)?;
             self.consume(); // Consume Tokens::Semicolon
@@ -126,23 +125,23 @@ impl<'a> Parser<'a> {
         while let Some(token) = self.tokens.peek() {
             match token {
                 Tokens::Let => {
-                    let let_statement = self.let_parser()?;        
+                    let let_statement = self.let_parser()?;
                     statements.push(let_statement);
-                },
+                }
                 Tokens::Print => {
                     let print_statement = self.print_parser()?;
                     statements.push(print_statement);
-                },
+                }
                 Tokens::Println => {
                     let println_statement = self.println_parser()?;
                     statements.push(println_statement);
-                },
+                }
                 _ => break,
             }
         }
         Ok(statements)
     }
-    
+
     fn let_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Let
 
