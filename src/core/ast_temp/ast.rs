@@ -25,13 +25,13 @@ pub enum AST {
         value: Box<Tokens>,
     },
 
-    Print{
+    Print {
         value: Box<Tokens>,
     },
-    Println{
+    Println {
         value: Box<Tokens>,
     },
-    
+
     Return {
         value: Box<Tokens>,
     },
