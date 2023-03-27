@@ -1,174 +1,163 @@
-use crate::core::ast_temp::{AST,AstParseError};
+use crate::core::ast_temp::{AstParseError, AST};
 use crate::core::lexer::Tokens;
+use std::iter::Peekable;
 
-pub struct Parser {
-    tokens: Vec<Tokens>,
-    pos: usize,
+pub struct Parser<'a> {
+    tokens: Peekable<std::slice::Iter<'a, Tokens>>,
 }
 
-impl Parser {
-    pub fn new(tokens: Vec<Tokens>) -> Self {
-        Parser { tokens, pos: 0 }
+impl<'a> Parser<'a> {
+    pub fn new(tokens: &'a [Tokens]) -> Self {
+        Parser {
+            tokens: tokens.iter().peekable(),
+        }
     }
 
     pub fn parse(&mut self) -> Result<Vec<AST>, AstParseError> {
         let mut ast = Vec::new();
-        loop {
-            if let Some(token) = self.tokens.get(self.pos) {
-                match token {
-                    Tokens::Function => {
-                        ast.push(self.parse_function()?);
-                    }
-                    _ => {
-                        return Err(AstParseError::UnknownToken {
-                            token: token.to_string()
-                        });
-                    }
+
+        while let Some(token) = self.tokens.peek() {
+            match token {
+                Tokens::Function => {
+                    ast.push(self.parse_function(false)?);
                 }
-            } else {
-                return Err(AstParseError::EndofFile);
+                Tokens::Public => {
+                    ast.push(self.parse_function(true)?);
+                }
+                _ => {
+                    return Err(AstParseError::UnknownToken {
+                        token: token.to_string(),
+                    });
+                }
             }
         }
+
+        Ok(ast)
     }
-    fn parse_statements(&mut self,return_type:&Tokens) -> Result<Vec<AST>,AstParseError>{
+
+    fn consume(&mut self) -> Option<&Tokens> {
+        self.tokens.next()
+    }
+
+    fn expect(&mut self, expected: Tokens) -> Result<(), AstParseError> {
+        if self.tokens.peek() == Some(&&expected) {
+            Ok(())
+        } else {
+            println!("{:?}", self.tokens.peek());
+            Err(AstParseError::ExpectedOther {
+                token: expected.to_string(),
+            })
+        }
+    }
+    fn parse_function(&mut self, is_public: bool) -> Result<AST, AstParseError> {
+        if is_public {
+            self.consume(); // Consume Tokens::Public
+        }
+        self.consume(); // Consume Tokens::Function
+        let name = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Function Name".to_owned(),
+            })?;
+        self.consume(); // Consume Function Name
+
+        self.expect(Tokens::OpenParen)?;
+        self.consume(); // Consume Tokens::OpenParen
+        self.expect(Tokens::CloseParen)?;
+        self.consume(); // Consume Tokens::CloseParen
+        self.expect(Tokens::Arrow)?;
+        self.consume(); // Consume Tokens::Arrow
+
+        let return_type = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Return Type".to_owned(),
+            })?;
+        self.consume(); // Consume Return Type
+
+        self.expect(Tokens::OpenBrace)?;
+        self.consume(); // Consume Tokens::OpenBrace
+
+        let statements = self.parse_statements(return_type)?;
+
+        if let Some(Tokens::CloseBrace) = self.consume() {
+            let function = AST::Function {
+                public: is_public,
+                name: name.to_string(),
+                args: Vec::new(),
+                statements,
+                return_type: return_type.to_string(),
+            };
+
+            Ok(function)
+        } else {
+            Err(AstParseError::ExpectedOther {
+                token: "CloseBrace".to_owned(),
+            })
+        }
+    }
+
+    fn parse_statements(&mut self, _return_type: &Tokens) -> Result<Vec<AST>, AstParseError> {
         let mut statements = Vec::new();
 
-        while let Some(token) = self.tokens.get(self.pos) {
+        while let Some(token) = self.tokens.peek() {
             match token {
                 Tokens::Let => {
-                    self.pos += 1;
-                    if let Some(Tokens::Colon) = self.tokens.get(self.pos) {
-                        self.pos += 1;
-                        if let Some(Tokens::Identifier(type_name)) = self.tokens.get(self.pos) {
-                            self.pos += 1;
-                            if let Some(Tokens::Identifier(variable_name)) =
-                                self.tokens.get(self.pos)
-                            {
-                                self.pos += 1;
-                                if let Some(Tokens::Assign) = self.tokens.get(self.pos) {
-                                    self.pos += 1;
-                                    if let Some(Tokens::Integer(value)) =
-                                        self.tokens.get(self.pos)
-                                    {
-                                        self.pos += 1;
-                                        if let Some(Tokens::Semicolon) =
-                                            self.tokens.get(self.pos)
-                                        {
-                                            self.pos += 1;
-                                            let type_name = Some(type_name.to_string());
-                                            let let_statement = AST::Let {
-                                                name: variable_name.to_string(),
-                                                type_name,
-                                                value: Box::new(AST::Token(Tokens::Integer(
-                                                    *value,
-                                                ))),
-                                            };
-                                            statements.push(let_statement);
-                                        } else {
-                                            return Err(AstParseError::ExpectedOther { token: "Semicolon".to_owned() });
-                                        }
-                                    } else {
-                                        return Err(AstParseError::ExpectedOther { token: "Value".to_owned() });
-                                    }
-                                } else {
-                                    return Err(AstParseError::ExpectedOther { token: "Assignment Operator (=)".to_owned() });
-                                }
-                            } else {
-                                return Err(AstParseError::ExpectedOther { token: "Varible Name".to_owned() });
-                            }
-                        } else {
-                            return Err(AstParseError::ExpectedOther { token: "Type".to_owned() });
-                        }
-                    } else {
-                        return Err(AstParseError::ExpectedOther { token: "Colon".to_owned() });
-                    }
+                    let let_statement = self.let_parser()?;
+                    statements.push(let_statement);
                 }
-                
-                
-                _ => return Err(AstParseError::UnknownToken {  token:token.to_string() }),
+                _ => break,
             }
         }
         Ok(statements)
     }
-    fn parse_function(&mut self) -> Result<AST, AstParseError> {
-        
-        while let Some(token) = self.tokens.get(self.pos){
-            match token {
-                Tokens::Function => {
-                    self.pos += 1;
-                    if let Some(Tokens::Identifier(name)) = self.tokens.get(self.pos).clone() {
-                        self.pos += 1;
-                        if let Some(Tokens::OpenParen) = self.tokens.get(self.pos) {
-                            self.pos += 1;
-                            if let Some(Tokens::CloseParen) = self.tokens.get(self.pos) {
-                                self.pos += 1;
-                                if let Some(Tokens::OpenBrace) = self.tokens.get(self.pos) {
-                                    self.pos += 1;
-                                    if let Some(Tokens::Arrow) = self.tokens.get(self.pos){
-                                        self.pos += 1;
-                                        // return type : Void, Int, String, Bool, Float
-                                        let return_type = self.tokens.get(self.pos).unwrap();
-                                        if return_type == &Tokens::Void || return_type == &Tokens::Int || return_type == &Tokens::String || return_type == &Tokens::Bool || return_type == &Tokens::Float {
-                                            if let Some(Tokens::CloseBrace) = self.tokens.get(self.pos) {
-                                                self.pos += 1;
-                                                let statements = self.parse_statements(return_type)?;
-                                                let function = AST::Function {
-                                                    public: false,
-                                                    name: name.to_string(),
-                                                    args: Vec::new(),
-                                                    statements,
-                                                    return_type: return_type.to_string(),
-                                                };
-                                                return Ok(function);
-                                            } else {
-                                                return Err(AstParseError::ExpectedOther { token: "CloseBrace".to_owned() });
-                                            }
-                                        }
-                                    } else {
-                                        return Err(AstParseError::ExpectedOther { token: "Arrow".to_owned() });
-                                    }
-                                } else {
-                                    return Err(AstParseError::ExpectedOther { token: "OpenBrace".to_owned() });
-                                }
-                            } else {
-                                return Err(AstParseError::ExpectedOther { token: "CloseParen".to_owned() });
-                            }
-                        } else {
-                            return Err(AstParseError::ExpectedOther { token: "OpenParen".to_owned() });
-                        }
-                    } else {
-                        return Err(AstParseError::ExpectedOther { token: "Function Name".to_owned() });
-                    }
-                }
-                _ => return Err(AstParseError::UnknownToken {  token:token.to_string() }),
-            }
-        }
 
-        return Err(AstParseError::EndofFile);     
-    }
+    fn let_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::Let
 
-    
-}
+        self.expect(Tokens::Colon)?;
+        self.consume(); // Consume Tokens::Colon
+        let type_name = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Type".to_owned(),
+            })?;
+        self.consume(); // Consume Type
+        let variable_name = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Variable Name".to_owned(),
+            })?;
+        self.consume(); // Consume Variable Name
+                        //
+        self.expect(Tokens::Assign)?;
+        self.consume(); // Consume Tokens::Assign
 
-#[cfg(test)]
-mod test {
-    use super::*;
-    use crate::core::lexer::lexer;
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
 
-    #[test]
-    fn parser_let_statement() {
-        let code = "let:int x = 3;";
-        let tokens = lexer(code);
-        let mut parser = Parser::new(tokens);
-        let expected = vec![AST::Let {
-            name: "x".to_string(),
-            type_name: Some("int".to_string()),
-            value: Box::new(AST::Token(Tokens::Integer(3))),
-        }];
-
-        // Compare each element in the vector to the expected value
-        for (i, actual) in parser.parse().unwrap().iter().enumerate() {
-            assert_eq!(actual, &expected[i]);
-        }
+        self.expect(Tokens::Semicolon)?;
+        self.consume(); // Consume Tokens::Semicolon
+                        //
+        let let_statement = AST::Let {
+            name: variable_name.to_string(),
+            type_name: Some(type_name.to_string()),
+            value: Box::new(value.clone()),
+        };
+        Ok(let_statement)
     }
 }

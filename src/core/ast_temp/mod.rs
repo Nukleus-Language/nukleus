@@ -1,5 +1,5 @@
 mod ast;
 mod errors;
 
-pub use errors::AstParseError;
 pub use ast::AST;
+pub use errors::AstParseError;
