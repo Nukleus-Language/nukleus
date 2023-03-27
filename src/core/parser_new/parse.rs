@@ -262,3 +262,84 @@ impl<'a> Parser<'a> {
         Ok(return_statement)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::core::ast_temp::{AST};
+    use crate::core::lexer::Tokens;
+
+    #[test]
+    fn test_parse_function() {
+        let tokens = vec![
+            Tokens::Function,
+            Tokens::Identifier("my_function".to_owned()),
+            Tokens::OpenParen,
+            Tokens::CloseParen,
+            Tokens::Arrow,
+            Tokens::Void,
+            Tokens::OpenBrace,
+            Tokens::CloseBrace,
+
+        ];
+        let mut parser = Parser::new(&tokens);
+        let result = parser.parse().unwrap();
+        assert_eq!(
+            result,
+            vec![AST::Function {
+                public: false,
+                name: "my_function".to_owned(),
+                args: Vec::new(),
+                statements: Vec::new(),
+                return_type: "void".to_owned(),
+            }]
+        );
+    }
+
+    /*#[test] //Not Implemented args yet
+    fn test_parse_function_with_args() {
+        let tokens = vec![
+            Tokens::Function,
+            Tokens::Identifier("my_function".to_owned()),
+            Tokens::OpenParen,
+            Tokens::Identifier("arg1".to_owned()),
+            Tokens::Colon,
+            Tokens::Int,
+            Tokens::Comma,
+            Tokens::Identifier("arg2".to_owned()),
+            Tokens::Colon,
+            Tokens::String,
+            Tokens::CloseParen,
+            Tokens::Arrow,
+            Tokens::Void,
+            Tokens::OpenBrace,
+            Tokens::CloseBrace,
+
+        ];
+        let mut parser = Parser::new(&tokens);
+        let result = parser.parse().unwrap();
+        assert_eq!(
+            result,
+            vec![AST::Function {
+                public: false,
+                name: "my_function".to_owned(),
+                args: vec![
+                    AST::FunctionArg {
+                        name: "arg1".to_owned(),
+                        type_name: "int".to_owned(),
+                    },
+                    AST::FunctionArg {
+                        name: "arg2".to_owned(),
+                        type_name: "string".to_owned(),
+                    },
+                ],
+                statements: Vec::new(),
+                return_type: "void".to_owned(),
+            }]
+        );
+    }*/
+
+    // Add more test functions for other statements here
+
+}
+

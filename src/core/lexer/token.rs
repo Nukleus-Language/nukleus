@@ -130,7 +130,7 @@ impl fmt::Display for Tokens {
             Tokens::Integer(n) => write!(f, "Integer({})", n),
             //Tokens::Float(n) => write!(f, "Float({})", n),
             //Tokens::Decimal(n) => write!(f, "Decimal({})", n),
-            Tokens::Identifier(ref s) => write!(f, "Identifier({})", s),
+            Tokens::Identifier(ref s) => write!(f, "{}", s),
             Tokens::QuotedString(ref s) => write!(f, "QuotedString({})", s),
             _ => write!(f, "{}", self.as_str()),
         }
@@ -151,7 +151,7 @@ mod test {
             Tokens::Semicolon,
         ];
 
-        let expected = "Identifier(let), Identifier(x), =, Integer(3), +, Integer(4), ;";
+        let expected = "let, x, =, Integer(3), +, Integer(4), ;";
         let result: Vec<String> = tokens.iter().map(|t| t.to_string()).collect();
         let result = result.join(", ");
         assert_eq!(expected, result);
