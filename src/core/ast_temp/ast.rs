@@ -24,7 +24,12 @@ pub enum AST {
         type_name: Option<String>,
         value: Tokens,
     },
-
+    For {
+        start: Tokens,
+        end: Tokens,
+        value: Tokens,
+        statements: Vec<AST>,
+    },
     Print {
         value: Tokens,
     },

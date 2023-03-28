@@ -43,7 +43,7 @@ impl<'a> Parser<'a> {
         if self.tokens.peek() == Some(&&expected) {
             Ok(())
         } else {
-            println!("{:?}", self.tokens.peek());
+            //println!("{:?}", self.tokens.peek());
             Err(AstParseError::ExpectedOther {
                 token: expected.to_string(),
             })
@@ -121,7 +121,7 @@ impl<'a> Parser<'a> {
 
     fn parse_statements(&mut self, _return_type: &Tokens) -> Result<Vec<AST>, AstParseError> {
         let mut statements = Vec::new();
-
+        //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
             match token {
                 Tokens::Let => {
@@ -135,6 +135,10 @@ impl<'a> Parser<'a> {
                 Tokens::Println => {
                     let println_statement = self.println_parser()?;
                     statements.push(println_statement);
+                }
+                Tokens::For => {
+                    let for_statement = self.for_parser()?;
+                    statements.push(for_statement);
                 }
                 _ => break,
             }
@@ -241,6 +245,65 @@ impl<'a> Parser<'a> {
         Ok(println_statement)
     }
 
+    fn for_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::For
+
+        self.expect(Tokens::OpenParen)?;
+        self.consume(); // Consume Tokens::OpenParen
+
+        let start_variable = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Variable".to_owned(),
+            })?;
+        self.consume(); // Consume Variable
+
+        self.expect(Tokens::Arrow)?;
+        self.consume(); // Consume Tokens::Arrow
+
+        let end_variable = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Variable".to_owned(),
+            })?;
+        self.consume(); // Consume Variable
+                        
+        self.expect(Tokens::DoubleColon)?;
+        self.consume(); // Consume Tokens::DoubleColon
+
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
+        println!("Value: {:?}", value);
+        self.expect(Tokens::CloseParen)?;
+        self.consume(); // Consume Tokens::CloseParen
+
+        self.expect(Tokens::OpenBrace)?;
+        self.consume(); // Consume Tokens::OpenBrace
+
+        let statements = self.parse_statements(&Tokens::Void)?;
+
+        self.expect(Tokens::CloseBrace)?;
+        self.consume(); // Consume Tokens::CloseBrace
+        let for_statement = AST::For {
+            start: start_variable.clone(),
+            end: end_variable.clone(),
+            value: value.clone(),
+            statements,
+        };
+        Ok(for_statement)
+    }
+
+
     fn return_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Return
 
@@ -273,7 +336,7 @@ mod test {
     fn test_parse_function() {
         let tokens = vec![
             Tokens::Function,
-            Tokens::Identifier("my_function".to_owned()),
+            Tokens::Identifier("main".to_owned()),
             Tokens::OpenParen,
             Tokens::CloseParen,
             Tokens::Arrow,
@@ -287,7 +350,7 @@ mod test {
             result,
             vec![AST::Function {
                 public: false,
-                name: "my_function".to_owned(),
+                name: "main".to_owned(),
                 args: Vec::new(),
                 statements: Vec::new(),
                 return_type: Tokens::Void,

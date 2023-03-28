@@ -1,8 +1,19 @@
-public fn main() -> void
+fn main() -> void
 {
-	let: String a = "Hello World";
+	let:String a = "Hello World";
 	let:int test = 5324;
+	let:int i = 0;
 	print(a);
 	println(test);
+
+	for(i -> 10::1) {
+		println(i);
+	}
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+	
 	return;
 }
+
