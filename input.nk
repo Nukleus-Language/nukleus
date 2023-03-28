@@ -6,8 +6,12 @@ fn main() -> void
 	print(a);
 	println(test);
 
-	for(i -> 10::1) {
-		println(i);
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
 	}
 
 	println("Hello World!?");
