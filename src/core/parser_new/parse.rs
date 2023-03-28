@@ -108,7 +108,7 @@ impl<'a> Parser<'a> {
                 name: name.to_string(),
                 args: Vec::new(),
                 statements,
-                return_type: return_type.to_string(),
+                return_type: return_type.clone(),
             };
 
             Ok(function)
@@ -182,7 +182,7 @@ impl<'a> Parser<'a> {
         let let_statement = AST::Let {
             name: variable_name.to_string(),
             type_name: Some(type_name.to_string()),
-            value: Box::new(value.clone()),
+            value: value.clone(),
         };
         Ok(let_statement)
     }
@@ -209,7 +209,7 @@ impl<'a> Parser<'a> {
         self.consume(); // Consume Tokens::Semicolon
 
         let print_statement = AST::Print {
-            value: Box::new(value.clone()),
+            value: value.clone(),
         };
         Ok(print_statement)
     }
@@ -236,7 +236,7 @@ impl<'a> Parser<'a> {
         self.consume(); // Consume Tokens::Semicolon
 
         let println_statement = AST::Println {
-            value: Box::new(value.clone()),
+            value: value.clone(),
         };
         Ok(println_statement)
     }
@@ -257,7 +257,7 @@ impl<'a> Parser<'a> {
         self.consume(); // Consume Tokens::Semicolon
 
         let return_statement = AST::Return {
-            value: Box::new(value.clone()),
+            value: value.clone(),
         };
         Ok(return_statement)
     }
@@ -266,7 +266,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::core::ast_temp::{AST};
+    use crate::core::ast_temp::AST;
     use crate::core::lexer::Tokens;
 
     #[test]
@@ -280,7 +280,6 @@ mod test {
             Tokens::Void,
             Tokens::OpenBrace,
             Tokens::CloseBrace,
-
         ];
         let mut parser = Parser::new(&tokens);
         let result = parser.parse().unwrap();
@@ -340,6 +339,4 @@ mod test {
     }*/
 
     // Add more test functions for other statements here
-
 }
-

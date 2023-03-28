@@ -14,25 +14,45 @@ pub enum AST {
     Function {
         public: bool,
         name: String,
-        args: Vec<String>,
+        args: Vec<AST>,
         statements: Vec<AST>,
-        return_type: String,
+        return_type: Tokens,
     },
 
     Let {
         name: String,
         type_name: Option<String>,
-        value: Box<Tokens>,
+        value: Tokens,
     },
 
     Print {
-        value: Box<Tokens>,
+        value: Tokens,
     },
     Println {
-        value: Box<Tokens>,
+        value: Tokens,
     },
 
     Return {
-        value: Box<Tokens>,
+        value: Tokens,
     },
+}
+impl AST {
+    pub fn is_function(&self) -> bool {
+        match self {
+            AST::Function { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn function_get_statements(&self) -> Vec<AST> {
+        match self {
+            AST::Function { statements, .. } => statements.clone(),
+            _ => panic!("Not a function"),
+        }
+    }
+    pub fn function_get_name(&self) -> String {
+        match self {
+            AST::Function { name, .. } => name.clone(),
+            _ => panic!("Not a function"),
+        }
+    }
 }
