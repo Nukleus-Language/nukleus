@@ -8,21 +8,17 @@ pub struct Interpreter {
 }
 
 impl Interpreter {
-    pub fn new() -> Self { 
+    pub fn new() -> Self {
         Interpreter {
             variables: HashMap::new(),
         }
     }
 
     pub fn run(&mut self, program: Vec<AST>) {
-        for func in program 
-        {
-            if func.is_function() {
-                if func.function_get_name() == "main" {
-                    self.run_function(func.function_get_statements());
-                }
+        for func in program {
+            if func.is_function() && func.function_get_name() == "main" {
+                self.run_function(func.function_get_statements());
             }
-           
         }
     }
 
@@ -64,4 +60,3 @@ impl Interpreter {
         }
     }
 }
-
