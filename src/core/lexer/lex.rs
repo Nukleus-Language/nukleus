@@ -36,6 +36,8 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
     let mut tokens = Vec::new();
     let mut buffer = String::new();
     let mut arrow_flag = false;
+    let mut equals_flag = false;
+    let mut double_colon_flag = false;
     let mut string_flag = false;
 
     // Iterate through the string by character
@@ -85,14 +87,27 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
 
         // Check if the current character is a Equals
         if c == '=' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
-            buffer.push('>');
+            buffer.push('=');
             tokens.push(Tokens::Equals);
             buffer.clear();
-            arrow_flag = true;
+            equals_flag = true;
             continue;
         }
-        if arrow_flag {
-            arrow_flag = false;
+        if equals_flag {
+            equals_flag = false;
+            continue;
+        }
+
+        // Check if the current character is a DoubleColon
+        if c == ':' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == ':' {
+            buffer.push(':');
+            tokens.push(Tokens::DoubleColon);
+            buffer.clear();
+            double_colon_flag = true;
+            continue;
+        }
+        if double_colon_flag {
+            double_colon_flag = false;
             continue;
         }
 
@@ -102,6 +117,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "let" => Tokens::Let,
                 "fn" => Tokens::Function,
                 "->" => Tokens::Arrow,
+                "::" => Tokens::DoubleColon,
                 "return" => Tokens::Return,
                 "import" => Tokens::Import,
                 "==" => Tokens::Equals,
@@ -153,6 +169,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "let" => Tokens::Let,
                 "fn" => Tokens::Function,
                 "->" => Tokens::Arrow,
+                "::" => Tokens::DoubleColon,
                 "return" => Tokens::Return,
                 "import" => Tokens::Import,
                 "==" => Tokens::Equals,

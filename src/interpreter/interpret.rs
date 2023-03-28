@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 use crate::core::ast_temp::AST;
 use crate::core::lexer::Tokens;
@@ -33,6 +34,15 @@ impl Interpreter {
                 }
                 AST::Println { value } => {
                     println!("{}", self.eval_expr(&value));
+                }
+                AST::For { start, end, value, statements} => {
+                    let start_value = self.eval_expr(&start).parse::<i32>().unwrap();
+                    let end_value = self.eval_expr(&end).parse::<i32>().unwrap();
+
+                    for i in start_value..end_value {
+                        self.variables.insert(start.clone().to_string(), Tokens::Integer(i.try_into().unwrap()));
+                        self.run_function(statements.clone());
+                    }
                 }
                 _ => panic!("Invalid statement"),
             }
