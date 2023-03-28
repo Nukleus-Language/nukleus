@@ -35,12 +35,20 @@ impl Interpreter {
                 AST::Println { value } => {
                     println!("{}", self.eval_expr(&value));
                 }
-                AST::For { start, end, value, statements} => {
+                AST::For {
+                    start,
+                    end,
+                    value,
+                    statements,
+                } => {
                     let start_value = self.eval_expr(&start).parse::<i32>().unwrap();
                     let end_value = self.eval_expr(&end).parse::<i32>().unwrap();
-
-                    for i in start_value..end_value {
-                        self.variables.insert(start.clone().to_string(), Tokens::Integer(i.try_into().unwrap()));
+                    let by_value = self.eval_expr(&value).parse::<usize>().unwrap();
+                    for i in (start_value..end_value).step_by(by_value) {
+                        self.variables.insert(
+                            start.clone().to_string(),
+                            Tokens::Integer(i.try_into().unwrap()),
+                        );
                         self.run_function(statements.clone());
                     }
                 }

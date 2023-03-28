@@ -6,6 +6,25 @@ pub mod interpreter;
 use std::fs::File;
 use std::io::prelude::*;
 
+use clap::{Arg, ArgAction, Command};
+
+
+fn cli() -> Command {
+
+    Command::new("nukleus")
+        .version("0.1.0 Nightly 2023-03")
+        .author("Skuld Norniern. <skuldnorniern@gmail.com>")
+        .about("Nukleus Language")
+        .arg (
+            Arg::new("input")
+                .required(true)
+                .long("input")
+                .short('i')
+                
+        )
+}
+
+
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
     let mut file = File::open(filename)?;
     let mut contents = String::new();
@@ -14,7 +33,10 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 }
 
 fn main() {
-    let contents = read_file("input.nk").unwrap();
+    let matches = cli().get_matches();
+    let input = matches.get_one::<String>("input").unwrap();
+    let contents = read_file(input).unwrap();
+    //let contents = read_file("input.nk").unwrap();
     //let contents = "public fn main() -> void\n{\nlet:int a = 3;}";
     //println!("Input: {}", contents);
 
