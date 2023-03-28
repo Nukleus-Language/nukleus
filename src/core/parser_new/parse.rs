@@ -271,7 +271,7 @@ impl<'a> Parser<'a> {
                 token: "Variable".to_owned(),
             })?;
         self.consume(); // Consume Variable
-                        
+
         self.expect(Tokens::DoubleColon)?;
         self.consume(); // Consume Tokens::DoubleColon
 
@@ -283,7 +283,7 @@ impl<'a> Parser<'a> {
                 token: "Value".to_owned(),
             })?;
         self.consume(); // Consume Value
-        
+
         self.expect(Tokens::CloseParen)?;
         self.consume(); // Consume Tokens::CloseParen
 
@@ -302,7 +302,6 @@ impl<'a> Parser<'a> {
         };
         Ok(for_statement)
     }
-
 
     fn return_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Return

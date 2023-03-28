@@ -21,6 +21,7 @@ cranelift-jit = "0.93.0"
 cranelift-native = "0.93.0"
 cranelift-frontend = "0.93.0"
 snafu = "0.7.4"
+clap = "4.2.0"
 
 #[lib]
 #crate-type = ["cdylib", "rlib"]
