@@ -290,7 +290,7 @@ mod test {
                 name: "my_function".to_owned(),
                 args: Vec::new(),
                 statements: Vec::new(),
-                return_type: "void".to_owned(),
+                return_type: Tokens::Void,
             }]
         );
     }

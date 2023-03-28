@@ -29,5 +29,4 @@ fn main() {
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
     let mut interpreter = interpreter::Interpreter::new();
     interpreter.run(ast.unwrap());
-
 }
