@@ -14,7 +14,11 @@ pub enum Tokens {
     // Strings
     QuotedString(String),
 
+
+
     // Type
+    TypeName(TypeName),
+    TypeValue(TypeValue),
     Void,
     Int,
     String,
@@ -45,6 +49,7 @@ pub enum Tokens {
     Slash,
 
     // Keywords
+    Statement(Statement),
     And,
     Break,
     If,
@@ -64,6 +69,8 @@ pub enum Tokens {
     Let,
     Equals,
     Import,
+
+    Operator(Operator),
     // End of file
     EOF,
 }
@@ -77,6 +84,11 @@ impl Tokens {
             //Tokens::Decimal(_) => "decimal",
             Tokens::Identifier(_) => "identifier",
             Tokens::QuotedString(_) => "string",
+            Tokens::TypeName(_) => "type name",
+            Tokens::TypeValue(_) => "type value",
+            Tokens::Operator(_) => "operator",
+            Tokens::Statement(_) => "statement",
+
             Tokens::Asterisk => "*",
             Tokens::At => "@",
             Tokens::Carat => "^",
@@ -138,6 +150,138 @@ impl fmt::Display for Tokens {
         }
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub enum Operator {
+    Plus,
+    Minus,
+    Asterisk,
+    Slash,
+    Percent,
+    Equals,
+    NotEquals,
+    LessThan,
+    LessThanEquals,
+    GreaterThan,
+    GreaterThanEquals,
+    And,
+    Or,
+    Not,
+}
+impl Operator {
+    /// Returns a string representation of the operator.
+    pub fn as_str(&self) -> &str {
+        match *self {
+            Operator::Plus => "+",
+            Operator::Minus => "-",
+            Operator::Asterisk => "*",
+            Operator::Slash => "/",
+            Operator::Percent => "%",
+            Operator::Equals => "==",
+            Operator::NotEquals => "!=",
+            Operator::LessThan => "<",
+            Operator::LessThanEquals => "<=",
+            Operator::GreaterThan => ">",
+            Operator::GreaterThanEquals => ">=",
+            Operator::And => "&&",
+            Operator::Or => "||",
+            Operator::Not => "!",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub enum Statement {
+    Let,
+    Return,
+    Print,
+    Println,
+    Break,
+    If,
+    Else,
+    ElseIf,
+    For,
+    While,
+    Function,
+    Import,
+}
+impl Statement {
+    /// Returns a string representation of the statement.
+    pub fn as_str(&self) -> &str {
+        match *self {
+            Statement::Let => "let",
+            Statement::Return => "return",
+            Statement::Print => "print",
+            Statement::Println => "println",
+            Statement::Break => "break",
+            Statement::If => "if",
+            Statement::Else => "else",
+            Statement::ElseIf => "else if",
+            Statement::For => "for",
+            Statement::While => "while",
+            Statement::Function => "fn",
+            Statement::Import => "import",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub enum TypeName {
+    Void,
+    I8,
+    I16,
+    I32,
+    I64,
+    U8,
+    U16,
+    U32,
+    U64,
+    String,
+    Bool,
+    Float,
+}
+impl TypeName {
+    /// Returns a string representation of the type.
+    pub fn as_str(&self) -> &str {
+        match *self {
+            TypeName::Void => "void",
+            TypeName::I8 => "i8",
+            TypeName::I16 => "i16",
+            TypeName::I32 => "i32",
+            TypeName::I64 => "i64",
+            TypeName::U8 => "u8",
+            TypeName::U16 => "u16",
+            TypeName::U32 => "u32",
+            TypeName::U64 => "u64",
+            TypeName::String => "string",
+            TypeName::Bool => "bool",
+            TypeName::Float => "float",
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(missing_docs)]
+pub enum TypeValue {
+    I8(i8),
+    I16(i16),
+    I32(i32),
+    I64(i64),
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+    String(String),
+    Bool(bool),
+    //Float(f64),
+}
+
+
+
+
 #[cfg(test)]
 mod test {
     use super::*;

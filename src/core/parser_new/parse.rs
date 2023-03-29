@@ -1,15 +1,15 @@
 use crate::core::ast_temp::{AstParseError, AST};
 use crate::core::lexer::Tokens;
-use std::iter::Peekable;
+use std::iter::{Peekable,Cloned};
 
 pub struct Parser<'a> {
-    tokens: Peekable<std::slice::Iter<'a, Tokens>>,
+    tokens: Peekable<Cloned<std::slice::Iter<'a, Tokens>>>,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: &'a [Tokens]) -> Self {
         Parser {
-            tokens: tokens.iter().peekable(),
+            tokens: tokens.iter().cloned().peekable(),
         }
     }
 
@@ -35,12 +35,12 @@ impl<'a> Parser<'a> {
         Ok(ast)
     }
 
-    fn consume(&mut self) -> Option<&Tokens> {
+    fn consume(&mut self) -> Option<Tokens> {
         self.tokens.next()
     }
 
     fn expect(&mut self, expected: Tokens) -> Result<(), AstParseError> {
-        if self.tokens.peek() == Some(&&expected) {
+        if self.tokens.peek() == Some(&expected) {
             Ok(())
         } else {
             //println!("{:?}", self.tokens.peek());
@@ -82,9 +82,9 @@ impl<'a> Parser<'a> {
         self.expect(Tokens::OpenBrace)?;
         self.consume(); // Consume Tokens::OpenBrace
 
-        let statements = self.parse_statements(return_type)?;
-        let return_value;
-        if return_type != &Tokens::Void {
+        let statements = self.parse_statements(return_type.clone())?;
+        let mut return_value;
+        if return_type != Tokens::Void {
             self.expect(Tokens::Return)?;
             self.consume(); // Consume Tokens::Return
             return_value = self
@@ -97,7 +97,7 @@ impl<'a> Parser<'a> {
             self.consume(); // Consume Value
             self.expect(Tokens::Semicolon)?;
             self.consume(); // Consume Tokens::Semicolon
-        } else if self.tokens.peek() == Some(&&Tokens::Return) {
+        } else if self.tokens.peek() == Some(&Tokens::Return) {
             self.consume(); // Consume Tokens::Return
             self.expect(Tokens::Semicolon)?;
             self.consume(); // Consume Tokens::Semicolon
@@ -119,7 +119,8 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_statements(&mut self, _return_type: &Tokens) -> Result<Vec<AST>, AstParseError> {
+    fn parse_statements(&mut self, return_type: Tokens) -> Result<Vec<AST>, AstParseError> {
+        
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
@@ -139,6 +140,14 @@ impl<'a> Parser<'a> {
                 Tokens::For => {
                     let for_statement = self.for_parser()?;
                     statements.push(for_statement);
+                }
+                Tokens::If => {
+                    let if_statement = self.if_parser()?;
+                    statements.push(if_statement);
+                }
+                Tokens::Identifier(_) => {
+                    let assign_statement = self.assign_parser()?;
+                    statements.push(assign_statement);
                 }
                 _ => break,
             }
@@ -190,6 +199,36 @@ impl<'a> Parser<'a> {
         };
         Ok(let_statement)
     }
+    fn assign_parser(&mut self) -> Result<AST, AstParseError> {
+        let variable_name = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Variable Name".to_owned(),
+            })?;
+        self.consume(); // Consume Variable Name
+
+        self.expect(Tokens::Assign)?;
+        self.consume(); // Consume Tokens::Assign
+
+        let mut value: Vec<Tokens> = Vec::new();
+        while let Some(token) = self.tokens.peek() {
+            if token == &Tokens::Semicolon {
+                break;
+            }
+            value.push(token.clone());
+            self.consume();
+        }
+        self.expect(Tokens::Semicolon)?;
+        self.consume(); // Consume Tokens::Semicolon
+
+        let assign_statement = AST::Assign {
+            name: variable_name.to_string(),
+            value: value,
+        };
+        Ok(assign_statement)
+    }
 
     fn print_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Print
@@ -216,6 +255,36 @@ impl<'a> Parser<'a> {
             value: value.clone(),
         };
         Ok(print_statement)
+    }
+    fn if_parser(&mut self) -> Result<AST, AstParseError> {
+        self.consume(); // Consume Tokens::If
+
+        self.expect(Tokens::OpenParen)?;
+        self.consume(); // Consume Tokens::OpenParen
+
+        let mut condition: Vec<Tokens> = Vec::new();
+        while let Some(token) = self.tokens.peek() {
+            if token == &Tokens::CloseParen {
+                break;
+            }
+            condition.push(token.clone());
+            self.consume();
+        }
+        self.expect(Tokens::CloseParen)?;
+        self.consume(); // Consume Tokens::CloseParen
+
+        self.expect(Tokens::OpenBrace)?;
+        self.consume(); // Consume Tokens::OpenBrace
+        
+        let statements = self.parse_statements(Tokens::Void)?;
+        self.expect(Tokens::CloseBrace)?;
+        self.consume(); // Consume Tokens::CloseBrace
+
+        let if_statement = AST::If {
+            condition,
+            statements,
+        };
+        Ok(if_statement)
     }
 
     fn println_parser(&mut self) -> Result<AST, AstParseError> {
@@ -290,7 +359,7 @@ impl<'a> Parser<'a> {
         self.expect(Tokens::OpenBrace)?;
         self.consume(); // Consume Tokens::OpenBrace
 
-        let statements = self.parse_statements(&Tokens::Void)?;
+        let statements = self.parse_statements(Tokens::Void)?;
 
         self.expect(Tokens::CloseBrace)?;
         self.consume(); // Consume Tokens::CloseBrace
