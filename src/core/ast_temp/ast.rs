@@ -24,6 +24,24 @@ pub enum AST {
         type_name: Option<String>,
         value: Tokens,
     },
+    Assign {
+        name: String,
+        value: Vec<Tokens>,
+    },
+    If {
+        condition: Vec<Tokens>,
+        statements: Vec<AST>,
+        //else_if: Vec<AST>,
+        //else_: Option<Box<AST>>,
+    },
+    ElseIf {
+        condition: Vec<Tokens>,
+        statements: Vec<AST>,
+    },
+    Else {
+        statements: Vec<AST>,
+    },
+
     For {
         start: Tokens,
         end: Tokens,
@@ -36,7 +54,7 @@ pub enum AST {
     Println {
         value: Tokens,
     },
-
+    
     Return {
         value: Tokens,
     },
