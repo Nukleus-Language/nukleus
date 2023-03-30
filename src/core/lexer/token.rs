@@ -30,6 +30,7 @@ pub enum Tokens {
     At,
     Carat,
     Colon,
+    Comma,
     DoubleColon,
     Dot,
     Assign,
@@ -93,6 +94,7 @@ impl Tokens {
             Tokens::At => "@",
             Tokens::Carat => "^",
             Tokens::Colon => ":",
+            Tokens::Comma => ",",
             Tokens::DoubleColon => "::",
             Tokens::Dot => ".",
             Tokens::Assign => "=",
@@ -135,6 +137,12 @@ impl Tokens {
             Tokens::Bool => "bool",
             Tokens::Void => "void",
             Tokens::EOF => "EOF",
+        }
+    }
+    pub fn is_identifier(&self) -> bool {
+        match *self {
+            Tokens::Identifier(_) => true,
+            _ => false,
         }
     }
 }

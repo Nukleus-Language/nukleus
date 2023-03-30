@@ -42,8 +42,7 @@ impl<'a> Parser<'a> {
     fn expect(&mut self, expected: Tokens) -> Result<(), AstParseError> {
         if self.tokens.peek() == Some(&expected) {
             Ok(())
-        } else {
-            //println!("{:?}", self.tokens.peek());
+        }else {
             Err(AstParseError::ExpectedOther {
                 token: expected.to_string(),
             })
@@ -102,21 +101,18 @@ impl<'a> Parser<'a> {
             self.expect(Tokens::Semicolon)?;
             self.consume(); // Consume Tokens::Semicolon
         }
-        if let Some(Tokens::CloseBrace) = self.consume() {
-            let function = AST::Function {
-                public: is_public,
-                name: name.to_string(),
-                args: Vec::new(),
-                statements,
-                return_type: return_type.clone(),
-            };
+        self.expect(Tokens::CloseBrace)?;
+        self.consume(); // Consume Tokens::CloseBrace
 
-            Ok(function)
-        } else {
-            Err(AstParseError::ExpectedOther {
-                token: "CloseBrace".to_owned(),
-            })
-        }
+        let function = AST::Function {
+            public: is_public,
+            name: name.to_string(),
+            args: Vec::new(),
+            statements,
+            return_type: return_type.clone(),
+        };
+
+        Ok(function)
     }
 
     fn parse_statements(&mut self, return_type: Tokens) -> Result<Vec<AST>, AstParseError> {
@@ -124,6 +120,7 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
+            println!("{:?}", token);
             match token {
                 Tokens::Let => {
                     let let_statement = self.let_parser()?;
@@ -168,6 +165,7 @@ impl<'a> Parser<'a> {
                 token: "Type".to_owned(),
             })?;
         self.consume(); // Consume Type
+        
         let variable_name = self
             .tokens
             .peek()
@@ -175,11 +173,20 @@ impl<'a> Parser<'a> {
             .ok_or(AstParseError::ExpectedOther {
                 token: "Variable Name".to_owned(),
             })?;
+        match variable_name.is_identifier(){
+            false => return Err(AstParseError::ExpectedOther {
+                token: "Variable Name".to_owned(),
+            }),
+            true => (),
+        }
+        println!("{:?}", variable_name);
+        
         self.consume(); // Consume Variable Name
                         //
         self.expect(Tokens::Assign)?;
         self.consume(); // Consume Tokens::Assign
 
+        //check if the value is a Identifier
         let value = self
             .tokens
             .peek()

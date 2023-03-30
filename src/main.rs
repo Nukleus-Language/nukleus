@@ -18,8 +18,6 @@ fn cli() -> Command {
         .arg (
             Arg::new("input")
                 .required(true)
-                .long("input")
-                .short('i')
                 
         )
 }
@@ -46,9 +44,18 @@ fn main() {
     //println!("{:?}", ast);
     // Pass contents to the lexer here
     let ast = core::parser_new::parse::Parser::new(&tokens).parse();
-    //println!("AST Tree: {:?}", ast.unwrap());
+    match ast {
+        Ok(ast) => {
+            println!("AST Tree: {:?}", ast);
+            //let mut interpreter = interpreter::Interpreter::new();
+            //interpreter.run(ast);
+        }
+        Err(e) => {
+            println!("Error: {}", e);
+        }
+    }
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
-    let mut interpreter = interpreter::Interpreter::new();
-    interpreter.run(ast.unwrap());
+    //let mut interpreter = interpreter::Interpreter::new();
+    //interpreter.run(ast.unwrap());
 }
