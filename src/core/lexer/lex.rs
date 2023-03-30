@@ -1,4 +1,6 @@
-use super::token::Tokens;
+use super::Tokens;
+use super::Operator;
+use super::LexerError;
 
 // Struct to hold the lexer state
 struct Lexer {
@@ -38,6 +40,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
     let mut arrow_flag = false;
     let mut equals_flag = false;
     let mut double_colon_flag = false;
+    let mut not_equals_flag = false;
     let mut string_flag = false;
 
     // Iterate through the string by character
@@ -111,6 +114,19 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
             continue;
         }
 
+        // Check if the current character is a NotEquals
+        if c == '!' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+            buffer.push('=');
+            //tokens.push(Token_test::Operator::NotEquals);
+            buffer.clear();
+            not_equals_flag = true;
+            continue;
+        }
+        if not_equals_flag {
+            not_equals_flag = false;
+            continue;
+        }
+
         // If the buffer is not empty, check if it contains a keyword or identifier
         if !buffer.is_empty() {
             let token = match buffer.as_str() {
@@ -131,7 +147,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "void" => Tokens::Void,
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Tokens::Identifier(buffer.to_string()),
+                _ => Tokens::Identifier(Identifier_parser(buffer.clone()).unwrap()),
             };
             tokens.push(token);
             buffer.clear();
@@ -158,6 +174,8 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
             '%' => Tokens::Percent,
             ';' => Tokens::Semicolon,
             '/' => Tokens::Slash,
+            ',' => Tokens::Comma,
+            '!' => Tokens::Operator(Operator::Not),
 
             ' ' | '\n' | '\t' | '\u{20}' | '\r' => continue,
             _ => panic!("Unexpected character: {}", c),
@@ -183,7 +201,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "void" => Tokens::Void,
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Tokens::Identifier(buffer.to_string()),
+                _ => Tokens::Identifier(Identifier_parser(buffer.clone()).unwrap()),
             };
             tokens.push(token);
         }
@@ -191,6 +209,18 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
 
     tokens
 }
+// a Identifier cannot start with a number and can only contain letters, numbers and underscores
+fn Identifier_parser(buffer: String) -> Result<String, LexerError> {
+    
+    if buffer.chars().nth(0).unwrap().is_numeric() {
+        return Err(LexerError::InvalidIdentifierNum);
+    }
+    if buffer.chars().any(|c| !c.is_alphanumeric() && c != '_') {
+        return Err(LexerError::InvalidIdentifierChar);
+    }
+    Ok(buffer)
+}
+
 
 #[cfg(test)]
 mod test {
