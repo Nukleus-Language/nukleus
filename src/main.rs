@@ -6,22 +6,15 @@ pub mod interpreter;
 use std::fs::File;
 use std::io::prelude::*;
 
-use clap::{Arg, ArgAction, Command};
-
+use clap::{Arg, Command};
 
 fn cli() -> Command {
-
     Command::new("nukleus")
         .version("0.1.0 Nightly 2023-03")
         .author("Skuld Norniern. <skuldnorniern@gmail.com>")
         .about("Nukleus Language")
-        .arg (
-            Arg::new("input")
-                .required(true)
-                
-        )
+        .arg(Arg::new("input").required(true))
 }
-
 
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
     let mut file = File::open(filename)?;
@@ -44,18 +37,18 @@ fn main() {
     //println!("{:?}", ast);
     // Pass contents to the lexer here
     let ast = core::parser_new::parse::Parser::new(&tokens).parse();
-    match ast {
+    /*match ast.clone() {
         Ok(ast) => {
-            println!("AST Tree: {:?}", ast);
+            println!("AST Tree: {:?}", ast;
             //let mut interpreter = interpreter::Interpreter::new();
             //interpreter.run(ast);
         }
         Err(e) => {
             println!("Error: {}", e);
         }
-    }
+    }*/
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
-    //let mut interpreter = interpreter::Interpreter::new();
-    //interpreter.run(ast.unwrap());
+    let mut interpreter = interpreter::Interpreter::new();
+    interpreter.run(ast.unwrap());
 }

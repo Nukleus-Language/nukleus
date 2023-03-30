@@ -17,6 +17,7 @@ pub enum AST {
         args: Vec<AST>,
         statements: Vec<AST>,
         return_type: Tokens,
+        return_value: Tokens,
     },
 
     Let {
@@ -54,7 +55,7 @@ pub enum AST {
     Println {
         value: Tokens,
     },
-    
+
     Return {
         value: Tokens,
     },

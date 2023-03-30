@@ -13,7 +13,11 @@ fn main() -> void
 		}
 		println(" ");
 	}
-
+	let:int a = 0;
+	a = i;
+	if (a != 1 ){
+		println("LOL");
+	}
 	println("Hello World!?");
 	print("LOLOLOL");
 	println(i);
@@ -21,3 +25,7 @@ fn main() -> void
 	return;
 }
 
+fn print_hello() -> void
+{
+	println("Hello My Friend!");
+}

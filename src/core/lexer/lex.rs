@@ -1,6 +1,6 @@
-use super::Tokens;
-use super::Operator;
 use super::LexerError;
+use super::Operator;
+use super::Tokens;
 
 // Struct to hold the lexer state
 struct Lexer {
@@ -117,7 +117,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
         // Check if the current character is a NotEquals
         if c == '!' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
             buffer.push('=');
-            //tokens.push(Token_test::Operator::NotEquals);
+            tokens.push(Tokens::Operator(Operator::NotEquals));
             buffer.clear();
             not_equals_flag = true;
             continue;
@@ -137,6 +137,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "return" => Tokens::Return,
                 "import" => Tokens::Import,
                 "==" => Tokens::Equals,
+                "!=" => Tokens::Operator(Operator::NotEquals),
                 "public" => Tokens::Public,
                 "if" => Tokens::If,
                 "else" => Tokens::Else,
@@ -191,6 +192,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
                 "return" => Tokens::Return,
                 "import" => Tokens::Import,
                 "==" => Tokens::Equals,
+                "!=" => Tokens::Operator(Operator::NotEquals),
                 "public" => Tokens::Public,
                 "print" => Tokens::Print,
                 "println" => Tokens::Println,
@@ -211,8 +213,7 @@ pub fn lexer(code: &str) -> Vec<Tokens> {
 }
 // a Identifier cannot start with a number and can only contain letters, numbers and underscores
 fn Identifier_parser(buffer: String) -> Result<String, LexerError> {
-    
-    if buffer.chars().nth(0).unwrap().is_numeric() {
+    if buffer.chars().next().unwrap().is_numeric() {
         return Err(LexerError::InvalidIdentifierNum);
     }
     if buffer.chars().any(|c| !c.is_alphanumeric() && c != '_') {
@@ -220,7 +221,6 @@ fn Identifier_parser(buffer: String) -> Result<String, LexerError> {
     }
     Ok(buffer)
 }
-
 
 #[cfg(test)]
 mod test {
