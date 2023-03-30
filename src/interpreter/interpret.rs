@@ -4,7 +4,6 @@ use std::convert::TryInto;
 use crate::core::ast_temp::AST;
 use crate::core::lexer::Tokens;
 
-
 pub struct Interpreter {
     variables: HashMap<String, Tokens>,
 }
@@ -17,10 +16,15 @@ impl Interpreter {
     }
 
     pub fn run(&mut self, program: Vec<AST>) {
+        let mut is_main = false;
         for func in program {
             if func.is_function() && func.function_get_name() == "main" {
                 self.run_function(func.function_get_statements());
+                is_main = true;
             }
+        }
+        if !is_main {
+            panic!("No main function found");
         }
     }
 
@@ -52,6 +56,17 @@ impl Interpreter {
                         );
                         self.run_function(statements.clone());
                     }
+                }
+                AST::If {
+                    condition,
+                    statements,
+                } => {
+                    println!("Condition: {:?}", condition);
+                    println!("Statements: {:?}", statements);
+                    println!("Not implemented yet");
+                }
+                AST::Assign { name: _, value: _ } => {
+                    println!("Not implemented yet");
                 }
                 _ => panic!("Invalid statement"),
             }

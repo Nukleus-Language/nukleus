@@ -14,8 +14,6 @@ pub enum Tokens {
     // Strings
     QuotedString(String),
 
-
-
     // Type
     TypeName(TypeName),
     TypeValue(TypeValue),
@@ -274,6 +272,7 @@ impl TypeName {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum TypeValue {
+    None,
     I8(i8),
     I16(i16),
     I32(i32),
@@ -286,9 +285,6 @@ pub enum TypeValue {
     Bool(bool),
     //Float(f64),
 }
-
-
-
 
 #[cfg(test)]
 mod test {
