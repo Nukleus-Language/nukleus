@@ -93,4 +93,6 @@ impl Interpreter {
             _ => panic!("Invalid expression"),
         }
     }
+    // can evaluate conditions like i <10 && i > j
+    fn eval_cond(&self, cond: Vec<Tokens>) -> bool {}
 }
