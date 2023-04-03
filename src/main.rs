@@ -18,7 +18,15 @@ fn cli() -> Command {
 }
 
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
-    let mut file = File::open(filename)?;
+    // Get the file
+    let file_path = std::path::Path::new(filename);
+
+    let file_extension = file_path.extension().unwrap().to_str().unwrap();
+    if file_extension != "nk" {
+        panic!("Provided file is not a .nk file");
+    }
+    let mut file = File::open(file_path)?;
+
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     Ok(contents)
@@ -33,12 +41,12 @@ fn main() {
     //println!("Input: {}", contents);
 
     let tokens = lexer(&contents);
-    println!("Tokens: {:?}", tokens);
+    //println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here
     let ast = core::parser_new::parse::Parser::new(&tokens).parse();
-    println!("{:?}", ast);
+    //println!("{:?}", ast);
     /*match ast.clone() {
         Ok(ast) => {
             println!("AST Tree: {:?}", ast;
@@ -51,6 +59,6 @@ fn main() {
     }*/
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
-    //let mut interpreter = interpreter::Interpreter::new();
-    //interpreter.run(ast.unwrap());
+    let mut interpreter = interpreter::Interpreter::new();
+    interpreter.run(ast.unwrap());
 }

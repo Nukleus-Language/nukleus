@@ -19,11 +19,13 @@ snafu = "0.7.4"
 clap = "4.2.0"
 
 lexer = { path = "./lexer" }
+parser = { path = "./parser" }
 #[lib]
 #crate-type = ["cdylib", "rlib"]
 
 [workspace]
 members = [
 	"lexer",
+	"parser"
 ]
 
