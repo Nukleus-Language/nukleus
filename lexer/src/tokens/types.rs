@@ -35,6 +35,11 @@ impl TypeName {
         }
     }
 }
+impl fmt::Display for TypeName {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_str())
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]

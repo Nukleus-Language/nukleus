@@ -1,13 +1,16 @@
 use crate::core::ast_temp::{AstParseError, AST};
-use crate::core::lexer::{Tokens, Operator, Assigns, TypeName, TypeValue};
+use lexer::{Token, Operator, Assign, TypeName, Statement, Logical, Symbol};
+
+//use lexer::Lexer;
+
 use std::iter::{Cloned, Peekable};
 
 pub struct Parser<'a> {
-    tokens: Peekable<Cloned<std::slice::Iter<'a, Tokens>>>,
+    tokens: Peekable<Cloned<std::slice::Iter<'a, Token>>>,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(tokens: &'a [Tokens]) -> Self {
+    pub fn new(tokens: &'a [Token]) -> Self {
         Parser {
             tokens: tokens.iter().cloned().peekable(),
         }
@@ -18,10 +21,10 @@ impl<'a> Parser<'a> {
 
         while let Some(token) = self.tokens.peek() {
             match token {
-                Tokens::Function => {
+                Token::Statement(Statement::Function) => {
                     ast.push(self.parse_function(false)?);
                 }
-                Tokens::Public => {
+                Token::Statement(Statement::Public) => {
                     ast.push(self.parse_function(true)?);
                 }
                 _ => {
@@ -35,11 +38,11 @@ impl<'a> Parser<'a> {
         Ok(ast)
     }
 
-    fn consume(&mut self) -> Option<Tokens> {
+    fn consume(&mut self) -> Option<Token> {
         self.tokens.next()
     }
 
-    fn expect(&mut self, expected: Tokens) -> Result<(), AstParseError> {
+    fn expect(&mut self, expected: Token) -> Result<(), AstParseError> {
         if self.tokens.peek() == Some(&expected) {
             Ok(())
         } else {
@@ -70,12 +73,12 @@ impl<'a> Parser<'a> {
         }
         self.consume(); // Consume Function Name
 
-        self.expect(Tokens::OpenParen)?;
-        self.consume(); // Consume Tokens::OpenParen
-        self.expect(Tokens::CloseParen)?;
-        self.consume(); // Consume Tokens::CloseParen
-        self.expect(Tokens::Arrow)?;
-        self.consume(); // Consume Tokens::Arrow
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
+        self.consume(); // Consume OpenParen
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
+        self.consume(); // Consume CloseParen
+        self.expect(Token::Symbol(Symbol::Arrow))?;
+        self.consume(); // Consume Arrow
 
         let return_type = self
             .tokens
@@ -86,14 +89,14 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Return Type
 
-        self.expect(Tokens::OpenBrace)?;
-        self.consume(); // Consume Tokens::OpenBrace
+        self.expect(Token::Symbol(Symbol::OpenBrace))?;
+        self.consume(); // Consume OpenBrace
 
         let statements = self.parse_statements(return_type.clone())?;
-        let mut return_value = Tokens::TypeValue(TypeValue::None);
-        if return_type != Tokens::TypeName(TypeName::Void) {
-            self.expect(Tokens::Return)?;
-            self.consume(); // Consume Tokens::Return
+        let mut return_value = Token::None;
+        if return_type != Token::TypeName(TypeName::Void) {
+            self.expect(Token::Statement(Statement::Return))?;
+            self.consume(); // Consume Return
 
             return_value = self
                 .tokens
@@ -103,14 +106,14 @@ impl<'a> Parser<'a> {
                     token: "Return Value".to_owned(),
                 })?;
             self.consume(); // Consume Value
-            self.expect(Tokens::Semicolon)?;
-            self.consume(); // Consume Tokens::Semicolon
-        } else if self.tokens.peek() == Some(&Tokens::Return) {
-            self.consume(); // Consume Tokens::Return
-            self.expect(Tokens::Semicolon)?;
-            self.consume(); // Consume Tokens::Semicolon
+            self.expect(Token::Symbol(Symbol::Semicolon))?;
+            self.consume(); // Consume Semicolon
+        } else if self.tokens.peek() == Some(&Token::Statement(Statement::Return)) {
+            self.consume(); // Consume Return
+            self.expect(Token::Symbol(Symbol::Semicolon))?;
+            self.consume(); // Consume Semicolon
         }
-        self.expect(Tokens::CloseBrace)?;
+        self.expect(Token::Symbol(Symbol::CloseBrace))?;
         self.consume(); // Consume Tokens::CloseBrace
 
         let function = AST::Function {
@@ -125,32 +128,32 @@ impl<'a> Parser<'a> {
         Ok(function)
     }
 
-    fn parse_statements(&mut self, _return_type: Tokens) -> Result<Vec<AST>, AstParseError> {
+    fn parse_statements(&mut self, _return_type: Token) -> Result<Vec<AST>, AstParseError> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
             match token {
-                Tokens::Let => {
+                Token::Statement(Statement::Let) => {
                     let let_statement = self.let_parser()?;
                     statements.push(let_statement);
                 }
-                Tokens::Print => {
+                Token::Statement(Statement::Print) => {
                     let print_statement = self.print_parser()?;
                     statements.push(print_statement);
                 }
-                Tokens::Println => {
+                Token::Statement(Statement::Println) => {
                     let println_statement = self.println_parser()?;
                     statements.push(println_statement);
                 }
-                Tokens::For => {
+                Token::Statement(Statement::For) => {
                     let for_statement = self.for_parser()?;
                     statements.push(for_statement);
                 }
-                Tokens::If => {
+                Token::Statement(Statement::If) => {
                     let if_statement = self.if_parser()?;
                     statements.push(if_statement);
                 }
-                Tokens::Identifier(_) => {
+                Token::Identifier(_) => {
                     let assign_statement = self.assign_parser()?;
                     statements.push(assign_statement);
                 }
@@ -161,10 +164,10 @@ impl<'a> Parser<'a> {
     }
 
     fn let_parser(&mut self) -> Result<AST, AstParseError> {
-        self.consume(); // Consume Tokens::Let
+        self.consume(); // Consume Let
 
-        self.expect(Tokens::Colon)?;
-        self.consume(); // Consume Tokens::Colon
+        self.expect(Token::Symbol(Symbol::Colon))?;
+        self.consume(); // Consume Colon
         let type_name = self
             .tokens
             .peek()
@@ -191,7 +194,7 @@ impl<'a> Parser<'a> {
         }
         self.consume(); // Consume Variable Name
                         //
-        self.expect(Tokens::Assigns(Assigns::Assign))?;
+        self.expect(Token::Assign(Assign::Assign))?;
         self.consume(); // Consume Tokens::Assign
 
         //check if the value is a Identifier
@@ -204,7 +207,7 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Value
 
-        self.expect(Tokens::Semicolon)?;
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
         self.consume(); // Consume Tokens::Semicolon
                         //
         let let_statement = AST::Let {
@@ -224,19 +227,19 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Variable Name
 
-        self.expect(Tokens::Assigns(Assigns::Assign))?;
-        self.consume(); // Consume Tokens::Assign
+        self.expect(Token::Assign(Assign::Assign))?;
+        self.consume(); // Consume Assign
 
-        let mut value: Vec<Tokens> = Vec::new();
+        let mut value: Vec<Token> = Vec::new();
         while let Some(token) = self.tokens.peek() {
-            if token == &Tokens::Semicolon {
+            if token == &Token::Symbol(Symbol::Semicolon) {
                 break;
             }
             value.push(token.clone());
             self.consume();
         }
-        self.expect(Tokens::Semicolon)?;
-        self.consume(); // Consume Tokens::Semicolon
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
+        self.consume(); // Consume Semicolon
 
         let assign_statement = AST::Assign {
             name: variable_name.to_string(),
@@ -248,7 +251,7 @@ impl<'a> Parser<'a> {
     fn print_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Print
 
-        self.expect(Tokens::OpenParen)?;
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume Tokens::OpenParen
 
         let value = self
@@ -260,11 +263,11 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Value
 
-        self.expect(Tokens::CloseParen)?;
-        self.consume(); // Consume Tokens::CloseParen
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
+        self.consume(); // Consume CloseParen
 
-        self.expect(Tokens::Semicolon)?;
-        self.consume(); // Consume Tokens::Semicolon
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
+        self.consume(); // Consume Semicolon
 
         let print_statement = AST::Print { value };
         Ok(print_statement)
@@ -272,26 +275,26 @@ impl<'a> Parser<'a> {
     fn if_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::If
 
-        self.expect(Tokens::OpenParen)?;
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume Tokens::OpenParen
 
-        let mut condition: Vec<Tokens> = Vec::new();
+        let mut condition: Vec<Token> = Vec::new();
         while let Some(token) = self.tokens.peek() {
-            if token == &Tokens::CloseParen {
+            if token == &Token::Symbol(Symbol::CloseParen) {
                 break;
             }
             condition.push(token.clone());
             self.consume();
         }
-        self.expect(Tokens::CloseParen)?;
-        self.consume(); // Consume Tokens::CloseParen
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
+        self.consume(); // Consume CloseParen
 
-        self.expect(Tokens::OpenBrace)?;
-        self.consume(); // Consume Tokens::OpenBrace
+        self.expect(Token::Symbol(Symbol::OpenBrace))?;
+        self.consume(); // Consume OpenBrace
 
-        let statements = self.parse_statements(Tokens::Void)?;
-        self.expect(Tokens::CloseBrace)?;
-        self.consume(); // Consume Tokens::CloseBrace
+        let statements = self.parse_statements(Token::TypeName(TypeName::Void))?;
+        self.expect(Token::Symbol(Symbol::CloseBrace))?;
+        self.consume(); // Consume CloseBrace
 
         let if_statement = AST::If {
             condition,
@@ -303,7 +306,7 @@ impl<'a> Parser<'a> {
     fn println_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Println
 
-        self.expect(Tokens::OpenParen)?;
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume Tokens::OpenParen
 
         let value = self
@@ -315,10 +318,10 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Value
 
-        self.expect(Tokens::CloseParen)?;
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
         self.consume(); // Consume Tokens::CloseParen
 
-        self.expect(Tokens::Semicolon)?;
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
         self.consume(); // Consume Tokens::Semicolon
 
         let println_statement = AST::Println { value };
@@ -328,7 +331,7 @@ impl<'a> Parser<'a> {
     fn for_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::For
 
-        self.expect(Tokens::OpenParen)?;
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume Tokens::OpenParen
 
         let start_variable = self
@@ -340,7 +343,7 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Variable
 
-        self.expect(Tokens::Arrow)?;
+        self.expect(Token::Symbol(Symbol::Arrow))?;
         self.consume(); // Consume Tokens::Arrow
 
         let end_variable = self
@@ -352,7 +355,7 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Variable
 
-        self.expect(Tokens::DoubleColon)?;
+        self.expect(Token::Symbol(Symbol::DoubleColon))?;
         self.consume(); // Consume Tokens::DoubleColon
 
         let value = self
@@ -364,15 +367,15 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Value
 
-        self.expect(Tokens::CloseParen)?;
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
         self.consume(); // Consume Tokens::CloseParen
 
-        self.expect(Tokens::OpenBrace)?;
+        self.expect(Token::Symbol(Symbol::OpenBrace))?;
         self.consume(); // Consume Tokens::OpenBrace
 
-        let statements = self.parse_statements(Tokens::Void)?;
+        let statements = self.parse_statements(Token::TypeName(TypeName::Void))?;
 
-        self.expect(Tokens::CloseBrace)?;
+        self.expect(Token::Symbol(Symbol::CloseBrace))?;
         self.consume(); // Consume Tokens::CloseBrace
         let for_statement = AST::For {
             start: start_variable,
@@ -395,8 +398,8 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Value
 
-        self.expect(Tokens::Semicolon)?;
-        self.consume(); // Consume Tokens::Semicolon
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
+        self.consume(); // Consume Semicolon
 
         let return_statement = AST::Return { value };
         Ok(return_statement)
@@ -407,19 +410,19 @@ impl<'a> Parser<'a> {
 mod test {
     use super::*;
     use crate::core::ast_temp::AST;
-    use crate::core::lexer::{Tokens, TypeValue, TypeName};
+    use lexer::*;
 
     #[test]
     fn test_parse_function() {
         let tokens = vec![
-            Tokens::Function,
-            Tokens::Identifier("main".to_owned()),
-            Tokens::OpenParen,
-            Tokens::CloseParen,
-            Tokens::Arrow,
-            Tokens::Void,
-            Tokens::OpenBrace,
-            Tokens::CloseBrace,
+            Token::Statement(Statement::Function),
+            Token::Identifier("main".to_owned()),
+            Token::Symbol(Symbol::OpenParen),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Arrow),
+            Token::TypeName(TypeName::Void),
+            Token::Symbol(Symbol::OpenBrace),
+            Token::Symbol(Symbol::CloseBrace),
         ];
         let mut parser = Parser::new(&tokens);
         let result = parser.parse().unwrap();
@@ -430,8 +433,8 @@ mod test {
                 name: "main".to_owned(),
                 args: Vec::new(),
                 statements: Vec::new(),
-                return_type: Tokens::TypeName(TypeName::Void),
-                return_value: Tokens::TypeValue(TypeValue::None),
+                return_type: Token::TypeName(TypeName::Void),
+                return_value: Token::None,
             }]
         );
     }
