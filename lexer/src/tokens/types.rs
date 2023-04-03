@@ -12,7 +12,7 @@ pub enum TypeName {
     U16,
     U32,
     U64,
-    QuoatedString,
+    QuotedString,
     Bool,
     Float,
 }
@@ -29,7 +29,7 @@ impl TypeName {
             TypeName::U16 => "u16",
             TypeName::U32 => "u32",
             TypeName::U64 => "u64",
-            TypeName::QuoatedString => "string",
+            TypeName::QuotedString => "string",
             TypeName::Bool => "bool",
             TypeName::Float => "float",
         }
