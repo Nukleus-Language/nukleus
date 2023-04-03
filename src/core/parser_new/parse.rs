@@ -1,5 +1,5 @@
 use crate::core::ast_temp::{AstParseError, AST};
-use crate::core::lexer::{Tokens, TypeValue};
+use crate::core::lexer::{Tokens, Operator, Assigns, TypeName, TypeValue};
 use std::iter::{Cloned, Peekable};
 
 pub struct Parser<'a> {
@@ -91,7 +91,7 @@ impl<'a> Parser<'a> {
 
         let statements = self.parse_statements(return_type.clone())?;
         let mut return_value = Tokens::TypeValue(TypeValue::None);
-        if return_type != Tokens::Void {
+        if return_type != Tokens::TypeName(TypeName::Void) {
             self.expect(Tokens::Return)?;
             self.consume(); // Consume Tokens::Return
 
@@ -191,7 +191,7 @@ impl<'a> Parser<'a> {
         }
         self.consume(); // Consume Variable Name
                         //
-        self.expect(Tokens::Assign)?;
+        self.expect(Tokens::Assigns(Assigns::Assign))?;
         self.consume(); // Consume Tokens::Assign
 
         //check if the value is a Identifier
@@ -224,7 +224,7 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Variable Name
 
-        self.expect(Tokens::Assign)?;
+        self.expect(Tokens::Assigns(Assigns::Assign))?;
         self.consume(); // Consume Tokens::Assign
 
         let mut value: Vec<Tokens> = Vec::new();
@@ -407,7 +407,7 @@ impl<'a> Parser<'a> {
 mod test {
     use super::*;
     use crate::core::ast_temp::AST;
-    use crate::core::lexer::Tokens;
+    use crate::core::lexer::{Tokens, TypeValue, TypeName};
 
     #[test]
     fn test_parse_function() {
@@ -430,7 +430,8 @@ mod test {
                 name: "main".to_owned(),
                 args: Vec::new(),
                 statements: Vec::new(),
-                return_type: Tokens::Void,
+                return_type: Tokens::TypeName(TypeName::Void),
+                return_value: Tokens::TypeValue(TypeValue::None),
             }]
         );
     }

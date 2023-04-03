@@ -1,5 +1,7 @@
 use std::fmt;
 
+use super::operator::{Operator, Logical, Assigns};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum Tokens {
@@ -57,8 +59,6 @@ pub enum Tokens {
     False,
     Function,
     Public,
-    Not,
-    Or,
     For,
     While,
     Print,
@@ -69,7 +69,11 @@ pub enum Tokens {
     Equals,
     Import,
 
+    // Operators
     Operator(Operator),
+    Logical(Logical),
+    Assigns(Assigns),
+    
     // End of file
     EOF,
 }
@@ -85,7 +89,11 @@ impl Tokens {
             Tokens::QuotedString(_) => "string",
             Tokens::TypeName(_) => "type name",
             Tokens::TypeValue(_) => "type value",
-            Tokens::Operator(_) => "operator",
+            //Tokens::Operator(_) => self.display(),
+            // Need to show only the Operator, not the whole enum
+            Tokens::Operator(_) => 
+            Tokens::Logical(_) => "logical",
+            Tokens::Assigns(_) =>   "assigns",
             Tokens::Statement(_) => "statement",
 
             Tokens::Asterisk => "*",
@@ -120,8 +128,6 @@ impl Tokens {
             Tokens::Print => "print",
             Tokens::Println => "println",
             Tokens::Public => "public",
-            Tokens::Not => "not",
-            Tokens::Or => "or",
             Tokens::For => "for",
             Tokens::While => "while",
             Tokens::Return => "return",
@@ -143,6 +149,25 @@ impl Tokens {
             _ => false,
         }
     }
+    pub fn operator_precedence(&self) -> i32 {
+        match self {
+            //Tokens::Multiply | Tokens::Divide | Tokens::Modulus => 3,
+            Tokens::Operator(Operator::Add) | Tokens::Operator(Operator::Subtract) => 4,
+            //Tokens::LeftShift | Tokens::RightShift => 5,
+            //Tokens::LessThan | Tokens::LessThanOrEqual | Tokens::GreaterThan | Tokens::GreaterThanOrEqual => 6,
+            Tokens::Logical(Logical::Equals) | Tokens::Logical(Logical::NotEquals) => 7,
+            //Tokens::BitwiseAnd => 8,
+            //Tokens::BitwiseXor => 9,
+            //Tokens::BitwiseOr => 10,
+            Tokens::Logical(Logical::And) => 13,
+            Tokens::Logical(Logical::Or) => 14,
+            //Tokens::Assign | Tokens::AddAssign | Tokens::SubAssign | Tokens::MulAssign | Tokens::DivAssign | Tokens::ModAssign | Tokens::LeftShiftAssign | Tokens::RightShiftAssign | Tokens::AndAssign | Tokens::XorAssign | Tokens::OrAssign => 16,
+            Tokens::Comma => 18,
+            Tokens::OpenParen | Tokens::CloseParen => 0,
+            _ => -1,
+        }
+    }
+
 }
 impl fmt::Display for Tokens {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -157,6 +182,7 @@ impl fmt::Display for Tokens {
     }
 }
 
+/*
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
 pub enum Operator {
@@ -195,113 +221,25 @@ impl Operator {
             Operator::Not => "!",
         }
     }
-}
+}*/
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(missing_docs)]
-pub enum Statement {
-    Let,
-    Return,
-    Print,
-    Println,
-    Break,
-    If,
-    Else,
-    ElseIf,
-    For,
-    While,
-    Function,
-    Import,
-}
-impl Statement {
-    /// Returns a string representation of the statement.
-    pub fn as_str(&self) -> &str {
-        match *self {
-            Statement::Let => "let",
-            Statement::Return => "return",
-            Statement::Print => "print",
-            Statement::Println => "println",
-            Statement::Break => "break",
-            Statement::If => "if",
-            Statement::Else => "else",
-            Statement::ElseIf => "else if",
-            Statement::For => "for",
-            Statement::While => "while",
-            Statement::Function => "fn",
-            Statement::Import => "import",
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(missing_docs)]
-pub enum TypeName {
-    Void,
-    I8,
-    I16,
-    I32,
-    I64,
-    U8,
-    U16,
-    U32,
-    U64,
-    String,
-    Bool,
-    Float,
-}
-impl TypeName {
-    /// Returns a string representation of the type.
-    pub fn as_str(&self) -> &str {
-        match *self {
-            TypeName::Void => "void",
-            TypeName::I8 => "i8",
-            TypeName::I16 => "i16",
-            TypeName::I32 => "i32",
-            TypeName::I64 => "i64",
-            TypeName::U8 => "u8",
-            TypeName::U16 => "u16",
-            TypeName::U32 => "u32",
-            TypeName::U64 => "u64",
-            TypeName::String => "string",
-            TypeName::Bool => "bool",
-            TypeName::Float => "float",
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(missing_docs)]
-pub enum TypeValue {
-    None,
-    I8(i8),
-    I16(i16),
-    I32(i32),
-    I64(i64),
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-    String(String),
-    Bool(bool),
-    //Float(f64),
-}
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    use crate::core::lexer::{Tokens,Operator,Logical,Assigns};
     #[test]
     fn token_display() {
         let tokens = vec![
             Tokens::Identifier("let".to_string()),
             Tokens::Identifier("x".to_string()),
-            Tokens::Assign,
+            Tokens::Assigns(Assigns::Assign),
             Tokens::Integer(3),
-            Tokens::Plus,
+            Tokens::Operator(Operator::Add),
             Tokens::Integer(4),
             Tokens::Semicolon,
         ];
 
-        let expected = "let, x, =, Integer(3), +, Integer(4), ;";
+        let expected = "let, x, Assigns(Assign), Integer(3), Operator(Add), Integer(4), ;";
         let result: Vec<String> = tokens.iter().map(|t| t.to_string()).collect();
         let result = result.join(", ");
         assert_eq!(expected, result);
