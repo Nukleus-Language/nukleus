@@ -50,10 +50,8 @@ impl Interpreter {
                     let end_value = self.eval_expr(&end).parse::<i32>().unwrap();
                     let by_value = self.eval_expr(&value).parse::<usize>().unwrap();
                     for i in (start_value..end_value).step_by(by_value) {
-                        self.variables.insert(
-                            start.clone().to_string(),
-                            Token::I32(i.try_into().unwrap()),
-                        );
+                        self.variables
+                            .insert(start.clone().to_string(), Token::I32(i.try_into().unwrap()));
                         self.run_function(statements.clone());
                     }
                 }

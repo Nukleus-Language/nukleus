@@ -6,7 +6,7 @@ use crate::tokens::*;
 // Struct to hold the lexer state
 struct Lexer {
     tokens: Vec<Token>, // Vector of tokens
-    pos: usize,          // Current position in the vector
+    pos: usize,         // Current position in the vector
 }
 
 // Returns a new lexer

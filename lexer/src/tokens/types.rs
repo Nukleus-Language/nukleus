@@ -58,7 +58,7 @@ pub enum TypeValue {
     //Float(f64),
     Identifier(String),
 }
-impl TypeValue{
+impl TypeValue {
     fn as_str(&self) -> &str {
         match *self {
             TypeValue::None => "None",

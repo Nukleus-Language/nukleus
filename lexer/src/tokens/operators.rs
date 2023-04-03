@@ -11,7 +11,7 @@ pub enum Operator {
 
     ShiftLeft,
     ShiftRight,
-    
+
     BitAnd,
     BitOr,
     BitXor,
@@ -41,7 +41,7 @@ impl fmt::Display for Operator {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub enum Logical{
+pub enum Logical {
     Equals,
     NotEquals,
     LessThan,
@@ -76,10 +76,10 @@ impl fmt::Display for Logical {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub enum Assign{
+pub enum Assign {
     // Default
     Assign,
-    
+
     // Normal Operator Assigns
     PlusAssign,
     MinusAssign,
