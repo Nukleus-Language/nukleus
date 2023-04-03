@@ -3,5 +3,4 @@ mod lex;
 mod errors;
 
 pub use tokens::*;
-pub use lex::*;
-pub use errors::*;
+pub use lex::lexer;

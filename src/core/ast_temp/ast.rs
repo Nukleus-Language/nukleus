@@ -1,9 +1,8 @@
-use crate::core::lexer::Tokens;
-
+use lexer::Token;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AST {
     // A leaf node representing a single token
-    Token(Tokens),
+    Token(Token),
 
     Import {
         //path: String,
@@ -16,27 +15,27 @@ pub enum AST {
         name: String,
         args: Vec<AST>,
         statements: Vec<AST>,
-        return_type: Tokens,
-        return_value: Tokens,
+        return_type: Token,
+        return_value: Token,
     },
 
     Let {
         name: String,
         type_name: Option<String>,
-        value: Tokens,
+        value: Token,
     },
     Assign {
         name: String,
-        value: Vec<Tokens>,
+        value: Vec<Token>,
     },
     If {
-        condition: Vec<Tokens>,
+        condition: Vec<Token>,
         statements: Vec<AST>,
         //else_if: Vec<AST>,
         //else_: Option<Box<AST>>,
     },
     ElseIf {
-        condition: Vec<Tokens>,
+        condition: Vec<Token>,
         statements: Vec<AST>,
     },
     Else {
@@ -44,20 +43,20 @@ pub enum AST {
     },
 
     For {
-        start: Tokens,
-        end: Tokens,
-        value: Tokens,
+        start: Token,
+        end: Token,
+        value: Token,
         statements: Vec<AST>,
     },
     Print {
-        value: Tokens,
+        value: Token,
     },
     Println {
-        value: Tokens,
+        value: Token,
     },
 
     Return {
-        value: Tokens,
+        value: Token,
     },
 }
 impl AST {

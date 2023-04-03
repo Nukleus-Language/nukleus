@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use clap::{Arg, Command};
+use lexer::lexer;
 
 fn cli() -> Command {
     Command::new("nukleus")
@@ -31,8 +32,8 @@ fn main() {
     //let contents = "public fn main() -> void\n{\nlet:int a = 3;}";
     //println!("Input: {}", contents);
 
-    let tokens = core::lexer::lexer(&contents);
-    //println!("Tokens: {:?}", tokens);
+    let tokens = lexer(&contents);
+    println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here

@@ -1,3 +1,4 @@
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(missing_docs)]
@@ -34,5 +35,10 @@ impl Statement {
             Statement::Function => "fn",
             Statement::Import => "import",
         }
+    }
+}
+impl fmt::Display for Statement {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
 }

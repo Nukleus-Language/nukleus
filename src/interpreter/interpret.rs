@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 
 use crate::core::ast_temp::AST;
-use crate::core::lexer::Tokens;
+use lexer::Token;
 
 pub struct Interpreter {
-    variables: HashMap<String, Tokens>,
+    variables: HashMap<String, Token>,
 }
 
 impl Interpreter {
@@ -52,7 +52,7 @@ impl Interpreter {
                     for i in (start_value..end_value).step_by(by_value) {
                         self.variables.insert(
                             start.clone().to_string(),
-                            Tokens::Integer(i.try_into().unwrap()),
+                            Token::I32(i.try_into().unwrap()),
                         );
                         self.run_function(statements.clone());
                     }
@@ -74,16 +74,16 @@ impl Interpreter {
         //println!("Function: {:?}", func);
     }
 
-    fn eval_expr(&self, expr: &Tokens) -> String {
+    fn eval_expr(&self, expr: &Token) -> String {
         match expr {
-            Tokens::Integer(i) => i.to_string(),
-            Tokens::QuotedString(s) => s.clone(),
-            Tokens::Identifier(id) => {
+            Token::I32(i) => i.to_string(),
+            Token::QuotedString(s) => s.clone(),
+            Token::Identifier(id) => {
                 if let Some(value) = self.variables.get(id) {
                     match value {
-                        Tokens::Integer(i) => i.to_string(),
-                        Tokens::QuotedString(s) => s.clone(),
-                        Tokens::Identifier(_) => panic!("Invalid identifier reference"),
+                        Token::I32(i) => i.to_string(),
+                        Token::QuotedString(s) => s.clone(),
+                        Token::Identifier(_) => panic!("Invalid identifier reference"),
                         _ => panic!("Invalid value type"),
                     }
                 } else {
@@ -95,5 +95,5 @@ impl Interpreter {
     }
     // can evaluate conditions like i <10 && i > j
     //fn eval_cond(&self, cond: Vec<Tokens>) -> bool {}
-    fn eval_operater
+    //fn eval_operater
 }
