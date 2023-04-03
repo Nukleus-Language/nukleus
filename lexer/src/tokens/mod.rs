@@ -1,13 +1,13 @@
 mod operators;
 mod statements;
-mod types;
 mod symbols;
+mod types;
 
 use std::fmt;
 
-pub use operators::Operator;
-pub use operators::Logical;
 pub use operators::Assign;
+pub use operators::Logical;
+pub use operators::Operator;
 
 pub use statements::Statement;
 
@@ -37,7 +37,7 @@ pub enum Token {
     QuotedString(String),
     Bool(bool),
     Identifier(String),
-    
+
     EOF,
 }
 impl Token {

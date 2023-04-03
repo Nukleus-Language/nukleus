@@ -1,5 +1,5 @@
 use crate::core::ast_temp::{AstParseError, AST};
-use lexer::{Token, Operator, Assign, TypeName, Statement, Logical, Symbol};
+use lexer::{Assign, Statement, Symbol, Token, TypeName};
 
 //use lexer::Lexer;
 
@@ -410,7 +410,7 @@ impl<'a> Parser<'a> {
 mod test {
     use super::*;
     use crate::core::ast_temp::AST;
-    use lexer::*;
+    
 
     #[test]
     fn test_parse_function() {

@@ -1,6 +1,6 @@
-mod tokens;
-mod lex;
 mod errors;
+mod lex;
+mod tokens;
 
-pub use tokens::*;
 pub use lex::lexer;
+pub use tokens::*;
