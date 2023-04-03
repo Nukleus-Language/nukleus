@@ -56,7 +56,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             buffer.push(c);
             if c == '"' {
                 string_flag = false;
-                tokens.push(Token::QuoatedString(buffer.trim_matches('"').to_string()));
+                tokens.push(Token::QuotedString(buffer.trim_matches('"').to_string()));
                 buffer.clear();
             }
             continue;
@@ -147,6 +147,10 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "println" => Token::Statement(Statement::Println),
                 "for" => Token::Statement(Statement::For),
                 "void" => Token::TypeName(TypeName::Void),
+                "bool" => Token::TypeName(TypeName::Bool),
+                "string" => Token::TypeName(TypeName::QuotedString),
+                "i8" => Token::TypeName(TypeName::I8),
+                "i16" => Token::TypeName(TypeName::I16),
                 "i32" => Token::TypeName(TypeName::I32),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
@@ -203,7 +207,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "println" => Token::Statement(Statement::Println),
                 "for" => Token::Statement(Statement::For),
                 "void" => Token::TypeName(TypeName::Void),
+                "bool" => Token::TypeName(TypeName::Bool),
+                "string" => Token::TypeName(TypeName::QuotedString),
+                "i8" => Token::TypeName(TypeName::I8),
+                "i16" => Token::TypeName(TypeName::I16),
                 "i32" => Token::TypeName(TypeName::I32),
+                "i64" => Token::TypeName(TypeName::I64),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
                 _ => Token::Identifier(Identifier_parser(buffer.clone()).unwrap()),
@@ -246,61 +255,59 @@ mod test {
         assert_eq!(expected, lexer(code));
     }
 
-    /*#[test]
+    #[test]
     fn lexer_underscore_identifiers() {
-        let code = "let<int> x_ = 3 + 4;";
+        let code = "let:i8 x_ = 3 + 4;";
         let expected = vec![
-            Tokens::Let,
-            Tokens::OpenAngle,
-            Tokens::Identifier("int".to_string()),
-            Tokens::CloseAngle,
-            Tokens::Identifier("x_".to_string()),
-            Tokens::Assign,
-            Tokens::Integer(3),
-            Tokens::Plus,
-            Tokens::Integer(4),
-            Tokens::Semicolon,
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I8),
+            Token::Identifier("x_".to_string()),
+            Token::Assign(Assign::Assign),
+            Token::I32(3),
+            Token::Operator(Operator::Add),
+            Token::I32(4),
+            Token::Symbol(Symbol::Semicolon),
         ];
         assert_eq!(expected, lexer(code));
     }
 
     #[test]
     fn lexer_keywords() {
-        let code = "fn main\n{\n  let<int> i=0;\n  return;\n}\n";
+        let code = "fn main\n{\n  let:i32 i=0;\n  return;\n}\n";
         let expected = vec![
-            Tokens::Function,
-            Tokens::Identifier("main".to_string()),
-            Tokens::OpenBrace,
-            Tokens::Let,
-            Tokens::OpenAngle,
-            Tokens::Identifier("int".to_string()),
-            Tokens::CloseAngle,
-            Tokens::Identifier("i".to_string()),
-            Tokens::Assign,
-            Tokens::Integer(0),
-            Tokens::Semicolon,
-            Tokens::Return,
-            Tokens::Semicolon,
-            Tokens::CloseBrace,
+            Token::Statement(Statement::Function),
+            Token::Identifier("main".to_string()),
+            Token::Symbol(Symbol::OpenBrace),
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::Identifier("i".to_string()),
+            Token::Assign(Assign::Assign),
+            Token::I32(0),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Statement(Statement::Return),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Symbol(Symbol::CloseBrace),
         ];
         assert_eq!(expected, lexer(code));
     }
 
     #[test]
     fn lexer_symbols() {
-        let code = "fn main() -> int {\n  return 0;\n}\n";
+        let code = "fn main() -> i32 {\n  return 0;\n}\n";
         let expected = vec![
-            Tokens::Function,
-            Tokens::Identifier("main".to_string()),
-            Tokens::OpenParen,
-            Tokens::CloseParen,
-            Tokens::Arrow,
-            Tokens::Identifier("int".to_string()),
-            Tokens::OpenBrace,
-            Tokens::Return,
-            Tokens::Integer(0),
-            Tokens::Semicolon,
-            Tokens::CloseBrace,
+            Token::Statement(Statement::Function),
+            Token::Identifier("main".to_string()),
+            Token::Symbol(Symbol::OpenParen),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Arrow),
+            Token::TypeName(TypeName::I32),
+            Token::Symbol(Symbol::OpenBrace),
+            Token::Statement(Statement::Return),
+            Token::I32(0),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Symbol(Symbol::CloseBrace),
         ];
         assert_eq!(expected, lexer(code));
     }
@@ -309,35 +316,34 @@ mod test {
     fn lexer_numbers() {
         let code = "1 + 2 - 3 * 4 / 5 % 6";
         let expected = vec![
-            Tokens::Integer(1),
-            Tokens::Plus,
-            Tokens::Integer(2),
-            Tokens::Minus,
-            Tokens::Integer(3),
-            Tokens::Asterisk,
-            Tokens::Integer(4),
-            Tokens::Slash,
-            Tokens::Integer(5),
-            Tokens::Percent,
-            Tokens::Integer(6),
+            Token::I32(1),
+            Token::Operator(Operator::Add),
+            Token::I32(2),
+            Token::Operator(Operator::Subtract),
+            Token::I32(3),
+            Token::Operator(Operator::Multiply),
+            Token::I32(4),
+            Token::Operator(Operator::Divide),
+            Token::I32(5),
+            Token::Operator(Operator::Remainder),
+            Token::I32(6),
         ];
 
         assert_eq!(expected, lexer(code));
     }
     #[test]
     fn lexing_strings() {
-        let code = "let<String> x = \"hello world\";";
+        let code = "let:string x = \"hello world\";";
         let expected = vec![
-            Tokens::Let,
-            Tokens::OpenAngle,
-            Tokens::Identifier("String".to_string()),
-            Tokens::CloseAngle,
-            Tokens::Identifier("x".to_string()),
-            Tokens::Assign,
-            Tokens::QuotedString("hello world".to_string()),
-            Tokens::Semicolon,
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::QuotedString),
+            Token::Identifier("x".to_string()),
+            Token::Assign(Assign::Assign),
+            Token::QuotedString("hello world".to_string()),
+            Token::Symbol(Symbol::Semicolon),
         ];
 
         assert_eq!(expected, lexer(code));
-    }*/
+    }
 }
