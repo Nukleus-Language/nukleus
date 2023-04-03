@@ -37,6 +37,7 @@ fn main() {
     //println!("{:?}", ast);
     // Pass contents to the lexer here
     let ast = core::parser_new::parse::Parser::new(&tokens).parse();
+    println!("{:?}", ast);
     /*match ast.clone() {
         Ok(ast) => {
             println!("AST Tree: {:?}", ast;
@@ -49,6 +50,6 @@ fn main() {
     }*/
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
-    let mut interpreter = interpreter::Interpreter::new();
-    interpreter.run(ast.unwrap());
+    //let mut interpreter = interpreter::Interpreter::new();
+    //interpreter.run(ast.unwrap());
 }
