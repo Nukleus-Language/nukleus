@@ -128,7 +128,7 @@ impl<'a> Parser<'a> {
         Ok(function)
     }
 
-    fn parse_statements(&mut self, _return_type: Token) -> Result<Vec<AST>, AstParseError> {
+    pub fn parse_statements(&mut self, _return_type: Token) -> Result<Vec<AST>, AstParseError> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {

@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::io::{self, Write};
 
 use crate::core::ast_temp::AST;
+use crate::core::parser_new::parse::Parser;
 use lexer::Token;
+use lexer::TypeName;
 
 pub struct Interpreter {
     variables: HashMap<String, Token>,
@@ -25,6 +28,28 @@ impl Interpreter {
         }
         if !is_main {
             panic!("No main function found");
+        }
+    }
+    pub fn run_repl(&mut self){
+        println!("Nukleus 0.1.0 Nightly 2023-04");
+        loop {
+            print!("> ");
+            io::stdout().flush();
+            let mut input = String::new();
+            io::stdin().read_line(&mut input).unwrap();
+            
+            let tokens = lexer::lexer(&input);
+            let ast = Parser::new(&tokens).parse_statements(Token::TypeName(TypeName::Void));      
+            match ast {
+                Ok(ast) => {
+                    println!("AST Tree: {:?}", ast);
+                    self.run_function(ast);
+                }
+                Err(e) => {
+                    println!("Error: {:?}", e);
+                }
+                _ => println!("Unknown Error occured"),
+            }
         }
     }
 

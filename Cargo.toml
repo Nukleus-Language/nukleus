@@ -22,6 +22,8 @@ lexer = { path = "./lexer" }
 parser = { path = "./parser" }
 #[lib]
 #crate-type = ["cdylib", "rlib"]
+#[env]
+#NK_VERSION = "0.1.0 Nightly"
 
 [workspace]
 members = [
