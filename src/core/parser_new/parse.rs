@@ -614,7 +614,7 @@ mod test {
     fn test_parse_function() {
         let tokens = vec![
             Token::Statement(Statement::Function),
-            Token::Identifier("main".to_owned()),
+            Token::TypeValue(TypeValue::Identifier("main".to_owned())),
             Token::Symbol(Symbol::OpenParen),
             Token::Symbol(Symbol::CloseParen),
             Token::Symbol(Symbol::Arrow),
@@ -632,7 +632,7 @@ mod test {
                 args: Vec::new(),
                 statements: Vec::new(),
                 return_type: Token::TypeName(TypeName::Void),
-                return_value: Token::None,
+                return_value: Token::TypeValue(TypeValue::None),
             }]
         );
     }
