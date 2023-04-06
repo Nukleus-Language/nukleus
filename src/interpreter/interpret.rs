@@ -93,49 +93,20 @@ impl Interpreter {
                 } => {
                     let left = self.eval_expr(&l_var);
                     let right = self.eval_expr(&r_var);
-                    match logic {
-                        Token::Logical(Logical::And) => {
-                            if left.as_bool() && right.as_bool() {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::Or) => {
-                            if left.as_bool() || right.as_bool() {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::Equals) => {
-                            if left == right {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::NotEquals) => {
-                            if left != right {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::GreaterThan) => {
-                            if left.as_i32() > right.as_i32() {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::LessThan) => {
-                            if left.as_i32() < right.as_i32() {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::GreaterThanEquals) => {
-                            if left.as_i32() >= right.as_i32() {
-                                self.run_function(statements);
-                            }
-                        }
-                        Token::Logical(Logical::LessThanEquals) => {
-                            if left.as_i32() <= right.as_i32() {
-                                self.run_function(statements);
-                            }
-                        }
+                    let condition = match logic {
+                        Token::Logical(Logical::And) => left.as_bool() && right.as_bool(),
+                        Token::Logical(Logical::Or) => left.as_bool() || right.as_bool(),
+                        Token::Logical(Logical::Equals) => left == right,
+                        Token::Logical(Logical::NotEquals) => left != right,
+                        Token::Logical(Logical::GreaterThan) => left.as_i32() > right.as_i32(),
+                        Token::Logical(Logical::LessThan) => left.as_i32() < right.as_i32(),
+                        Token::Logical(Logical::GreaterThanEquals) => left.as_i32() >= right.as_i32(),
+                        Token::Logical(Logical::LessThanEquals) => left.as_i32() <= right.as_i32(),
                         _ => panic!("Invalid logic operator"),
-                    }
+                    };
+                    if condition {
+                        self.run_function(statements);
+                    }   
                 }
                 AST::Assign { name: _, value: _ } => {
                     println!("Not implemented yet");
