@@ -94,6 +94,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
+                else if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::SubAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
             }
             '=' => {
                 // Check if the Double Symbol is a Equals
@@ -117,15 +123,6 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 // Check if the Double Symbol is a PlusEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
                     tokens.push(Token::Assign(Assign::AddAssign));
-                    buffer.clear();
-                    double_state = true;
-                    continue;
-                }
-            }
-            '-' => {
-                // Check if the Double Symbol is a MinusEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
-                    tokens.push(Token::Assign(Assign::SubAssign));
                     buffer.clear();
                     double_state = true;
                     continue;
