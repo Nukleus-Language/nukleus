@@ -60,7 +60,7 @@ impl Interpreter {
         for stmt in statements {
             match stmt {
                 AST::Let { name, value, .. } => {
-                    self.variables.insert(name.clone(), value.clone());
+                    self.variables.insert(name.clone(), lexer::Token::TypeValue(self.eval_expr(&value)));
                 }
                 AST::Print { value } => {
                     print!("{}", self.eval_expr(&value));
@@ -108,8 +108,15 @@ impl Interpreter {
                         self.run_function(statements);
                     }   
                 }
-                AST::Assign { name: _, value: _ } => {
-                    println!("Not implemented yet");
+                AST::Assign { l_var, r_var } => {
+                    //let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32(
+                            (right.as_i32()).try_into().unwrap(),
+                        )),
+                    );
                 }
                 AST::AddAssign { l_var, r_var } => {
                     let left = self.eval_expr(&l_var);

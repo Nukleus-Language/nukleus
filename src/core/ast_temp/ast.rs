@@ -25,8 +25,8 @@ pub enum AST {
         value: Token,
     },
     Assign {
-        name: String,
-        value: Vec<Token>,
+        l_var: Token,
+        r_var: Token,
     },
     AddAssign {
         l_var: Token,
