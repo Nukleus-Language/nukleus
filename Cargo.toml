@@ -20,6 +20,7 @@ clap = "4.2.0"
 
 lexer = { path = "./lexer" }
 parser = { path = "./parser" }
+
 #[lib]
 #crate-type = ["cdylib", "rlib"]
 #[env]

@@ -28,8 +28,30 @@ pub enum AST {
         name: String,
         value: Vec<Token>,
     },
+    AddAssign {
+        l_var: Token,
+        r_var: Token,
+    },
+    SubAssign {
+        l_var: Token,
+        r_var: Token,
+    },
+    MulAssign {
+        l_var: Token,
+        r_var: Token,
+    },
+    DivAssign {
+        l_var: Token,
+        r_var: Token,
+    },
+    RemAssign {
+        l_var: Token,
+        r_var: Token,
+    },
     If {
-        condition: Vec<Token>,
+        l_var: Token,
+        logic: Token,
+        r_var: Token,
         statements: Vec<AST>,
         //else_if: Vec<AST>,
         //else_: Option<Box<AST>>,

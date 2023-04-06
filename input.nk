@@ -1,8 +1,8 @@
 fn main() -> void
 {
 	let:String a = "Hello World";
-	let:int test = 5324;
-	let:int i = 0;
+	let:i32 test = 5324;
+	let:i32 i = 0;
 	print(a);
 	println(test);
 
@@ -13,11 +13,27 @@ fn main() -> void
 		}
 		println(" ");
 	}
-	let:int a = 0;
-	a = i;
-	if (a != 1 ){
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
 		println("LOL");
 	}
+	print("a + i =");
+	print(a);
+	println("");
+	
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
 	println("Hello World!?");
 	print("LOLOLOL");
 	println(i);

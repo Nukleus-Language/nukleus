@@ -8,5 +8,7 @@ pub enum AstParseError {
     #[snafu(display("Expected `{token}`"))]
     ExpectedOther { token: String },
     #[snafu(display("End of file"))]
-    EndofFile,
+    EndOfFile,
+    #[snafu(display("Unknown error"))]
+    Unknown,
 }

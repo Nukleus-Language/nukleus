@@ -4,8 +4,11 @@ use std::io::{self, Write};
 
 use crate::core::ast_temp::AST;
 use crate::core::parser_new::parse::Parser;
+
 use lexer::Token;
 use lexer::TypeName;
+use lexer::TypeValue;
+use lexer::Logical;
 
 pub struct Interpreter {
     variables: HashMap<String, Token>,
@@ -31,7 +34,7 @@ impl Interpreter {
         }
     }
     pub fn run_repl(&mut self){
-        println!("Nukleus 0.1.0 Nightly 2023-04");
+        println!("Nukleus 0.1.0 Nightly 2023-04-B1");
         loop {
             print!("> ");
             io::stdout().flush();
@@ -42,7 +45,7 @@ impl Interpreter {
             let ast = Parser::new(&tokens).parse_statements(Token::TypeName(TypeName::Void));      
             match ast {
                 Ok(ast) => {
-                    println!("AST Tree: {:?}", ast);
+                    //println!("AST Tree: {:?}", ast);
                     self.run_function(ast);
                 }
                 Err(e) => {
@@ -71,42 +74,129 @@ impl Interpreter {
                     value,
                     statements,
                 } => {
-                    let start_value = self.eval_expr(&start).parse::<i32>().unwrap();
-                    let end_value = self.eval_expr(&end).parse::<i32>().unwrap();
-                    let by_value = self.eval_expr(&value).parse::<usize>().unwrap();
+                    let start_value = self.eval_expr(&start).as_i32();
+                    let end_value = self.eval_expr(&end).as_i32();
+                    let by_value = self.eval_expr(&value).as_i32().try_into().unwrap();
                     for i in (start_value..end_value).step_by(by_value) {
                         self.variables
-                            .insert(start.clone().to_string(), Token::I32(i.try_into().unwrap()));
+                            .insert(start.clone().to_string(), Token::TypeValue(TypeValue::I32(i.try_into().unwrap())));
                         self.run_function(statements.clone());
                     }
                 }
                 AST::If {
-                    condition,
+                    l_var,
+                    logic,
+                    r_var,
                     statements,
                 } => {
-                    println!("Condition: {:?}", condition);
-                    println!("Statements: {:?}", statements);
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    match logic {
+                        Token::Logical(Logical::And) => {
+                            if left.as_bool() && right.as_bool() {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::Or) => {
+                            if left.as_bool() || right.as_bool() {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::Equals) => {
+                            if left == right{
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::NotEquals) => {
+                            if left != right {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::GreaterThan) => {
+                            if left.as_i32() > right.as_i32() {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::LessThan) => {
+                            if left.as_i32() < right.as_i32() {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::GreaterThanEquals) => {
+                            if left.as_i32() >= right.as_i32() {
+                                self.run_function(statements);
+                            }
+                        }
+                        Token::Logical(Logical::LessThanEquals) => {
+                            if left.as_i32() <= right.as_i32() {
+                                self.run_function(statements);
+                            }
+                        }
+                        _ => panic!("Invalid logic operator"),
+                    }
+                }
+                AST::Assign { name, value } => {
                     println!("Not implemented yet");
                 }
-                AST::Assign { name: _, value: _ } => {
-                    println!("Not implemented yet");
+                AST::AddAssign { l_var, r_var } => {
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32((left.as_i32() + right.as_i32()).try_into().unwrap())),
+                    );
                 }
+                AST::SubAssign {l_var, r_var} => {
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32((left.as_i32() - right.as_i32()).try_into().unwrap())),
+                    );
+                }
+                AST::MulAssign {l_var, r_var} => {
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32((left.as_i32() * right.as_i32()).try_into().unwrap())),
+                    );
+                }
+                AST::DivAssign {l_var, r_var} => {
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32((left.as_i32() / right.as_i32()).try_into().unwrap())),
+                    );
+                }
+                AST::RemAssign {l_var, r_var} => {
+                    let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32((left.as_i32() % right.as_i32()).try_into().unwrap())),
+                    );
+                }
+                
                 _ => panic!("Invalid statement"),
             }
         }
         //println!("Function: {:?}", func);
     }
 
-    fn eval_expr(&self, expr: &Token) -> String {
+    fn eval_expr(&self, expr: &Token) -> TypeValue {
         match expr {
-            Token::I32(i) => i.to_string(),
-            Token::QuotedString(s) => s.clone(),
-            Token::Identifier(id) => {
+            Token::TypeValue(TypeValue::I32(i)) => TypeValue::I32(*i),
+            Token::TypeValue(TypeValue::QuotedString(s)) => TypeValue::QuotedString(s.clone()),
+            Token::TypeValue(TypeValue::Bool(b)) => TypeValue::Bool(*b),
+            Token::TypeValue(TypeValue::Identifier(id)) => {
                 if let Some(value) = self.variables.get(id) {
                     match value {
-                        Token::I32(i) => i.to_string(),
-                        Token::QuotedString(s) => s.clone(),
-                        Token::Identifier(_) => panic!("Invalid identifier reference"),
+                        Token::TypeValue(TypeValue::I32(i)) => TypeValue::I32(*i),
+                        Token::TypeValue(TypeValue::QuotedString(s)) => TypeValue::QuotedString(s.clone()),
+                        Token::TypeValue(TypeValue::Bool(b)) => TypeValue::Bool(*b),
+                        Token::TypeValue(TypeValue::Identifier(_)) => panic!("Invalid identifier reference"),
                         _ => panic!("Invalid value type"),
                     }
                 } else {
