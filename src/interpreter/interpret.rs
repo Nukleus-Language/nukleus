@@ -60,7 +60,7 @@ impl Interpreter {
         for stmt in statements {
             match stmt {
                 AST::Let { name, value, .. } => {
-                    self.variables.insert(name.clone(), value.clone());
+                    self.variables.insert(name.clone(), lexer::Token::TypeValue(self.eval_expr(&value)));
                 }
                 AST::Print { value } => {
                     print!("{}", self.eval_expr(&value));
