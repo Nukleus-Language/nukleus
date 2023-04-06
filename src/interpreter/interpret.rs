@@ -137,8 +137,15 @@ impl Interpreter {
                         _ => panic!("Invalid logic operator"),
                     }
                 }
-                AST::Assign { name: _, value: _ } => {
-                    println!("Not implemented yet");
+                AST::Assign { l_var, r_var } => {
+                    //let left = self.eval_expr(&l_var);
+                    let right = self.eval_expr(&r_var);
+                    self.variables.insert(
+                        l_var.clone().to_string(),
+                        Token::TypeValue(TypeValue::I32(
+                            (right.as_i32()).try_into().unwrap(),
+                        )),
+                    );
                 }
                 AST::AddAssign { l_var, r_var } => {
                     let left = self.eval_expr(&l_var);

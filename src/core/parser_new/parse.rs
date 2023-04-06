@@ -218,7 +218,7 @@ impl<'a> Parser<'a> {
         };
         Ok(let_statement)
     }
-    fn assign_parser(&mut self, variable_name: Token) -> Result<AST, AstParseError> {
+    /*fn assign_parser(&mut self, variable_name: Token) -> Result<AST, AstParseError> {
         println!("ASSIGN PARSER");
         println!("{:?}", self.tokens.peek());
         self.expect(Token::Assign(Assign::Assign))?;
@@ -240,7 +240,7 @@ impl<'a> Parser<'a> {
             value,
         };
         Ok(assign_statement)
-    }
+    }*/
     fn identifier_parser(&mut self) -> Result<AST, AstParseError> {
         let variable = self
             .tokens
@@ -284,6 +284,28 @@ impl<'a> Parser<'a> {
             _ => Err(AstParseError::Unknown),
         }
         //Ok()
+    }
+    fn assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
+        self.expect(Token::Assign(Assign::Assign))?;
+        self.consume(); // Consume AddAssign
+
+        let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;
+        self.consume(); // Consume Value
+
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
+        self.consume(); // Consume Semicolon
+
+        let assign_statement = AST::AddAssign {
+            l_var: variable,
+            r_var: value,
+        };
+        Ok(assign_statement)
     }
     fn add_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::AddAssign))?;
