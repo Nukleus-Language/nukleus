@@ -195,7 +195,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
                 _ => Token::TypeValue(TypeValue::Identifier(
-                    Identifier_parser(buffer.clone()).unwrap(),
+                    identifier_parser(buffer.clone()).unwrap(),
                 )),
             };
             tokens.push(token);
@@ -258,7 +258,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
                 _ => Token::TypeValue(TypeValue::Identifier(
-                    Identifier_parser(buffer.clone()).unwrap(),
+                    identifier_parser(buffer.clone()).unwrap(),
                 )),
             };
             tokens.push(token);
@@ -268,7 +268,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
     tokens
 }
 // a Identifier cannot start with a number and can only contain letters, numbers and underscores
-fn Identifier_parser(buffer: String) -> Result<String, LexerError> {
+fn identifier_parser(buffer: String) -> Result<String, LexerError> {
     if buffer.chars().next().unwrap().is_numeric() {
         return Err(LexerError::InvalidIdentifierNum);
     }
