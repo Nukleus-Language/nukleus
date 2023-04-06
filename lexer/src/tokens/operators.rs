@@ -81,11 +81,11 @@ pub enum Assign {
     Assign,
 
     // Normal Operator Assigns
-    PlusAssign,
-    MinusAssign,
-    MultiplyAssign,
-    DivideAssign,
-    RemainderAssign,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    RemAssign,
 
     // Bitwise Operator Assigns
     BitAndAssign,
@@ -97,11 +97,11 @@ impl Assign {
     pub fn as_str(&self) -> &str {
         match *self {
             Assign::Assign => "=",
-            Assign::PlusAssign => "+=",
-            Assign::MinusAssign => "-=",
-            Assign::MultiplyAssign => "*=",
-            Assign::DivideAssign => "/=",
-            Assign::RemainderAssign => "%=",
+            Assign::AddAssign => "+=",
+            Assign::SubAssign => "-=",
+            Assign::MulAssign => "*=",
+            Assign::DivAssign => "/=",
+            Assign::RemAssign => "%=",
             Assign::BitAndAssign => "&=",
             Assign::BitOrAssign => "|=",
             Assign::BitXorAssign => "^=",

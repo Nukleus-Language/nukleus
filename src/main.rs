@@ -2,6 +2,7 @@
 //pub mod compiler;
 pub mod core;
 pub mod interpreter;
+mod errors;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -16,6 +17,7 @@ fn cli() -> Command {
         .about("Nukleus Language")
         .arg(Arg::new("input").default_value("repl"))
 }
+
 
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
     // Get the file
@@ -51,7 +53,7 @@ fn main() {
     //println!("Input: {}", contents);
 
     let tokens = lexer(&contents);
-    println!("Tokens: {:?}", tokens);
+    //println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here

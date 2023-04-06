@@ -12,7 +12,7 @@ pub use operators::Operator;
 pub use statements::Statement;
 
 pub use types::TypeName;
-//pub use types::TypeValue;
+pub use types::TypeValue;
 
 pub use symbols::Symbol;
 
@@ -23,9 +23,9 @@ pub enum Token {
     Assign(Assign),
     Statement(Statement),
     TypeName(TypeName),
-    //TypeValue(TypeValue),
+    TypeValue(TypeValue),
     Symbol(Symbol),
-    None,
+    /*None,
     I8(i8),
     I16(i16),
     I32(i32),
@@ -36,14 +36,14 @@ pub enum Token {
     U64(u64),
     QuotedString(String),
     Bool(bool),
-    Identifier(String),
+    Identifier(String),*/
 
     EOF,
 }
 impl Token {
     pub fn is_identifier(&self) -> bool {
         match self {
-            Token::Identifier(_) => true,
+            Token::TypeValue(TypeValue::Identifier(_)) => true,
             _ => false,
         }
     }
@@ -56,20 +56,8 @@ impl fmt::Display for Token {
             Token::Assign(asn) => write!(f, "{}", asn),
             Token::Statement(st) => write!(f, "{}", st),
             Token::TypeName(tn) => write!(f, "{}", tn),
-            //Token::TypeValue(tv) => write!(f, "{}", tv),
+            Token::TypeValue(tv) => write!(f, "{}", tv),
             Token::Symbol(sym) => write!(f, "{}", sym),
-            Token::None => write!(f, "None"),
-            Token::I8(i) => write!(f, "{}", i),
-            Token::I16(i) => write!(f, "{}", i),
-            Token::I32(i) => write!(f, "{}", i),
-            Token::I64(i) => write!(f, "{}", i),
-            Token::U8(u) => write!(f, "{}", u),
-            Token::U16(u) => write!(f, "{}", u),
-            Token::U32(u) => write!(f, "{}", u),
-            Token::U64(u) => write!(f, "{}", u),
-            Token::QuotedString(s) => write!(f, "{}", s),
-            Token::Bool(b) => write!(f, "{}", b),
-            Token::Identifier(s) => write!(f, "{}", s),
             Token::EOF => write!(f, "EOF"),
         }
     }

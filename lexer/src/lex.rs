@@ -38,6 +38,7 @@ impl Iterator for Lexer {
 pub fn lexer(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut buffer = String::new();
+    let mut double_state = false;
     let mut arrow_flag = false;
     let mut equals_flag = false;
     let mut double_colon_flag = false;
@@ -56,7 +57,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             buffer.push(c);
             if c == '"' {
                 string_flag = false;
-                tokens.push(Token::QuotedString(buffer.trim_matches('"').to_string()));
+                tokens.push(Token::TypeValue(TypeValue::QuotedString(buffer.trim_matches('"').to_string())));
                 buffer.clear();
             }
             continue;
@@ -70,62 +71,102 @@ pub fn lexer(code: &str) -> Vec<Token> {
             if (i + 1 == code.len() || !code.chars().nth(i + 1).unwrap().is_alphanumeric())
                 && buffer.chars().all(char::is_numeric)
             {
-                tokens.push(Token::I32(buffer.parse().unwrap()));
+                tokens.push(Token::TypeValue(TypeValue::I32(buffer.parse().unwrap())));
                 buffer.clear();
             }
             continue;
         }
 
-        // Check if the current character is a Arrow
-        if c == '-' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '>' {
-            buffer.push('>');
-            tokens.push(Token::Symbol(Symbol::Arrow));
-            buffer.clear();
-            arrow_flag = true;
+        // Check if the character has been used in a double state
+        if double_state {
+            double_state = false;
             continue;
         }
-        if arrow_flag {
-            arrow_flag = false;
-            continue;
-        }
+        // Check for Symbol that is made with two Symbols
+        match c{
+            '-' => {
+                // Check if the Double Symbol is a Arrow
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '>' {
+                    tokens.push(Token::Symbol(Symbol::Arrow));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '=' => {
+                // Check if the Double Symbol is a Equals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Logical(Logical::Equals));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '!' => {
+                // Check if the Double Symbol is a NotEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Logical(Logical::NotEquals));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '+' => {
+                // Check if the Double Symbol is a PlusEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::AddAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '-' => {
+                // Check if the Double Symbol is a MinusEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::SubAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '*' => {
+                // Check if the Double Symbol is a StarEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::MulAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '/' => {
+                // Check if the Double Symbol is a SlashEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::DivAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            '%' => {
+                // Check if the Double Symbol is a PercentEquals
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                    tokens.push(Token::Assign(Assign::RemAssign));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
 
-        // Check if the current character is a Equals
-        if c == '=' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
-            buffer.push('=');
-            tokens.push(Token::Logical(Logical::Equals));
-            buffer.clear();
-            equals_flag = true;
-            continue;
-        }
-        if equals_flag {
-            equals_flag = false;
-            continue;
-        }
-
-        // Check if the current character is a DoubleColon
-        if c == ':' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == ':' {
-            buffer.push(':');
-            tokens.push(Token::Symbol(Symbol::DoubleColon));
-            buffer.clear();
-            double_colon_flag = true;
-            continue;
-        }
-        if double_colon_flag {
-            double_colon_flag = false;
-            continue;
-        }
-
-        // Check if the current character is a NotEquals
-        if c == '!' && i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
-            buffer.push('=');
-            tokens.push(Token::Logical(Logical::NotEquals));
-            buffer.clear();
-            not_equals_flag = true;
-            continue;
-        }
-        if not_equals_flag {
-            not_equals_flag = false;
-            continue;
+            ':' => {
+                // Check if the Double Symbol is a DoubleColon
+                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == ':' {
+                    tokens.push(Token::Symbol(Symbol::DoubleColon));
+                    buffer.clear();
+                    double_state = true;
+                    continue;
+                }
+            },
+            _ => {}
         }
 
         // If the buffer is not empty, check if it contains a keyword or identifier
@@ -133,12 +174,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
             let token = match buffer.as_str() {
                 "let" => Token::Statement(Statement::Let),
                 "fn" => Token::Statement(Statement::Function),
-                "->" => Token::Symbol(Symbol::Arrow),
-                "::" => Token::Symbol(Symbol::DoubleColon),
+                //"->" => Token::Symbol(Symbol::Arrow),
+                //"::" => Token::Symbol(Symbol::DoubleColon),
                 "return" => Token::Statement(Statement::Return),
                 "import" => Token::Statement(Statement::Import),
-                "==" => Token::Logical(Logical::Equals),
-                "!=" => Token::Logical(Logical::NotEquals),
+                //"==" => Token::Logical(Logical::Equals),
+                //"!=" => Token::Logical(Logical::NotEquals),
                 "public" => Token::Statement(Statement::Public),
                 "if" => Token::Statement(Statement::If),
                 "else" => Token::Statement(Statement::Else),
@@ -154,7 +195,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i32" => Token::TypeName(TypeName::I32),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Token::Identifier(Identifier_parser(buffer.clone()).unwrap()),
+                _ => Token::TypeValue(TypeValue::Identifier(Identifier_parser(buffer.clone()).unwrap())),
             };
             tokens.push(token);
             buffer.clear();
@@ -193,12 +234,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
             let token = match buffer.as_str() {
                 "let" => Token::Statement(Statement::Let),
                 "fn" => Token::Statement(Statement::Function),
-                "->" => Token::Symbol(Symbol::Arrow),
-                "::" => Token::Symbol(Symbol::DoubleColon),
+                //"->" => Token::Symbol(Symbol::Arrow),
+                //"::" => Token::Symbol(Symbol::DoubleColon),
                 "return" => Token::Statement(Statement::Return),
                 "import" => Token::Statement(Statement::Import),
-                "==" => Token::Logical(Logical::Equals),
-                "!=" => Token::Logical(Logical::NotEquals),
+                //"==" => Token::Logical(Logical::Equals),
+                //"!=" => Token::Logical(Logical::NotEquals),
                 "public" => Token::Statement(Statement::Public),
                 "if" => Token::Statement(Statement::If),
                 "else" => Token::Statement(Statement::Else),
@@ -215,7 +256,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i64" => Token::TypeName(TypeName::I64),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Token::Identifier(Identifier_parser(buffer.clone()).unwrap()),
+                _ => Token::TypeValue(TypeValue::Identifier(Identifier_parser(buffer.clone()).unwrap())),
             };
             tokens.push(token);
         }
@@ -245,11 +286,11 @@ mod test {
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),
             Token::TypeName(TypeName::I32),
-            Token::Identifier("x".to_string()),
+            Token::TypeValue(TypeValue::Identifier("x".to_string())),
             Token::Assign(Assign::Assign),
-            Token::I32(3),
+            Token::TypeValue(TypeValue::I32(3)),
             Token::Operator(Operator::Add),
-            Token::I32(4),
+            Token::TypeValue(TypeValue::I32(4)),
             Token::Symbol(Symbol::Semicolon),
         ];
         assert_eq!(expected, lexer(code));
@@ -262,11 +303,11 @@ mod test {
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),
             Token::TypeName(TypeName::I8),
-            Token::Identifier("x_".to_string()),
+            Token::TypeValue(TypeValue::Identifier("x_".to_string())),
             Token::Assign(Assign::Assign),
-            Token::I32(3),
+            Token::TypeValue(TypeValue::I32(3)),
             Token::Operator(Operator::Add),
-            Token::I32(4),
+            Token::TypeValue(TypeValue::I32(4)),
             Token::Symbol(Symbol::Semicolon),
         ];
         assert_eq!(expected, lexer(code));
@@ -277,14 +318,14 @@ mod test {
         let code = "fn main\n{\n  let:i32 i=0;\n  return;\n}\n";
         let expected = vec![
             Token::Statement(Statement::Function),
-            Token::Identifier("main".to_string()),
+            Token::TypeValue(TypeValue::Identifier("main".to_string())),
             Token::Symbol(Symbol::OpenBrace),
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),
             Token::TypeName(TypeName::I32),
-            Token::Identifier("i".to_string()),
+            Token::TypeValue(TypeValue::Identifier("i".to_string())),
             Token::Assign(Assign::Assign),
-            Token::I32(0),
+            Token::TypeValue(TypeValue::I32(0)),
             Token::Symbol(Symbol::Semicolon),
             Token::Statement(Statement::Return),
             Token::Symbol(Symbol::Semicolon),
@@ -298,14 +339,14 @@ mod test {
         let code = "fn main() -> i32 {\n  return 0;\n}\n";
         let expected = vec![
             Token::Statement(Statement::Function),
-            Token::Identifier("main".to_string()),
+            Token::TypeValue(TypeValue::Identifier("main".to_string())),
             Token::Symbol(Symbol::OpenParen),
             Token::Symbol(Symbol::CloseParen),
             Token::Symbol(Symbol::Arrow),
             Token::TypeName(TypeName::I32),
             Token::Symbol(Symbol::OpenBrace),
             Token::Statement(Statement::Return),
-            Token::I32(0),
+            Token::TypeValue(TypeValue::I32(0)),
             Token::Symbol(Symbol::Semicolon),
             Token::Symbol(Symbol::CloseBrace),
         ];
@@ -316,17 +357,17 @@ mod test {
     fn lexer_numbers() {
         let code = "1 + 2 - 3 * 4 / 5 % 6";
         let expected = vec![
-            Token::I32(1),
+            Token::TypeValue(TypeValue::I32(1)),
             Token::Operator(Operator::Add),
-            Token::I32(2),
+            Token::TypeValue(TypeValue::I32(2)),
             Token::Operator(Operator::Subtract),
-            Token::I32(3),
+            Token::TypeValue(TypeValue::I32(3)),
             Token::Operator(Operator::Multiply),
-            Token::I32(4),
+            Token::TypeValue(TypeValue::I32(4)),
             Token::Operator(Operator::Divide),
-            Token::I32(5),
+            Token::TypeValue(TypeValue::I32(5)),
             Token::Operator(Operator::Remainder),
-            Token::I32(6),
+            Token::TypeValue(TypeValue::I32(6)),
         ];
 
         assert_eq!(expected, lexer(code));
@@ -338,9 +379,9 @@ mod test {
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),
             Token::TypeName(TypeName::QuotedString),
-            Token::Identifier("x".to_string()),
+            Token::TypeValue(TypeValue::Identifier("x".to_string())),
             Token::Assign(Assign::Assign),
-            Token::QuotedString("hello world".to_string()),
+            Token::TypeValue(TypeValue::QuotedString("hello world".to_string())),
             Token::Symbol(Symbol::Semicolon),
         ];
 
