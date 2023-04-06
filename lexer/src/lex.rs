@@ -57,7 +57,9 @@ pub fn lexer(code: &str) -> Vec<Token> {
             buffer.push(c);
             if c == '"' {
                 string_flag = false;
-                tokens.push(Token::TypeValue(TypeValue::QuotedString(buffer.trim_matches('"').to_string())));
+                tokens.push(Token::TypeValue(TypeValue::QuotedString(
+                    buffer.trim_matches('"').to_string(),
+                )));
                 buffer.clear();
             }
             continue;
@@ -83,7 +85,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             continue;
         }
         // Check for Symbol that is made with two Symbols
-        match c{
+        match c {
             '-' => {
                 // Check if the Double Symbol is a Arrow
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '>' {
@@ -92,7 +94,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '=' => {
                 // Check if the Double Symbol is a Equals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -101,7 +103,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '!' => {
                 // Check if the Double Symbol is a NotEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -110,7 +112,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '+' => {
                 // Check if the Double Symbol is a PlusEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -119,7 +121,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '-' => {
                 // Check if the Double Symbol is a MinusEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -128,7 +130,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '*' => {
                 // Check if the Double Symbol is a StarEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -137,7 +139,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '/' => {
                 // Check if the Double Symbol is a SlashEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -146,7 +148,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             '%' => {
                 // Check if the Double Symbol is a PercentEquals
                 if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
@@ -155,7 +157,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
 
             ':' => {
                 // Check if the Double Symbol is a DoubleColon
@@ -165,7 +167,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     double_state = true;
                     continue;
                 }
-            },
+            }
             _ => {}
         }
 
@@ -195,7 +197,9 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i32" => Token::TypeName(TypeName::I32),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Token::TypeValue(TypeValue::Identifier(Identifier_parser(buffer.clone()).unwrap())),
+                _ => Token::TypeValue(TypeValue::Identifier(
+                    Identifier_parser(buffer.clone()).unwrap(),
+                )),
             };
             tokens.push(token);
             buffer.clear();
@@ -256,7 +260,9 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i64" => Token::TypeName(TypeName::I64),
 
                 " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
-                _ => Token::TypeValue(TypeValue::Identifier(Identifier_parser(buffer.clone()).unwrap())),
+                _ => Token::TypeValue(TypeValue::Identifier(
+                    Identifier_parser(buffer.clone()).unwrap(),
+                )),
             };
             tokens.push(token);
         }
