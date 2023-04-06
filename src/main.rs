@@ -1,8 +1,8 @@
 //pub mod compiler;
 //pub mod compiler;
 pub mod core;
-pub mod interpreter;
 mod errors;
+pub mod interpreter;
 
 use std::fs::File;
 use std::io::prelude::*;
@@ -17,7 +17,6 @@ fn cli() -> Command {
         .about("Nukleus Language")
         .arg(Arg::new("input").default_value("repl"))
 }
-
 
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
     // Get the file
@@ -35,7 +34,7 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 }
 
 fn run_interpreter_environment() {
-    let mut interpreter = interpreter::Interpreter::new();
+    let _interpreter = interpreter::Interpreter::new();
     //interpreter.run_repl();
 }
 

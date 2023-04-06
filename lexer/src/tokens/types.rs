@@ -58,7 +58,7 @@ pub enum TypeValue {
     //Float(f64),
     Identifier(String),
 }
-impl TypeValue{
+impl TypeValue {
     pub fn as_i8(&self) -> i8 {
         match *self {
             TypeValue::I8(n) => n,
@@ -125,7 +125,6 @@ impl TypeValue{
             _ => panic!("Type is not an identifier"),
         }
     }
-
 }
 
 impl fmt::Display for TypeValue {

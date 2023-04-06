@@ -1,5 +1,5 @@
 use crate::core::ast_temp::{AstParseError, AST};
-use lexer::{Assign, Statement, Symbol, Token, TypeName,TypeValue};
+use lexer::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;
 
@@ -218,8 +218,7 @@ impl<'a> Parser<'a> {
         };
         Ok(let_statement)
     }
-    fn assign_parser(&mut self, variable_name:Token) -> Result<AST, AstParseError> {
-        
+    fn assign_parser(&mut self, variable_name: Token) -> Result<AST, AstParseError> {
         println!("ASSIGN PARSER");
         println!("{:?}", self.tokens.peek());
         self.expect(Token::Assign(Assign::Assign))?;
@@ -242,7 +241,7 @@ impl<'a> Parser<'a> {
         };
         Ok(assign_statement)
     }
-    fn identifier_parser(&mut self) -> Result<AST, AstParseError>{
+    fn identifier_parser(&mut self) -> Result<AST, AstParseError> {
         let variable = self
             .tokens
             .peek()
@@ -252,12 +251,12 @@ impl<'a> Parser<'a> {
             })?;
         self.consume(); // Consume Identifier
 
-        match self.tokens.peek(){
+        match self.tokens.peek() {
             Some(Token::Assign(Assign::Assign)) => {
                 let assign_statement = self.assign_parser(variable)?;
                 Ok(assign_statement)
             }
-            
+
             /*Some(Token::Symbol(Symbol::OpenParen)) => {
                 let function_call = self.function_call_parser()?;
                 Ok(function_call)
@@ -282,13 +281,11 @@ impl<'a> Parser<'a> {
                 let rem_assign_statement = self.rem_assign_parser(variable)?;
                 Ok(rem_assign_statement)
             }
-            _ => {
-                Err(AstParseError::Unknown)
-            }
+            _ => Err(AstParseError::Unknown),
         }
         //Ok()
     }
-    fn add_assign_parser(&mut self, variable:Token) -> Result<AST,AstParseError>{
+    fn add_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::AddAssign))?;
         self.consume(); // Consume AddAssign
 
@@ -307,10 +304,10 @@ impl<'a> Parser<'a> {
         let add_assign_statement = AST::AddAssign {
             l_var: variable,
             r_var: value,
-        };        
+        };
         Ok(add_assign_statement)
     }
-    fn sub_assign_parser(&mut self, variable:Token) -> Result<AST, AstParseError> {
+    fn sub_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::SubAssign))?;
         self.consume(); // Consume SubAssign
 
@@ -332,7 +329,7 @@ impl<'a> Parser<'a> {
         };
         Ok(sub_assign_statement)
     }
-    fn mul_assign_parser(&mut self, variable:Token) -> Result<AST, AstParseError> {
+    fn mul_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::MulAssign))?;
         self.consume(); // Consume MulAssign
 
@@ -354,7 +351,7 @@ impl<'a> Parser<'a> {
         };
         Ok(mul_assign_statement)
     }
-    fn div_assign_parser(&mut self, variable:Token) -> Result<AST, AstParseError> {
+    fn div_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::DivAssign))?;
         self.consume(); // Consume DivAssign
 
@@ -376,7 +373,7 @@ impl<'a> Parser<'a> {
         };
         Ok(div_assign_statement)
     }
-    fn rem_assign_parser(&mut self, variable:Token) -> Result<AST, AstParseError> {
+    fn rem_assign_parser(&mut self, variable: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Assign(Assign::RemAssign))?;
         self.consume(); // Consume RemAssign
 
@@ -410,7 +407,7 @@ impl<'a> Parser<'a> {
             .cloned()
             .ok_or(AstParseError::ExpectedOther {
                 token: "Value".to_owned(),
-        })?;
+            })?;
         self.consume(); // Consume Value
 
         self.expect(Token::Symbol(Symbol::CloseParen))?;
@@ -434,9 +431,9 @@ impl<'a> Parser<'a> {
             .cloned()
             .ok_or(AstParseError::ExpectedOther {
                 token: "Value".to_owned(),
-        })?;
+            })?;
         self.consume(); // Consume Value
-        
+
         //self.expect(Token::Logical(_))?;
         let logic = self
             .tokens
@@ -444,18 +441,17 @@ impl<'a> Parser<'a> {
             .cloned()
             .ok_or(AstParseError::ExpectedOther {
                 token: "Logic".to_owned(),
-        })?;
+            })?;
         self.consume(); // Consume Logic
-        
+
         let r_value = self
             .tokens
             .peek()
             .cloned()
             .ok_or(AstParseError::ExpectedOther {
                 token: "Value".to_owned(),
-        })?;
+            })?;
         self.consume(); // Consume Value
-
 
         self.expect(Token::Symbol(Symbol::CloseParen))?;
         self.consume(); // Consume CloseParen
@@ -469,7 +465,7 @@ impl<'a> Parser<'a> {
 
         let if_statement = AST::If {
             l_var: l_value,
-            logic: logic,
+            logic,
             r_var: r_value,
             statements,
         };
@@ -613,7 +609,6 @@ impl<'a> Parser<'a> {
 mod test {
     use super::*;
     use crate::core::ast_temp::AST;
-    
 
     #[test]
     fn test_parse_function() {

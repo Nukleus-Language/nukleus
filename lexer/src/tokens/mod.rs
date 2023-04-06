@@ -37,7 +37,6 @@ pub enum Token {
     QuotedString(String),
     Bool(bool),
     Identifier(String),*/
-
     EOF,
 }
 impl Token {
