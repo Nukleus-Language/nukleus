@@ -43,7 +43,8 @@ fn main() -> void
 	return;
 }
 
-fn print_hello() -> void
+fn print_hello() -> i32
 {
 	println("Hello My Friend! from the print_hello function!");
+    return 2;
 }
