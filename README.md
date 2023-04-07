@@ -3,9 +3,25 @@
 </div>
 
 # The Nukleus Programming Language
-Simple and fast AI, GUI, Cross-Platform Program Programming Language
 
-## We need help!
-If anyone can help with this project, please join the Slack and send us some assistance! It would be greatly appreciated!
+Nukleus is a simple, fast, and versatile programming language designed for AI, GUI, and cross-platform development. Built with Rust, Nukleus offers excellent performance, reliability, and maintainability.
 
-![https://join.slack.com/t/nukleuslanguage/shared_invite/zt-wk4xav53-c0HUUdsJAL8dLByHD30Guw](https://img.shields.io/badge/slack-join-08d187.svg)
+## Features
+
+- Easy-to-learn syntax inspired by modern programming languages
+- Highly efficient performance[WIP] through the power of Rust
+- Versatile use-cases: AI, GUI, and cross-platform development[WIP]
+- Strongly typed language for increased reliability and maintainability
+- Comprehensive standard library[WIP]
+- Extensible with Rust libraries[WIP]
+
+## Getting Started
+
+To get started with Nukleus, follow these steps:
+
+1. Install the Nukleus compiler[WIP, slow interpreter is provided for testing] and set up your development environment.
+2. Explore the Nukleus documentation[WIP] to familiarize yourself with the language syntax and features.
+3. Try out the example programs provided in the repository.
+4. Write your own Nukleus programs and contribute to the growing community!
+
+
