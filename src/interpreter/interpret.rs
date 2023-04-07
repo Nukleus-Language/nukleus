@@ -82,7 +82,7 @@ impl Interpreter {
         self.pre_run(program);
         let main_addr = self.function_id_name.get("main").expect("No main function found");
         let main = self.functions.get(main_addr).expect("No main function found");
-        self.run_function(main.function_get_statements());
+        self.run_function(main.function_get_statements(), main.function_get_args(), main_addr.clone());
     }
     pub fn run_repl(&mut self) {
         println!("Nukleus 0.1.0 Nightly 2023-04-B1");
@@ -97,7 +97,10 @@ impl Interpreter {
             match ast {
                 Ok(ast) => {
                     //println!("AST Tree: {:?}", ast);
-                    self.run_function(ast);
+                    self.run_function(ast, vec![], FunctionId {
+                        function_address: 0,
+                        mem_address: 0,
+                    });
                 }
                 Err(e) => {
                     println!("Error: {:?}", e);
@@ -121,7 +124,7 @@ impl Interpreter {
         self.variables.insert(l_var.to_string(), Token::TypeValue(new_value));
     }*/
 
-    fn run_function(&mut self, statements: Vec<AST>) {
+    fn run_function(&mut self, statements: Vec<AST>,arguments: Vec<Token>,cur_function:FunctionId) {
         for stmt in statements {
             match stmt {
                 AST::Let { name, value, .. } => {
@@ -147,7 +150,7 @@ impl Interpreter {
                             start.clone().to_string(),
                             Token::TypeValue(TypeValue::I32(i.try_into().unwrap())),
                         );
-                        self.run_function(statements.clone());
+                        self.run_function(statements.clone(), vec![], cur_function.clone());
                     }
                 }
                 AST::If {
@@ -170,7 +173,7 @@ impl Interpreter {
                         _ => panic!("Invalid logic operator"),
                     };
                     if condition {
-                        self.run_function(statements);
+                        self.run_function(statements,vec![],cur_function.clone());
                     }   
                 }
                 AST::Assign { l_var, r_var } => {
@@ -237,7 +240,7 @@ impl Interpreter {
                     let func_name = name.to_string();
                     let target_func_addr = self.function_id_name.get(&func_name).expect("Function not found");
                     let target_func = self.functions.get(target_func_addr).expect("Function not found");
-                    self.run_function(target_func.function_get_statements().clone());
+                    self.run_function(target_func.function_get_statements().clone(),target_func.function_get_args().clone(),target_func_addr.clone());
                 }
                 /*
                 AST::Assign { l_var, r_var } => {
