@@ -4,6 +4,7 @@ use lexer::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 //use lexer::Lexer;
 
 use std::iter::{Cloned, Peekable};
+use std::collections::HashMap;
 
 pub struct Parser<'a> {
     tokens: Peekable<Cloned<std::slice::Iter<'a, Token>>>,
@@ -121,6 +122,7 @@ impl<'a> Parser<'a> {
             name: name.to_string(),
             args: Vec::new(),
             statements,
+            variables: HashMap::new(),
             return_type,
             return_value,
         };

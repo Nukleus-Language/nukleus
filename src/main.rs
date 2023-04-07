@@ -52,7 +52,7 @@ fn main() {
     //println!("Input: {}", contents);
 
     let tokens = lexer(&contents);
-    println!("Tokens: {:?}", tokens);
+    //println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here

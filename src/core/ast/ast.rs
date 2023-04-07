@@ -1,4 +1,8 @@
 use lexer::Token;
+
+use std::collections::HashMap;
+use std::convert::AsMut;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AST {
     // A leaf node representing a single token
@@ -15,6 +19,7 @@ pub enum AST {
         name: String,
         args: Vec<Token>,
         statements: Vec<AST>,
+        variables: HashMap<String, Token>,
         return_type: Token,
         return_value: Token,
     },
@@ -84,6 +89,41 @@ pub enum AST {
         value: Token,
     },
 }
+/*impl<T> AsMut<T> for AST {
+    fn as_mut(&mut self) -> &mut T {
+        match self {
+            AST::Function {
+                public,
+                name,
+                args,
+                statements,
+                variables,
+                return_type,
+                return_value,
+            } => {
+                // Implement the conversion from AST to the generic type T
+            }
+            _ => panic!("Invalid AST variant"),
+        }
+    }
+}*/
+impl AsMut<HashMap<String, Token>> for AST {
+    fn as_mut(&mut self) -> &mut HashMap<String, Token> {
+        match self {
+            AST::Function {
+                public,
+                name,
+                args,
+                statements,
+                variables,
+                return_type,
+                return_value,
+            } => variables,
+            _ => panic!("Invalid AST variant"),
+        }
+    }
+}
+
 impl AST {
     pub fn is_function(&self) -> bool {
         match self {
@@ -107,6 +147,46 @@ impl AST {
         match self {
             AST::Function { name, .. } => name.clone(),
             _ => panic!("Not a function"),
+        }
+    }
+    
+    pub fn function_insert_variable(&mut self, var_name: String, value: Token) {
+        match self {
+            AST::Function {
+                public,
+                name,
+                args,
+                statements,
+                variables,
+                return_type,
+                return_value,
+
+            } => {
+                variables.insert(var_name, value);
+        //.nsert(var_name, value);
+            }
+            _ => panic!("Invalid Variable Insertion"),
+        }
+    }
+    pub fn function_get_variable(&self, var_name: String) -> Token {
+        match self {
+            AST::Function {
+                public,
+                name,
+                args,
+                statements,
+                variables,
+                return_type,
+                return_value,
+
+            } => {
+                if variables.contains_key(&var_name) {
+                    variables.get(&var_name).unwrap().clone()
+                } else {
+                    panic!("Variable not found");
+                }
+            }
+            _ => panic!("Invalid Variable Reference"),
         }
     }
 }
