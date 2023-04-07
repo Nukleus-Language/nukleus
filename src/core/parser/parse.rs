@@ -630,7 +630,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::core::ast_temp::AST;
+    use crate::core::ast::AST;
 
     #[test]
     fn test_parse_function() {
