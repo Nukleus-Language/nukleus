@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq,Hash)]
 #[allow(missing_docs)]
 pub enum TypeName {
     Void,
@@ -34,6 +34,7 @@ impl TypeName {
             TypeName::Float => "float",
         }
     }
+
 }
 impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -41,7 +42,7 @@ impl fmt::Display for TypeName {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq,Hash)]
 #[allow(missing_docs)]
 pub enum TypeValue {
     None,
@@ -125,6 +126,176 @@ impl TypeValue {
             _ => panic!("Type is not an identifier"),
         }
     }
+
+    pub fn add(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::I8(a + b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::I16(a + b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::I32(a + b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::I64(a + b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::U8(a + b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::U16(a + b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::U32(a + b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::U64(a + b),
+            _ => panic!("Invalid types for addition"),
+        }
+    }
+    pub fn sub(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::I8(a - b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::I16(a - b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::I32(a - b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::I64(a - b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::U8(a - b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::U16(a - b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::U32(a - b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::U64(a - b),
+            _ => panic!("Invalid types for subtraction"),
+        }
+    }
+    pub fn mul(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::I8(a * b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::I16(a * b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::I32(a * b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::I64(a * b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::U8(a * b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::U16(a * b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::U32(a * b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::U64(a * b),
+            _ => panic!("Invalid types for multiplication"),
+        }
+    }
+    pub fn div(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::I8(a / b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::I16(a / b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::I32(a / b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::I64(a / b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::U8(a / b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::U16(a / b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::U32(a / b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::U64(a / b),
+            _ => panic!("Invalid types for division"),
+        }
+    }
+    pub fn rem(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::I8(a % b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::I16(a % b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::I32(a % b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::I64(a % b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::U8(a % b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::U16(a % b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::U32(a % b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::U64(a % b),
+            _ => panic!("Invalid types for remainder"),
+        }
+    }
+    pub fn eq(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a == b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a == b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a == b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a == b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a == b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a == b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a == b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a == b),
+            (TypeValue::QuotedString(ref a), TypeValue::QuotedString(ref b)) => {
+                TypeValue::Bool(a == b)
+            }
+            (TypeValue::Bool(a), TypeValue::Bool(b)) => TypeValue::Bool(a == b),
+            _ => panic!("Invalid types for equality"),
+        }
+    }
+    pub fn ne(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a != b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a != b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a != b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a != b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a != b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a != b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a != b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a != b),
+            (TypeValue::QuotedString(ref a), TypeValue::QuotedString(ref b)) => {
+                TypeValue::Bool(a != b)
+            }
+            (TypeValue::Bool(a), TypeValue::Bool(b)) => TypeValue::Bool(a != b),
+            _ => panic!("Invalid types for inequality"),
+        }
+    }
+    pub fn lt(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a < b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a < b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a < b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a < b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a < b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a < b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a < b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a < b),
+            _ => panic!("Invalid types for less than"),
+        }
+    }
+    pub fn le(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a <= b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a <= b),
+            _ => panic!("Invalid types for less than or equal"),
+        }
+    }
+    pub fn gt(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a > b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a > b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a > b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a > b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a > b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a > b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a > b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a > b),
+            _ => panic!("Invalid types for greater than"),
+        }
+    }
+    pub fn ge(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::I8(a), TypeValue::I8(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::I16(a), TypeValue::I16(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::I32(a), TypeValue::I32(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::I64(a), TypeValue::I64(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::U8(a), TypeValue::U8(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::U16(a), TypeValue::U16(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::U32(a), TypeValue::U32(b)) => TypeValue::Bool(a >= b),
+            (TypeValue::U64(a), TypeValue::U64(b)) => TypeValue::Bool(a >= b),
+            _ => panic!("Invalid types for greater than or equal"),
+        }
+    }
+    pub fn and(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::Bool(a), TypeValue::Bool(b)) => TypeValue::Bool(*a && *b),
+            _ => panic!("Invalid types for and"),
+        }
+    }
+    pub fn or(&self, other: &TypeValue) -> TypeValue {
+        match (self, other) {
+            (TypeValue::Bool(a), TypeValue::Bool(b)) => TypeValue::Bool(*a || *b),
+            _ => panic!("Invalid types for or"),
+        }
+    }
+    pub fn not(&self) -> TypeValue {
+        match *self {
+            TypeValue::Bool(a) => TypeValue::Bool(!a),
+            _ => panic!("Invalid types for not"),
+        }
+    }   
 }
 
 impl fmt::Display for TypeValue {
