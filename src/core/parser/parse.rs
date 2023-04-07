@@ -281,6 +281,10 @@ impl<'a> Parser<'a> {
                 let rem_assign_statement = self.rem_assign_parser(variable)?;
                 Ok(rem_assign_statement)
             }
+            Some(Token::Symbol(Symbol::OpenParen)) => {
+                let function_call = self.function_call_parser(variable)?;
+                Ok(function_call)
+            }
             _ => Err(AstParseError::Unknown),
         }
         //Ok()
@@ -416,6 +420,32 @@ impl<'a> Parser<'a> {
             r_var: value,
         };
         Ok(rem_assign_statement)
+    }
+    fn function_call_parser(&mut self, name:Token) -> Result<AST, AstParseError> {
+        self.expect(Token::Symbol(Symbol::OpenParen))?;
+        self.consume(); // Consume Tokens::OpenParen
+
+        /*let value = self
+            .tokens
+            .peek()
+            .cloned()
+            .ok_or(AstParseError::ExpectedOther {
+                token: "Value".to_owned(),
+            })?;*/
+
+        //self.consume(); // Consume Value
+
+        self.expect(Token::Symbol(Symbol::CloseParen))?;
+        self.consume(); // Consume CloseParen
+
+        self.expect(Token::Symbol(Symbol::Semicolon))?;
+        self.consume(); // Consume Semicolon
+
+        let function_call_statement = AST::FunctionCall {
+            name,
+            args: vec![],
+        };
+        Ok(function_call_statement)
     }
     fn print_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Print

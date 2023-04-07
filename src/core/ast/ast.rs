@@ -76,7 +76,10 @@ pub enum AST {
     Println {
         value: Token,
     },
-
+    FunctionCall {
+        name: Token,
+        args: Vec<Token>,
+    },
     Return {
         value: Token,
     },
