@@ -12,6 +12,11 @@ use lexer::TypeValue;
 
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FunctionId {
+    function_address: u32,
+    mem_address: u32,
+}
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct VariableId {
     function_address: u32,
     statement_address: u32,
@@ -25,29 +30,55 @@ pub struct Variable {
     var_value: TypeValue,
 }
 
-
 pub struct Interpreter {
+    functions: HashMap<FunctionId, AST>,
+    functions_address: u32,
     variables: HashMap<String, Token>,
+    variables_address: u32,
+    mem_address: u32,
+    main_address: u32,
+    main_mem_address: u32,
 }
 
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
+            functions: HashMap::new(),
+            functions_address: 0,
             variables: HashMap::new(),
+            variables_address: 0,
+            mem_address: 0,
+            main_address: 0,
+            main_mem_address: 0,
         }
     }
-
-    pub fn run(&mut self, program: Vec<AST>) {
+    pub fn pre_run(&mut self, program: Vec<AST>) {
         let mut is_main = false;
         for func in program {
-            if func.is_function() && func.function_get_name() == "main" {
-                self.run_function(func.function_get_statements());
-                is_main = true;
+            if func.is_function() {
+                self.functions.insert(FunctionId {
+                    function_address: self.functions_address,
+                    mem_address: self.mem_address,
+                }, func.clone());
+                if func.function_get_name() == "main" {
+                    is_main = true;
+                    self.main_address = self.functions_address;
+                    self.main_mem_address = self.mem_address;
+                }
+                self.functions_address += 1;
             }
         }
         if !is_main {
             panic!("No main function found");
         }
+    }
+    pub fn run(&mut self, program: Vec<AST>) {
+        self.pre_run(program);
+        let main = self.functions.get(&FunctionId {
+            function_address: self.main_address,
+            mem_address: self.main_mem_address,
+        }).unwrap();
+        self.run_function(main.function_get_statements());
     }
     pub fn run_repl(&mut self) {
         println!("Nukleus 0.1.0 Nightly 2023-04-B1");
