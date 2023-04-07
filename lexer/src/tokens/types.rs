@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq,Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum TypeName {
     Void,
@@ -34,7 +34,6 @@ impl TypeName {
             TypeName::Float => "float",
         }
     }
-
 }
 impl fmt::Display for TypeName {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -42,7 +41,7 @@ impl fmt::Display for TypeName {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq,Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum TypeValue {
     None,
@@ -295,7 +294,7 @@ impl TypeValue {
             TypeValue::Bool(a) => TypeValue::Bool(!a),
             _ => panic!("Invalid types for not"),
         }
-    }   
+    }
 }
 
 impl fmt::Display for TypeValue {
