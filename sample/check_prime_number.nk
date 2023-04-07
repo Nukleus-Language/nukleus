@@ -1,0 +1,26 @@
+fn main() -> void 
+{
+    let:i32 n = 10;
+    let:i32 i = 2;
+    let:i32 count = 0;
+
+    for ( i -> n :: 1 ) 
+    {
+        let:i32 j = n;
+        j %= i;
+    
+        if ( j == 0 ) 
+        {
+            count += 1;
+        }
+    }
+
+    if (count == 0) {
+        println("this is prime number!");
+    }
+    if (count != 0) {
+        println("this is not prime number!");
+    }
+
+    return;
+}
