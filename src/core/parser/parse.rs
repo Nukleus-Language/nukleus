@@ -1,4 +1,4 @@
-use crate::core::ast_temp::{AstParseError, AST};
+use crate::core::ast::{AstParseError, AST};
 use lexer::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;

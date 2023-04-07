@@ -56,7 +56,7 @@ fn main() {
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here
-    let ast = core::parser_new::parse::Parser::new(&tokens).parse();
+    let ast = core::parser::parse::Parser::new(&tokens).parse();
     //println!("{:?}", ast);
     /*match ast.clone() {
         Ok(ast) => {
