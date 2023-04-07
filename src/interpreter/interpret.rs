@@ -176,30 +176,51 @@ impl Interpreter {
     }
 
     fn eval_expr(&self, expr: &Token) -> TypeValue {
-        match expr {
-            Token::TypeValue(TypeValue::I32(i)) => TypeValue::I32(*i),
-            Token::TypeValue(TypeValue::QuotedString(s)) => TypeValue::QuotedString(s.clone()),
-            Token::TypeValue(TypeValue::Bool(b)) => TypeValue::Bool(*b),
-            Token::TypeValue(TypeValue::Identifier(id)) => {
-                if let Some(value) = self.variables.get(id) {
-                    match value {
-                        Token::TypeValue(TypeValue::I32(i)) => TypeValue::I32(*i),
-                        Token::TypeValue(TypeValue::QuotedString(s)) => {
-                            TypeValue::QuotedString(s.clone())
+        if let Token::TypeValue(inner_expr) = expr {
+            match inner_expr {
+                TypeValue::None => TypeValue::None,
+                TypeValue::I8(i) => TypeValue::I8(*i),
+                TypeValue::I16(i) => TypeValue::I16(*i),
+                TypeValue::I32(i) => TypeValue::I32(*i),
+                TypeValue::I64(i) => TypeValue::I64(*i),
+                TypeValue::U8(u) => TypeValue::U8(*u),
+                TypeValue::U16(u) => TypeValue::U16(*u),
+                TypeValue::U32(u) => TypeValue::U32(*u),
+                TypeValue::U64(u) => TypeValue::U64(*u),
+                TypeValue::QuotedString(s) => TypeValue::QuotedString(s.clone()),
+                TypeValue::Bool(b) => TypeValue::Bool(*b),
+                TypeValue::Identifier(id) => {
+                    if let Some(value) = self.variables.get(id) {
+                        if let Token::TypeValue(inner_value) = value {
+                            match inner_value {
+                                TypeValue::None => TypeValue::None,
+                                TypeValue::I8(i) => TypeValue::I8(*i),
+                                TypeValue::I16(i) => TypeValue::I16(*i),
+                                TypeValue::I32(i) => TypeValue::I32(*i),
+                                TypeValue::I64(i) => TypeValue::I64(*i),
+                                TypeValue::U8(u) => TypeValue::U8(*u),
+                                TypeValue::U16(u) => TypeValue::U16(*u),
+                                TypeValue::U32(u) => TypeValue::U32(*u),
+                                TypeValue::U64(u) => TypeValue::U64(*u),
+                                TypeValue::QuotedString(s) => TypeValue::QuotedString(s.clone()),
+                                TypeValue::Bool(b) => TypeValue::Bool(*b),
+                                TypeValue::Identifier(_) => {
+                                    panic!("Invalid identifier reference")
+                                }
+                            }
+                        } else {
+                            panic!("Invalid value type");
                         }
-                        Token::TypeValue(TypeValue::Bool(b)) => TypeValue::Bool(*b),
-                        Token::TypeValue(TypeValue::Identifier(_)) => {
-                            panic!("Invalid identifier reference")
-                        }
-                        _ => panic!("Invalid value type"),
+                    } else {
+                        panic!("Undefined variable '{}'", id);
                     }
-                } else {
-                    panic!("Undefined variable '{}'", id);
                 }
             }
-            _ => panic!("Invalid expression"),
+        } else {
+            panic!("Invalid expression");
         }
     }
+
     // can evaluate conditions like i <10 && i > j
     //fn eval_cond(&self, cond: Vec<Tokens>) -> bool {}
     //fn eval_operater
