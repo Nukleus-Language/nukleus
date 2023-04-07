@@ -10,6 +10,22 @@ use lexer::Token;
 use lexer::TypeName;
 use lexer::TypeValue;
 
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct VariableId {
+    function_address: u32,
+    statement_address: u32,
+    var_address: u32,
+    mem_address: u32
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Variable {
+    var_type: TypeName,
+    var_value: TypeValue,
+}
+
+
 pub struct Interpreter {
     variables: HashMap<String, Token>,
 }
@@ -55,6 +71,20 @@ impl Interpreter {
             }
         }
     }
+    /*fn update_variable<T: FnOnce(&TypeValue, &TypeValue) -> TypeValue>(
+        &mut self,
+        l_var: &Tokens,
+        r_var: &Tokens,
+        operation: T,
+    ) {
+        let right = self.eval_expr(r_var);
+        let left = self.variables
+            .get(l_var)
+            .expect(&format!("Undefined variable '{}'", l_var));
+
+        let new_value = operation(left, &right);
+        self.variables.insert(l_var.to_string(), Token::TypeValue(new_value));
+    }*/
 
     fn run_function(&mut self, statements: Vec<AST>) {
         for stmt in statements {
@@ -168,7 +198,26 @@ impl Interpreter {
                         )),
                     );
                 }
-
+                /*
+                AST::Assign { l_var, r_var } => {
+                    self.update_variable(l_var, r_var, |_, right| right.clone());
+                },
+                AST::AddAssign { l_var, r_var } => {
+                    self.update_variable(l_var, r_var, |left, right| left.add(right));
+                },
+                AST::SubAssign { l_var, r_var } => {
+                   self.update_variable(l_var, r_var, |left, right| left.sub(right));
+                },
+                AST::MulAssign { l_var, r_var } => {
+                    self.update_variable(l_var, r_var, |left, right| left.mul(right));
+                },
+                AST::DivAssign { l_var, r_var } => {
+                    self.update_variable(l_var, r_var, |left, right| left.div(right));
+                },
+                AST::RemAssign { l_var, r_var } => {
+                    self.update_variable(l_var, r_var, |left, right| left.rem(right));
+                },
+                */
                 _ => panic!("Invalid statement"),
             }
         }
