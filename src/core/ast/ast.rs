@@ -111,13 +111,13 @@ impl AsMut<HashMap<String, Token>> for AST {
     fn as_mut(&mut self) -> &mut HashMap<String, Token> {
         match self {
             AST::Function {
-                public,
-                name,
-                args,
-                statements,
+                public: _,
+                name: _,
+                args: _,
+                statements: _,
                 variables,
-                return_type,
-                return_value,
+                return_type: _,
+                return_value: _,
             } => variables,
             _ => panic!("Invalid AST variant"),
         }
@@ -149,21 +149,20 @@ impl AST {
             _ => panic!("Not a function"),
         }
     }
-    
+
     pub fn function_insert_variable(&mut self, var_name: String, value: Token) {
         match self {
             AST::Function {
-                public,
-                name,
-                args,
-                statements,
+                public: _,
+                name: _,
+                args: _,
+                statements: _,
                 variables,
-                return_type,
-                return_value,
-
+                return_type: _,
+                return_value: _,
             } => {
                 variables.insert(var_name, value);
-        //.nsert(var_name, value);
+                //.nsert(var_name, value);
             }
             _ => panic!("Invalid Variable Insertion"),
         }
@@ -171,14 +170,13 @@ impl AST {
     pub fn function_get_variable(&self, var_name: String) -> Token {
         match self {
             AST::Function {
-                public,
-                name,
-                args,
-                statements,
+                public: _,
+                name: _,
+                args: _,
+                statements: _,
                 variables,
-                return_type,
-                return_value,
-
+                return_type: _,
+                return_value: _,
             } => {
                 if variables.contains_key(&var_name) {
                     variables.get(&var_name).unwrap().clone()

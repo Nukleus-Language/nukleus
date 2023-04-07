@@ -93,8 +93,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                     buffer.clear();
                     double_state = true;
                     continue;
-                }
-                else if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                } else if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
                     tokens.push(Token::Assign(Assign::SubAssign));
                     buffer.clear();
                     double_state = true;

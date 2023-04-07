@@ -3,8 +3,8 @@ use lexer::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;
 
-use std::iter::{Cloned, Peekable};
 use std::collections::HashMap;
+use std::iter::{Cloned, Peekable};
 
 pub struct Parser<'a> {
     tokens: Peekable<Cloned<std::slice::Iter<'a, Token>>>,
@@ -423,17 +423,17 @@ impl<'a> Parser<'a> {
         };
         Ok(rem_assign_statement)
     }
-    fn function_call_parser(&mut self, name:Token) -> Result<AST, AstParseError> {
+    fn function_call_parser(&mut self, name: Token) -> Result<AST, AstParseError> {
         self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume Tokens::OpenParen
 
         /*let value = self
-            .tokens
-            .peek()
-            .cloned()
-            .ok_or(AstParseError::ExpectedOther {
-                token: "Value".to_owned(),
-            })?;*/
+        .tokens
+        .peek()
+        .cloned()
+        .ok_or(AstParseError::ExpectedOther {
+            token: "Value".to_owned(),
+        })?;*/
 
         //self.consume(); // Consume Value
 
@@ -443,10 +443,7 @@ impl<'a> Parser<'a> {
         self.expect(Token::Symbol(Symbol::Semicolon))?;
         self.consume(); // Consume Semicolon
 
-        let function_call_statement = AST::FunctionCall {
-            name,
-            args: vec![],
-        };
+        let function_call_statement = AST::FunctionCall { name, args: vec![] };
         Ok(function_call_statement)
     }
     fn print_parser(&mut self) -> Result<AST, AstParseError> {
@@ -685,6 +682,7 @@ mod test {
                 name: "main".to_owned(),
                 args: Vec::new(),
                 statements: Vec::new(),
+                variables: HashMap::new(),
                 return_type: Token::TypeName(TypeName::Void),
                 return_value: Token::TypeValue(TypeValue::None),
             }]
