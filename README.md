@@ -10,7 +10,7 @@ Nukleus is a simple, fast, and versatile programming language designed for AI, G
 
 - Easy-to-learn syntax inspired by modern programming languages
 - Highly efficient performance[WIP] through the power of Rust
-- Versatile use-cases: AI, GUI, and cross-platform development[WIP]
+- Versatile use-cases: AI[WIP], GUI[WIP], and cross-platform development
 - Strongly typed language for increased reliability and maintainability
 - Comprehensive standard library[WIP]
 - Extensible with Rust libraries[WIP]
@@ -19,7 +19,7 @@ Nukleus is a simple, fast, and versatile programming language designed for AI, G
 
 To get started with Nukleus, follow these steps:
 
-1. Install the Nukleus compiler[WIP, slow interpreter is provided for testing] and set up your development environment.
+1. Install the Nukleus compiler[WIP, slow interpreter will be provided for testing] and set up your development environment.
 2. Explore the Nukleus documentation[WIP] to familiarize yourself with the language syntax and features.
 3. Try out the example programs provided in the repository.
 4. Write your own Nukleus programs and contribute to the growing community!
