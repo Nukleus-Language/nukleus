@@ -1,3 +1,3 @@
-pub mod ast_temp;
+pub mod ast;
 //pub mod lexer;
-pub mod parser_new;
+pub mod parser;
