@@ -13,6 +13,7 @@ fn main() -> void
 		}
 		println(" ");
 	}
+	 
 	let:i32 a = 10;
 	print("a = ");
 	println(a);
@@ -37,11 +38,12 @@ fn main() -> void
 	println("Hello World!?");
 	print("LOLOLOL");
 	println(i);
-	
+
+	print_hello();
 	return;
 }
 
 fn print_hello() -> void
 {
-	println("Hello My Friend!");
+	println("Hello My Friend! from the print_hello function!");
 }

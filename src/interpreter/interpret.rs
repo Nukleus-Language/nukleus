@@ -31,6 +31,7 @@ pub struct Variable {
 }
 
 pub struct Interpreter {
+    function_id_name: HashMap<String,FunctionId>,
     functions: HashMap<FunctionId, AST>,
     functions_address: u32,
     variables: HashMap<String, Token>,
@@ -43,6 +44,7 @@ pub struct Interpreter {
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
+            function_id_name: HashMap::new(),
             functions: HashMap::new(),
             functions_address: 0,
             variables: HashMap::new(),
@@ -56,6 +58,10 @@ impl Interpreter {
         let mut is_main = false;
         for func in program {
             if func.is_function() {
+                self.function_id_name.insert(func.function_get_name().to_string(), FunctionId {
+                    function_address: self.functions_address,
+                    mem_address: self.mem_address,
+                });
                 self.functions.insert(FunctionId {
                     function_address: self.functions_address,
                     mem_address: self.mem_address,
@@ -74,10 +80,8 @@ impl Interpreter {
     }
     pub fn run(&mut self, program: Vec<AST>) {
         self.pre_run(program);
-        let main = self.functions.get(&FunctionId {
-            function_address: self.main_address,
-            mem_address: self.main_mem_address,
-        }).unwrap();
+        let main_addr = self.function_id_name.get("main").expect("No main function found");
+        let main = self.functions.get(main_addr).expect("No main function found");
         self.run_function(main.function_get_statements());
     }
     pub fn run_repl(&mut self) {
@@ -228,6 +232,12 @@ impl Interpreter {
                             (left.as_i32() % right.as_i32()).try_into().unwrap(),
                         )),
                     );
+                }
+                AST::FunctionCall {name,args} => {
+                    let func_name = name.to_string();
+                    let target_func_addr = self.function_id_name.get(&func_name).expect("Function not found");
+                    let target_func = self.functions.get(target_func_addr).expect("Function not found");
+                    self.run_function(target_func.function_get_statements().clone());
                 }
                 /*
                 AST::Assign { l_var, r_var } => {
