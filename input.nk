@@ -48,6 +48,8 @@ fn main() -> void
 fn print_hello(i32:a) -> i32
 {
 	println("Hello My Friend! from the print_hello function!");
+	print("a = ");
+	println(a);
     return 2;
 }
 
