@@ -139,7 +139,22 @@ impl Interpreter {
         self.variables.insert(l_var.to_string(), Token::TypeValue(new_value));
     }*/
 
-    fn run_function(&mut self, statements: Vec<AST>, _arguments: Vec<Token>) {
+    fn run_function(&mut self, statements: Vec<AST>, arguments: Vec<Token>) {
+        // Define args as variables
+        let arg_base = self.functions.get(&self.cur_function).unwrap().function_get_args_format();
+        
+        for (i, arg) in arg_base.iter().enumerate() {
+            let getten_value = self.eval_expr(&arguments[i].clone());
+            let func = self
+                .functions
+                .get_mut(&self.cur_function)
+                .expect("Function not found");
+            func.function_insert_variable(
+                arg.1.clone().to_string(),
+                lexer::Token::TypeValue(getten_value),
+            );
+        }
+
         for stmt in statements {
             match stmt {
                 AST::Let { name, value, .. } => {
