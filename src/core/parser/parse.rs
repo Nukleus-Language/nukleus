@@ -268,12 +268,32 @@ impl<'a> Parser<'a> {
         if self.tokens.peek() == Some(&Token::Symbol(Symbol::OpenParen)) {
             self.consume(); // Consume OpenParen
             let mut args: Vec<Token> = Vec::new();
+            let mut is_after_comma = false;
+            let mut is_after_open_paren = true;
             while let Some(token) = self.tokens.peek() {
                 if token == &Token::Symbol(Symbol::CloseParen) {
+                    if is_after_comma {
+                        return Err(AstParseError::ExpectedOther {
+                            token: "Argument".to_owned(),
+                        });
+                    }
                     break;
                 }
-                args.push(token.clone());
-                self.consume();
+                else if token == &Token::Symbol(Symbol::Comma) {
+                    self.consume(); // Consume Comma
+                    is_after_comma = true;
+                }
+                else if is_after_comma || is_after_open_paren {
+                    args.push(token.clone());
+                    self.consume(); // Consume Argument
+                    is_after_comma = false;
+                    is_after_open_paren = false;
+                }
+                else {
+                    return Err(AstParseError::ExpectedOther {
+                        token: "Argument".to_owned(),
+                    });
+                }
             }
             self.expect(Token::Symbol(Symbol::CloseParen))?;
             self.consume(); // Consume CloseParen
@@ -507,13 +527,22 @@ impl<'a> Parser<'a> {
         let mut done_flag = false;
         // Parse Arguments
         let mut arguments = Vec::new();
+        //println!("Parsing Arguments...");
         while !done_flag {
             match self.tokens.peek() {
                 Some(Token::Symbol(Symbol::CloseParen)) => {
                     self.consume(); // Consume CloseParen
                     done_flag = true;
                 }
-
+                Some(Token::Symbol(Symbol::Comma)) => {
+                    self.consume(); // Consume Comma
+                    // Check if there is another argument
+                    if self.tokens.peek() == Some(&Token::Symbol(Symbol::CloseParen)) {
+                        return Err(AstParseError::ExpectedOther {
+                            token: "Argument".to_owned(),
+                        });
+                    }
+                }
                 _ => {
                     let arg_name =
                         self.tokens
@@ -523,15 +552,9 @@ impl<'a> Parser<'a> {
                                 token: "Argument".to_owned(),
                             })?;
                     self.consume(); // Consume Argument Name
+                    //println!("Argument: {:?}", arg_name);
                     arguments.push(arg_name);
-                    if self.tokens.peek() == Some(&Token::Symbol(Symbol::Comma)) {
-                        self.consume(); // Consume Comma
-                        if self.tokens.peek() == Some(&Token::Symbol(Symbol::CloseParen)) {
-                            return Err(AstParseError::ExpectedOther {
-                                token: "Argument".to_owned(),
-                            });
-                        }
-                    }
+                    
                 }
             }
         }
