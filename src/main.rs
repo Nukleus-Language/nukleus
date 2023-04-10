@@ -68,8 +68,11 @@ fn main() {
             println!("Error: {}", e);
         }
     }*/
+    //println!("{:?}", ast);
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
     //let mut interpreter = interpreter::Interpreter::new();
-    interpreter.run(ast.unwrap());
+    interpreter.run(ast.clone().unwrap());
+
+    //println!("{:?}",ast);
 }

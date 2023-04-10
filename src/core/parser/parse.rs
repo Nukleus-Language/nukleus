@@ -95,7 +95,7 @@ impl<'a> Parser<'a> {
 
         let statements = self.parse_statements(return_type.clone())?;
         let mut return_value = Token::TypeValue(TypeValue::None);
-        if return_type != Token::TypeName(TypeName::Void) {
+        /*if return_type != Token::TypeName(TypeName::Void) {
             self.expect(Token::Statement(Statement::Return))?;
             self.consume(); // Consume Return
 
@@ -113,7 +113,7 @@ impl<'a> Parser<'a> {
             self.consume(); // Consume Return
             self.expect(Token::Symbol(Symbol::Semicolon))?;
             self.consume(); // Consume Semicolon
-        }
+        }*/
         self.expect(Token::Symbol(Symbol::CloseBrace))?;
         self.consume(); // Consume Tokens::CloseBrace
 
@@ -134,6 +134,7 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
+            //println!("{:?}", token);
             match token {
                 Token::Statement(Statement::Let) => {
                     let let_statement = self.let_parser()?;
@@ -159,6 +160,10 @@ impl<'a> Parser<'a> {
                     //println!("PEEK 2 {:?}", self.tokens.peek());
                     let assign_statement = self.identifier_parser()?;
                     statements.push(assign_statement);
+                }
+                Token::Statement(Statement::Return) => {
+                    let return_statement = self.return_parser()?;
+                    statements.push(return_statement);
                 }
                 _ => break,
             }
@@ -638,7 +643,10 @@ impl<'a> Parser<'a> {
 
     fn return_parser(&mut self) -> Result<AST, AstParseError> {
         self.consume(); // Consume Tokens::Return
-
+        if self.tokens.peek() == Some(&Token::Symbol(Symbol::Semicolon)) {
+            self.consume(); // Consume Semicolon
+            return Ok(AST::Return { value: Token::TypeValue(TypeValue::None) });
+        }
         let value = self
             .tokens
             .peek()

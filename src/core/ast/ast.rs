@@ -149,7 +149,36 @@ impl AST {
             _ => panic!("Not a function"),
         }
     }
-
+    pub fn function_set_return_value(&mut self, value: Token) {
+        match self {
+            AST::Function {
+                public: _,
+                name: _,
+                args: _,
+                statements: _,
+                variables: _,
+                return_type: _,
+                return_value,
+            } => {
+                *return_value = value;
+            }
+            _ => panic!("Invalid Return Value"),
+        }
+    }
+    pub fn function_get_return_value(&self) -> Token {
+        match self {
+            AST::Function {
+                public: _,
+                name: _,
+                args: _,
+                statements: _,
+                variables: _,
+                return_type: _,
+                return_value,
+            } => return_value.clone(),
+            _ => panic!("Invalid Return Value"),
+        }
+    }
     pub fn function_insert_variable(&mut self, var_name: String, value: Token) {
         match self {
             AST::Function {

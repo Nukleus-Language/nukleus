@@ -328,6 +328,15 @@ impl Interpreter {
                     self.update_variable(l_var, r_var, |left, right| left.rem(right));
                 },
                 */
+                AST::Return { value } => {
+                    let return_value = Token::TypeValue(self.eval_expr(&value));
+                    let func = self
+                        .functions
+                        .get_mut(&self.cur_function)
+                        .expect("Function not found");
+                    func.function_set_return_value(return_value);
+                    break;
+                }
                 _ => panic!("Invalid statement"),
             }
         }
