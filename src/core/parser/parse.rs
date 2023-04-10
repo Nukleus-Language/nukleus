@@ -184,7 +184,7 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
-            //println!("{:?}", token);
+            println!("{:?}", token);
             match token {
                 Token::Statement(Statement::Let) => {
                     let let_statement = self.let_parser()?;

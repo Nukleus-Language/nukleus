@@ -401,17 +401,7 @@ impl Interpreter {
     fn eval_expr(&mut self, expr: &Token) -> TypeValue {
         if let Token::TypeValue(inner_expr) = expr {
             match inner_expr {
-                TypeValue::None => TypeValue::None,
-                TypeValue::I8(i) => TypeValue::I8(*i),
-                TypeValue::I16(i) => TypeValue::I16(*i),
-                TypeValue::I32(i) => TypeValue::I32(*i),
-                TypeValue::I64(i) => TypeValue::I64(*i),
-                TypeValue::U8(u) => TypeValue::U8(*u),
-                TypeValue::U16(u) => TypeValue::U16(*u),
-                TypeValue::U32(u) => TypeValue::U32(*u),
-                TypeValue::U64(u) => TypeValue::U64(*u),
-                TypeValue::QuotedString(s) => TypeValue::QuotedString(s.clone()),
-                TypeValue::Bool(b) => TypeValue::Bool(*b),
+                TypeValue::None | TypeValue::I8(_) | TypeValue::I16(_) | TypeValue::I32(_) | TypeValue::I64(_) | TypeValue::U8(_) | TypeValue::U16(_) | TypeValue::U32(_) | TypeValue::U64(_) | TypeValue::QuotedString(_) | TypeValue::Bool(_) => inner_expr.clone(),
                 TypeValue::Identifier(id) => {
                     let func = self
                         .functions
@@ -420,17 +410,7 @@ impl Interpreter {
                     if let value = func.function_get_variable(id.to_string()) {
                         if let Token::TypeValue(inner_value) = value {
                             match inner_value {
-                                TypeValue::None => TypeValue::None,
-                                TypeValue::I8(i) => TypeValue::I8(i),
-                                TypeValue::I16(i) => TypeValue::I16(i),
-                                TypeValue::I32(i) => TypeValue::I32(i),
-                                TypeValue::I64(i) => TypeValue::I64(i),
-                                TypeValue::U8(u) => TypeValue::U8(u),
-                                TypeValue::U16(u) => TypeValue::U16(u),
-                                TypeValue::U32(u) => TypeValue::U32(u),
-                                TypeValue::U64(u) => TypeValue::U64(u),
-                                TypeValue::QuotedString(s) => TypeValue::QuotedString(s),
-                                TypeValue::Bool(b) => TypeValue::Bool(b),
+                                 TypeValue::None | TypeValue::I8(_) | TypeValue::I16(_) | TypeValue::I32(_) | TypeValue::I64(_) | TypeValue::U8(_) | TypeValue::U16(_) | TypeValue::U32(_) | TypeValue::U64(_) | TypeValue::QuotedString(_) | TypeValue::Bool(_) => inner_value.clone(),                                
                                 TypeValue::Identifier(_) => {
                                     panic!("Invalid identifier reference")
                                 }
@@ -459,9 +439,9 @@ impl Interpreter {
                             .get_mut(&target_func_addr)
                             .expect("Function not found");
 
-                        let target_statements = target_func.function_get_statements().clone();
+                        let target_statements = target_func.function_get_statements();
                         let this_function = self.cur_function.clone();
-                        let target_args = target_func.function_get_args_format().clone();
+                        let target_args = target_func.function_get_args_format();
                         (target_statements, this_function, target_args)
                     };
                     if target_args.len() != args.len() {
@@ -484,7 +464,7 @@ impl Interpreter {
                             .functions
                             .get(&target_func_addr)
                             .expect("Function not found");
-                        target_func.function_get_return_value().clone()
+                        target_func.function_get_return_value()
                     };
                     self.eval_expr(&return_value)
                 }
