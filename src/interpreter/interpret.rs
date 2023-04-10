@@ -145,6 +145,11 @@ impl Interpreter {
                 AST::Let { name, value, .. } => {
                     //self.variables.insert(name.clone(), lexer::Token::TypeValue(self.eval_expr(&value)));
                     let getten_value = self.eval_expr(&value.clone());
+                    
+                    // check if the variable name is taken by a function
+                    if self.function_map.contains_key(&name) {
+                        panic!("Variable name '{}' is taken by a function", name);
+                    }
 
                     let func = self
                         .functions

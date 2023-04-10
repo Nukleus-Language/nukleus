@@ -49,3 +49,9 @@ fn print_hello() -> i32
 	println("Hello My Friend! from the print_hello function!");
     return 2;
 }
+
+fn testt() -> void
+{
+	println("This is a test function!");
+	return;
+}
