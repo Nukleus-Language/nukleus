@@ -17,7 +17,7 @@ pub enum AST {
     Function {
         public: bool,
         name: String,
-        args: Vec<Token>,
+        args: Vec<(Token, Token)>,
         statements: Vec<AST>,
         variables: HashMap<String, Token>,
         return_type: Token,
@@ -137,7 +137,7 @@ impl AST {
             _ => panic!("Not a function"),
         }
     }
-    pub fn function_get_args(&self) -> Vec<Token> {
+    pub fn function_get_args_format(&self) -> Vec<(Token, Token)> {
         match self {
             AST::Function { args, .. } => args.clone(),
             _ => panic!("Not a function"),

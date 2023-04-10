@@ -40,12 +40,12 @@ fn main() -> void
 	print("LOLOLOL");
 	println(i);
 
-	let:i32 yay =print_hello();
+	let:i32 yay =print_hello(3);
 	println(yay);
 	return;
 }
 
-fn print_hello() -> i32
+fn print_hello(i32:a) -> i32
 {
 	println("Hello My Friend! from the print_hello function!");
     return 2;

@@ -1,5 +1,5 @@
-use std::fmt;
 use super::Token;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
@@ -42,7 +42,6 @@ impl fmt::Display for TypeName {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum TypeValue {
@@ -62,6 +61,22 @@ pub enum TypeValue {
     FunctionCall(String, Vec<Token>),
 }
 impl TypeValue {
+    pub fn get_type(&self) -> TypeName {
+        match *self {
+            TypeValue::None => TypeName::Void,
+            TypeValue::I8(_) => TypeName::I8,
+            TypeValue::I16(_) => TypeName::I16,
+            TypeValue::I32(_) => TypeName::I32,
+            TypeValue::I64(_) => TypeName::I64,
+            TypeValue::U8(_) => TypeName::U8,
+            TypeValue::U16(_) => TypeName::U16,
+            TypeValue::U32(_) => TypeName::U32,
+            TypeValue::U64(_) => TypeName::U64,
+            TypeValue::QuotedString(_) => TypeName::QuotedString,
+            TypeValue::Bool(_) => TypeName::Bool,
+            _ => panic!("Type is not a valid type"),
+        }
+    }
     pub fn as_i8(&self) -> i8 {
         match *self {
             TypeValue::I8(n) => n,
@@ -325,8 +340,7 @@ impl fmt::Display for TypeValue {
                     write!(f, "{}", arg)?;
                 }
                 write!(f, ")")
-            }
-            //_ => write!(f, "{}", self.as_str()),
+            } //_ => write!(f, "{}", self.as_str()),
         }
     }
 }
