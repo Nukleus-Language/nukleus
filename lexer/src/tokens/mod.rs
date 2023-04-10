@@ -16,7 +16,7 @@ pub use types::TypeValue;
 
 pub use symbols::Symbol;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Token {
     Operator(Operator),
     Logical(Logical),

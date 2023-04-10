@@ -23,7 +23,7 @@ fn main() -> void
 	if ( a != 19  ) {
 		println("LOL");
 	}
-	return ;
+	
 	print("a + i =");
 	print(a);
 	println("");
@@ -40,7 +40,8 @@ fn main() -> void
 	print("LOLOLOL");
 	println(i);
 
-	print_hello();
+	let:i32 yay =print_hello();
+	println(yay);
 	return;
 }
 

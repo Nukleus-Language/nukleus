@@ -1,4 +1,5 @@
 use std::fmt;
+use super::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
@@ -41,6 +42,7 @@ impl fmt::Display for TypeName {
     }
 }
 
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum TypeValue {
@@ -57,6 +59,7 @@ pub enum TypeValue {
     Bool(bool),
     //Float(f64),
     Identifier(String),
+    FunctionCall(String, Vec<Token>),
 }
 impl TypeValue {
     pub fn as_i8(&self) -> i8 {
@@ -313,6 +316,16 @@ impl fmt::Display for TypeValue {
             TypeValue::Bool(n) => write!(f, "{}", n),
             //TypeValue::Float(n) => write!(f, "Float({})", n),
             TypeValue::Identifier(ref s) => write!(f, "{}", s),
+            TypeValue::FunctionCall(ref s, ref args) => {
+                write!(f, "{}(", s)?;
+                for (i, arg) in args.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", arg)?;
+                }
+                write!(f, ")")
+            }
             //_ => write!(f, "{}", self.as_str()),
         }
     }

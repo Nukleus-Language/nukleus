@@ -76,6 +76,50 @@ impl<'a> Parser<'a> {
 
         self.expect(Token::Symbol(Symbol::OpenParen))?;
         self.consume(); // Consume OpenParen
+        while let Some(token) = self.tokens.peek() {
+            if token == &Token::Symbol(Symbol::CloseParen) {
+                break;
+            }
+            match token {
+                Token::TypeValue(_) => {
+                    let arg_type = self
+                        .tokens
+                        .peek()
+                        .cloned()
+                        .ok_or(AstParseError::ExpectedOther {
+                            token: "Argument Type".to_owned(),
+                        })?;
+                    self.consume(); // Consume Argument Type
+                    self.expect(Token::Symbol(Symbol::Colon))?;
+                    self.consume(); // Consume Colon
+                    let arg_name = self
+                        .tokens
+                        .peek()
+                        .cloned()
+                        .ok_or(AstParseError::ExpectedOther {
+                            token: "Argument Name".to_owned(),
+                        })?;
+                    match arg_name.is_identifier() {
+                        true => (),
+                        false => {
+                            return Err(AstParseError::ExpectedOther {
+                                token: "Argument Name".to_owned(),
+                            });
+                        }
+                    }
+                    self.consume(); // Consume Argument Name
+                }
+                Token::Symbol(Symbol::CloseParen) => {
+                    break;
+                }
+                _ => {
+                    return Err(AstParseError::ExpectedOther {
+                        token: "Argument".to_owned(),
+                    });
+                }
+            }
+            self.consume();
+        }
         self.expect(Token::Symbol(Symbol::CloseParen))?;
         self.consume(); // Consume CloseParen
         self.expect(Token::Symbol(Symbol::Arrow))?;
@@ -214,6 +258,28 @@ impl<'a> Parser<'a> {
                 token: "Value".to_owned(),
             })?;
         self.consume(); // Consume Value
+        // check if the value is calling a function
+        if self.tokens.peek() == Some(&Token::Symbol(Symbol::OpenParen)) {
+            self.consume(); // Consume OpenParen
+            let mut args: Vec<Token> = Vec::new();
+            while let Some(token) = self.tokens.peek() {
+                if token == &Token::Symbol(Symbol::CloseParen) {
+                    break;
+                }
+                args.push(token.clone());
+                self.consume();
+            }
+            self.expect(Token::Symbol(Symbol::CloseParen))?;
+            self.consume(); // Consume CloseParen
+            let let_statement = AST::Let {
+                name: variable_name.to_string(),
+                type_name: Some(type_name.to_string()),
+                value: Token::TypeValue(TypeValue::FunctionCall(value.to_string(), args))
+            };
+            self.expect(Token::Symbol(Symbol::Semicolon))?;
+            self.consume(); // Consume Tokens::Semicolon
+            return Ok(let_statement);
+        }
 
         self.expect(Token::Symbol(Symbol::Semicolon))?;
         self.consume(); // Consume Tokens::Semicolon
