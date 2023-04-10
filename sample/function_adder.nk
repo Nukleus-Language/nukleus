@@ -1,0 +1,13 @@
+fn main() -> void
+{
+	let:i32 ans = adder(1, 2);
+	print("1+2 =");
+	println(ans);
+	return ;
+}
+
+fn adder(i32:a, i32:b) -> i32
+{
+	a += b;
+	return a;
+}
