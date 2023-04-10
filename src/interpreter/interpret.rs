@@ -103,7 +103,7 @@ impl Interpreter {
         self.run_function(main.function_get_statements(), vec![]);
     }
     pub fn run_repl(&mut self) {
-        println!("Nukleus 0.1.0 Nightly 2023-04-B2");
+        println!("Nukleus 0.1.0 Nightly 2023-04-B3");
         loop {
             print!("> ");
             io::stdout().flush();
@@ -465,6 +465,7 @@ impl Interpreter {
                         (target_statements, this_function, target_args)
                     };
                     if target_args.len() != args.len() {
+                        //println!("{} {}", target_args.len(), args.len());
                         panic!("Argument count mismatch");
                     }
                     for (i, arg) in args.iter().enumerate() {

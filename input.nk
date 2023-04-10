@@ -42,6 +42,12 @@ fn main() -> void
 
 	let:i32 yay =print_hello(3);
 	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
 	return;
 }
 
@@ -51,6 +57,12 @@ fn print_hello(i32:a) -> i32
 	print("a = ");
 	println(a);
     return 2;
+}
+ 
+fn adder(i32:a,i32:b) -> i32
+{
+ 	a += b;
+	return a;
 }
 
 fn testt() -> void
