@@ -100,7 +100,7 @@ impl Interpreter {
             .get(main_addr)
             .expect("No main function found");
         self.cur_function = main_addr.clone();
-        self.run_function(main.function_get_statements(), main.function_get_args());
+        self.run_function(main.function_get_statements(), vec![]);
     }
     pub fn run_repl(&mut self) {
         println!("Nukleus 0.1.0 Nightly 2023-04-B1");
@@ -145,10 +145,10 @@ impl Interpreter {
                 AST::Let { name, value, .. } => {
                     //self.variables.insert(name.clone(), lexer::Token::TypeValue(self.eval_expr(&value)));
                     let getten_value = self.eval_expr(&value.clone());
-                    
+
                     // check if the variable name is taken by a function
                     if self.function_map.contains_key(&name) {
-                        panic!("Variable name '{}' is taken by a function", name);
+                        panic!("Variable name '{}' is taken", name);
                     }
 
                     let func = self
@@ -295,23 +295,58 @@ impl Interpreter {
                         )),
                     );
                 }
-                AST::FunctionCall { name, args: _ } => {
-                    let func_name = name.to_string();
+                AST::FunctionCall { name, args } => {
+                    let func_name = name.clone().to_string();
                     let target_func_addr = self
                         .function_map
                         .get(&func_name)
-                        .expect("Function not found");
-                    let target_func = self
-                        .functions
-                        .get(target_func_addr)
-                        .expect("Function not found");
-                    let this_function = self.cur_function.clone();
+                        .expect("Function not found")
+                        .clone();
+
+                    let (target_statements, this_function, target_args) = {
+                        let target_func = self
+                            .functions
+                            .get_mut(&target_func_addr)
+                            .expect("Function not found");
+
+                        let target_statements = target_func.function_get_statements().clone();
+                        let this_function = self.cur_function.clone();
+                        let target_args = target_func.function_get_args_format().clone();
+                        (target_statements, this_function, target_args)
+                    };
+                    if target_args.len() != args.len() {
+                        panic!("Argument count mismatch");
+                    }
+                    for (i, arg) in args.iter().enumerate() {
+                        let arg_type = self.eval_expr(arg).get_type();
+                        let arg_type = Token::TypeName(arg_type);
+                        if arg_type != target_args[i].0 {
+                            panic!("Argument type mismatch");
+                        }
+                    }
                     self.cur_function = target_func_addr.clone();
-                    self.run_function(
-                        target_func.function_get_statements().clone(),
-                        target_func.function_get_args().clone(),
-                    );
+                    self.run_function(target_statements, args.clone());
                     self.cur_function = this_function;
+                    /*let return_value = {
+                        let target_func = self
+                        .functions
+                        .get(&target_func_addr)
+                        .expect("Function not found");
+                        target_func.function_get_return_value().clone()
+                    };
+                    self.eval_expr(&return_value)
+                                        // Check for argument count, and type
+                    let target_args = target_func.function_get_args_format();
+                    if target_args.len() != args.len() {
+                        panic!("Argument count mismatch");
+                    }
+                    for (i, arg) in args.iter().enumerate() {
+                        let arg_type = self.eval_expr(arg).get_type();
+                        let arg_type = Token::TypeName(arg_type);
+                        if arg_type != target_args[i].0 {
+                            panic!("Argument type mismatch");
+                        }
+                    }*/
                 }
                 /*
                 AST::Assign { l_var, r_var } => {
@@ -394,8 +429,8 @@ impl Interpreter {
                     } else {
                         panic!("Undefined variable '{}'", id);
                     }
-                },
-                TypeValue::FunctionCall(id,args) =>{
+                }
+                TypeValue::FunctionCall(id, args) => {
                     let func_name = id.clone();
                     let target_func_addr = self
                         .function_map
@@ -403,7 +438,7 @@ impl Interpreter {
                         .expect("Function not found")
                         .clone();
 
-                    let (target_statements, this_function) = {
+                    let (target_statements, this_function, target_args) = {
                         let target_func = self
                             .functions
                             .get_mut(&target_func_addr)
@@ -411,17 +446,28 @@ impl Interpreter {
 
                         let target_statements = target_func.function_get_statements().clone();
                         let this_function = self.cur_function.clone();
-                        (target_statements, this_function)
+                        let target_args = target_func.function_get_args_format().clone();
+                        (target_statements, this_function, target_args)
                     };
+                    if target_args.len() != args.len() {
+                        panic!("Argument count mismatch");
+                    }
+                    for (i, arg) in args.iter().enumerate() {
+                        let arg_type = self.eval_expr(arg).get_type();
+                        let arg_type = Token::TypeName(arg_type);
+                        if arg_type != target_args[i].0 {
+                            panic!("Argument type mismatch");
+                        }
+                    }
 
                     self.cur_function = target_func_addr.clone();
                     self.run_function(target_statements, args.clone());
                     self.cur_function = this_function;
                     let return_value = {
                         let target_func = self
-                        .functions
-                        .get(&target_func_addr)
-                        .expect("Function not found");
+                            .functions
+                            .get(&target_func_addr)
+                            .expect("Function not found");
                         target_func.function_get_return_value().clone()
                     };
                     self.eval_expr(&return_value)
