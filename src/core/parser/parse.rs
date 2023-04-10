@@ -94,7 +94,7 @@ impl<'a> Parser<'a> {
         self.consume(); // Consume OpenBrace
 
         let statements = self.parse_statements(return_type.clone())?;
-        let mut return_value = Token::TypeValue(TypeValue::None);
+        let return_value = Token::TypeValue(TypeValue::None);
         /*if return_type != Token::TypeName(TypeName::Void) {
             self.expect(Token::Statement(Statement::Return))?;
             self.consume(); // Consume Return
@@ -645,7 +645,9 @@ impl<'a> Parser<'a> {
         self.consume(); // Consume Tokens::Return
         if self.tokens.peek() == Some(&Token::Symbol(Symbol::Semicolon)) {
             self.consume(); // Consume Semicolon
-            return Ok(AST::Return { value: Token::TypeValue(TypeValue::None) });
+            return Ok(AST::Return {
+                value: Token::TypeValue(TypeValue::None),
+            });
         }
         let value = self
             .tokens
