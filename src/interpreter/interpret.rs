@@ -348,7 +348,7 @@ impl Interpreter {
         //println!("Function: {:?}", func);
     }
 
-    fn eval_expr(&self, expr: &Token) -> TypeValue {
+    fn eval_expr(&mut self, expr: &Token) -> TypeValue {
         if let Token::TypeValue(inner_expr) = expr {
             match inner_expr {
                 TypeValue::None => TypeValue::None,
@@ -384,6 +384,9 @@ impl Interpreter {
                                 TypeValue::Identifier(_) => {
                                     panic!("Invalid identifier reference")
                                 }
+                                TypeValue::FunctionCall(_, _) => {
+                                    panic!("Invalid function call reference")
+                                }
                             }
                         } else {
                             panic!("Invalid value type");
@@ -391,6 +394,37 @@ impl Interpreter {
                     } else {
                         panic!("Undefined variable '{}'", id);
                     }
+                },
+                TypeValue::FunctionCall(id,args) =>{
+                    let func_name = id.clone();
+                    let target_func_addr = self
+                        .function_map
+                        .get(&func_name)
+                        .expect("Function not found")
+                        .clone();
+
+                    let (target_statements, this_function) = {
+                        let target_func = self
+                            .functions
+                            .get_mut(&target_func_addr)
+                            .expect("Function not found");
+
+                        let target_statements = target_func.function_get_statements().clone();
+                        let this_function = self.cur_function.clone();
+                        (target_statements, this_function)
+                    };
+
+                    self.cur_function = target_func_addr.clone();
+                    self.run_function(target_statements, args.clone());
+                    self.cur_function = this_function;
+                    let return_value = {
+                        let target_func = self
+                        .functions
+                        .get(&target_func_addr)
+                        .expect("Function not found");
+                        target_func.function_get_return_value().clone()
+                    };
+                    self.eval_expr(&return_value)
                 }
             }
         } else {
