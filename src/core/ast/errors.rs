@@ -1,6 +1,6 @@
 use snafu::prelude::*;
 
-#[derive(Debug, Snafu)]
+#[derive(Debug,Clone, Snafu)]
 #[snafu(visibility(pub))]
 pub enum AstParseError {
     #[snafu(display("Unknown token `{token}`"))]
