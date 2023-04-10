@@ -103,7 +103,7 @@ impl Interpreter {
         self.run_function(main.function_get_statements(), vec![]);
     }
     pub fn run_repl(&mut self) {
-        println!("Nukleus 0.1.0 Nightly 2023-04-B1");
+        println!("Nukleus 0.1.0 Nightly 2023-04-B2");
         loop {
             print!("> ");
             io::stdout().flush();
