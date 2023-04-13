@@ -61,7 +61,7 @@ impl<'a> Lexer<'a> {
             }
             else if state == State::Number && !is_numeric(c) {
                 //let number = buffer.parse::<i32>().unwrap();
-                let number = number_to_token(&self.buffer, self.line, self.column);
+                let number = number_to_token(self.buffer.clone(), self.line, self.column);
                 match number {
                     Ok(number) => self.insert_token(number),
                     Err(error) => self.report_error(error),
@@ -120,8 +120,26 @@ fn is_operator(c: char) -> bool {
         _ => false,
     }
 }
-fn operator_to_token(operator: &str, line:usize, column:usize) -> Result<Token, LexcialError> {
-    match operator {
+fn is_symbol(c: char) -> bool {
+    match c {
+        '(' | ')' | '{' | '}' | '[' | ']' | ',' | ';' | ':' | '.' => true,
+        _ => false,
+    }
+}
+fn is_quoted_string(c: char) -> bool {
+    match c {
+        '"' => true,
+        _ => false,
+    }
+}
+fn is_statement(b: String) -> bool{
+    match b.as_str() {
+        "if" | "else" | "while" | "for" | "return" | "break" | "continue" | "let" | "const" | "fn" | "public" | "import"  => true,
+        _ => false,
+    }
+}
+fn operator_to_token(operator: String, line:usize, column:usize) -> Result<Token, LexcialError> {
+    match operator.as_str() {
         "+" => Ok(Token::Operator(Operator::Add)),
         "-" => Ok(Token::Operator(Operator::Subtract)),
         "*" => Ok(Token::Operator(Operator::Multiply)),
@@ -130,7 +148,7 @@ fn operator_to_token(operator: &str, line:usize, column:usize) -> Result<Token, 
         _ => return Err(LexcialError{line, column, message: LexError::InvalidOperator(operator.to_string())}),
     }
 }
-fn number_to_token(number: &str, line:usize, column:usize) -> Result<Token, LexcialError> {
+fn number_to_token(number: String, line:usize, column:usize) -> Result<Token, LexcialError> {
     //check if the number is parseable while not changing the type of number to i32
     let test_parse = number.parse::<u64>();
 
@@ -139,8 +157,8 @@ fn number_to_token(number: &str, line:usize, column:usize) -> Result<Token, Lexc
         Err(_) => return Err(LexcialError{line, column, message: LexError::InvalidNumber(number.to_string())}),
     }
 }
-fn syambol_to_token(symbol: &str, line:usize, column:usize) -> Result<Token, LexcialError>{
-    match symbol {
+fn syambol_to_token(symbol: String, line:usize, column:usize) -> Result<Token, LexcialError>{
+    match symbol.as_str() {
         "@" => Ok(Token::Symbol(Symbol::At)),
         ":" => Ok(Token::Symbol(Symbol::Colon)),
         "." => Ok(Token::Symbol(Symbol::Dot)),
@@ -163,9 +181,37 @@ fn syambol_to_token(symbol: &str, line:usize, column:usize) -> Result<Token, Lex
         _ => return Err(LexcialError{line, column, message: LexError::InvalidSymbol(symbol.to_string())}),
     }
 }
-/*fn statement_to_token(statement_to_token) -> Token{
-
-}*/
+fn statement_to_token(statement:String, line:usize, column:usize) -> Result<Token, LexcialError>{
+       match statement.as_str() {
+                "let" => Ok(Token::Statement(Statement::Let)),
+                "fn" => Ok(Token::Statement(Statement::Function)),
+                //"->" => Token::Symbol(Symbol::Arrow),
+                //"::" => Token::Symbol(Symbol::DoubleColon),
+                "return" => Ok(Token::Statement(Statement::Return)),
+                "import" => Ok(Token::Statement(Statement::Import)),
+                //"==" => Token::Logical(Logical::Equals),
+                //"!=" => Token::Logical(Logical::NotEquals),
+                "public" => Ok(Token::Statement(Statement::Public)),
+                "if" => Ok(Token::Statement(Statement::If)),
+                "else" => Ok(Token::Statement(Statement::Else)),
+                "while" => Ok(Token::Statement(Statement::While)),
+                "print" => Ok(Token::Statement(Statement::Print)),
+                "println" => Ok(Token::Statement(Statement::Println)),
+                "for" => Ok(Token::Statement(Statement::For)),
+                "void" => Ok(Token::TypeName(TypeName::Void)),
+                "bool" => Ok(Token::TypeName(TypeName::Bool)),
+                "string" => Ok(Token::TypeName(TypeName::QuotedString)),
+                "i8" => Ok(Token::TypeName(TypeName::I8)),
+                "i16" => Ok(Token::TypeName(TypeName::I16)),
+                "i32" => Ok(Token::TypeName(TypeName::I32)),
+                "i64" => Ok(Token::TypeName(TypeName::I64)),
+                "u8" => Ok(Token::TypeName(TypeName::U8)),
+                "u16" => Ok(Token::TypeName(TypeName::U16)),
+                "u32" => Ok(Token::TypeName(TypeName::U32)),
+                "u64" => Ok(Token::TypeName(TypeName::U64)),
+                _ => return Err(LexcialError{line, column, message: LexError::InvalidStatement(statement.to_string())}),
+       }
+}
 
 
 #[cfg(test)]
@@ -173,11 +219,20 @@ mod test{
     use super::*;
     #[test]
     fn line_counting(){
-        let code = "fn main() {
-            println!(\"Hello, world!\");
+        let code = "fn main() -> void {
+            println(\"Hello, world!\");
         }";
         let mut lexer = Lexer::new(code);
         lexer.run();
         assert_eq!(lexer.line, 3);
+    }
+    #[test]
+    fn column_counting(){
+        let code = "fn main() -> void {
+            println(\"Hello, world!\");
+        }";
+        let mut lexer = Lexer::new(code);
+        lexer.run();
+        assert_eq!(lexer.column, 2);
     }
 }
