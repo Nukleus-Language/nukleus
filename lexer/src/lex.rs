@@ -39,10 +39,6 @@ pub fn lexer(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut buffer = String::new();
     let mut double_state = false;
-    let mut arrow_flag = false;
-    let mut equals_flag = false;
-    let mut double_colon_flag = false;
-    let mut not_equals_flag = false;
     let mut string_flag = false;
 
     // Iterate through the string by character
