@@ -84,16 +84,16 @@ impl<'a> Lexer<'a> {
                 self.buffer.push(c);
                 
                 self.state = State::StateDefault;
-                continue;
+                //continue;
             }
             println!("Current First Char: {}", self.buffer.chars().nth(0).unwrap());
             
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().nth(0).unwrap();
-            if self.state == State::StateDefault && ((first_char == '-' || is_numeric(first_char)) {
+            if self.state == State::StateDefault && (first_char == '-' || is_numeric(first_char)) {
                 self.state = State::Number;
-                self.buffer.push(c);
+                //self.buffer.push(c);
             }
             else if self.state == State::Number && is_numeric(c) {
                 self.buffer.push(c);
@@ -113,7 +113,7 @@ impl<'a> Lexer<'a> {
             // if the first character is a " then it is a string
             if self.state == State::StateDefault && is_quote(first_char) {
                 self.state = State::QuotedString;
-                self.buffer.push(c);
+                //self.buffer.push(c);
                 continue;
             }
             else if self.state == State::QuotedString && !is_quote(c) {
@@ -136,7 +136,7 @@ impl<'a> Lexer<'a> {
             // check if is a identifier, statement, or symbol
             if self.state == State::StateDefault && is_first_identifierable(first_char) {
                 self.state = State::Identifier;
-                self.buffer.push(c);
+                //self.buffer.push(c);
             }
             else if self.state == State::Identifier && is_identifierable(c) {
                 self.buffer.push(c);
@@ -202,7 +202,7 @@ impl<'a> Lexer<'a> {
         self.tokens.push(token);
     }
     fn report_error(&self, error: LexcialError) {
-        println!("{} on ---------> \nLine: {}, Column: {}",error, self.line, self.column);
+        println!("{} on \n-------------> Line: {}, Column: {}",error, self.line, self.column);
     }
 }
 
@@ -257,8 +257,9 @@ fn operator_to_token(operator: char, line:usize, column:usize) -> Result<Token, 
 }
 fn number_to_token(number: String, line:usize, column:usize) -> Result<Token, LexcialError> {
     //check if the number is parseable while not changing the type of number to i32
+    //println!("BEF Number: {}", number);
     let test_parse = number.parse::<u64>();
-
+    //println!("AFT Number: {}", number);
     match test_parse {
         Ok(number) => Ok(Token::TypeValue(TypeValue::Number(number.to_string()))),
         Err(_) => return Err(LexcialError{line, column, message: LexError::InvalidNumber(number.to_string())}),
@@ -370,7 +371,7 @@ mod test{
     }
     #[test]
     fn lexing_numbers(){
-        let code = "fn main() -> void \n{\nlet:i32 a = 5;\nlet:i32 b = 10;\n}";
+        let code = "fn main() -> void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";
         let mut lexer = Lexer::new(code);
         lexer.run();
         println!("{:?}", lexer.tokens);
