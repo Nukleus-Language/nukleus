@@ -3,7 +3,7 @@ use std::fmt;
 pub struct LexcialError {
     pub line: usize,
     pub column: usize,
-    pub message: LexError, 
+    pub message: LexError,
 }
 impl fmt::Display for LexcialError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -19,7 +19,7 @@ pub enum LexError {
     InvalidSymbol(String),
     InvalidStatement(String),
     InvalidTypeName(String),
-    InvalidDoubleSymbol(String)
+    InvalidDoubleSymbol(String),
 }
 impl fmt::Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -35,5 +35,3 @@ impl fmt::Display for LexError {
         }
     }
 }
-
-
