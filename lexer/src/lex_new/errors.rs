@@ -18,6 +18,7 @@ pub enum LexError {
     InvalidOperator(String),
     InvalidSymbol(String),
     InvalidStatement(String),
+    InvalidTypeName(String),
 }
 impl fmt::Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -28,6 +29,7 @@ impl fmt::Display for LexError {
             LexError::InvalidOperator(o) => write!(f, "Invalid operator: {}", o),
             LexError::InvalidSymbol(s) => write!(f, "Invalid symbol: {}", s),
             LexError::InvalidStatement(s) => write!(f, "Invalid statement: {}", s),
+            LexError::InvalidTypeName(t) => write!(f, "Invalid type name: {}", t),
         }
     }
 }
