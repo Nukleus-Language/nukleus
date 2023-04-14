@@ -40,6 +40,7 @@ impl<'a> Lexer<'a> {
     fn run(&mut self) {
         //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
+            let peeked_char = self.peek_char();
             println!("---------------------------------");
             println!("Current Char: {}", c);
             println!("Current State: {:?}", self.state);
@@ -60,7 +61,6 @@ impl<'a> Lexer<'a> {
             if self.buffer.is_empty(){
                 // check if is a double symbol
                 self.buffer.push(c);
-                let peeked_char = self.peek_char();
                 self.buffer.push(peeked_char);
                 let double_symbol = double_symbol_to_token(self.buffer.clone(), self.line, self.column);
                 match double_symbol {
@@ -91,14 +91,14 @@ impl<'a> Lexer<'a> {
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().nth(0).unwrap();
-            if self.state == State::StateDefault && ((first_char == '-' || is_numeric(first_char)) && is_numeric(self.peek_char())) {
+            if self.state == State::StateDefault && ((first_char == '-' || is_numeric(first_char)) {
                 self.state = State::Number;
                 self.buffer.push(c);
             }
             else if self.state == State::Number && is_numeric(c) {
                 self.buffer.push(c);
             }
-            if self.state == State::Number && !is_numeric(self.peek_char()) {
+            if self.state == State::Number && !is_numeric(peeked_char) {
                 //let number = buffer.parse::<i32>().unwrap();
                 let number = number_to_token(self.buffer.clone(), self.line, self.column);
                 match number {
@@ -202,8 +202,7 @@ impl<'a> Lexer<'a> {
         self.tokens.push(token);
     }
     fn report_error(&self, error: LexcialError) {
-        print!("{} on ", error);
-        println!("Line: {}, Column: {}", self.line, self.column);
+        println!("{} on ---------> \nLine: {}, Column: {}",error, self.line, self.column);
     }
 }
 
