@@ -142,7 +142,7 @@ impl<'a> Lexer<'a> {
                 self.buffer.push(c);
                 
             }
-            if self.state == State::Identifier {
+            if self.state == State::Identifier && !is_identifierable(peeked_char) {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
                 let statement = statement_to_token(self.buffer.clone(), self.line, self.column);
                 match statement {
@@ -154,12 +154,10 @@ impl<'a> Lexer<'a> {
                     }
                     Err(_) => {}
                 }
-                /*match identifier {
-                    Ok(identifier) => self.insert_token(identifier),
-                    Err(error) => self.report_error(error),
-                }*/
-                //self.buffer.clear();
-                //state = State::StateEmpty;
+                let identifier = Token::TypeValue(TypeValue::Identifier(self.buffer.clone()));
+                self.insert_token(identifier);
+                self.buffer.clear();
+                self.state = State::StateEmpty;
                 continue;
             }
 
@@ -202,7 +200,7 @@ impl<'a> Lexer<'a> {
         self.tokens.push(token);
     }
     fn report_error(&self, error: LexcialError) {
-        println!("{} on \n-------------> Line: {}, Column: {}",error, self.line, self.column);
+        println!("{} \n-------------> Line: {}, Column: {}",error, self.line, self.column);
     }
 }
 
@@ -349,6 +347,11 @@ fn double_symbol_to_token(double_symbol: String, line:usize, column:usize) -> Re
         _ => return Err(LexcialError{line, column, message: LexError::InvalidDoubleSymbol(double_symbol.to_string())}),
     }
 }
+/*fn identifier_to_token(identifier: String, line:usize, column:usize) -> Result<Token, LexcialError>{
+    match identifier.as_str() {
+        _ => Ok(Token::Identifier(identifier)),
+    }
+}*/
 
 #[cfg(test)]
 mod test{
@@ -372,15 +375,79 @@ mod test{
     #[test]
     fn lexing_numbers(){
         let code = "fn main() -> void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";
+        let ans = vec![
+            Token::Statement(Statement::Function),
+            Token::TypeValue(TypeValue::Identifier("main".to_string())),
+            Token::Symbol(Symbol::OpenParen),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Arrow),
+            Token::TypeName(TypeName::Void),
+            Token::Symbol(Symbol::OpenBrace),
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::TypeValue(TypeValue::Identifier("a".to_string())),
+            Token::Assign(Assign::Assign),
+            Token::TypeValue(TypeValue::Number(5.to_string())),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::TypeValue(TypeValue::Identifier("b".to_string())),
+            Token::Assign(Assign::Assign),
+            Token::TypeValue(TypeValue::Number(0.to_string())),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Symbol(Symbol::CloseBrace),
+        ];
         let mut lexer = Lexer::new(code);
         lexer.run();
         println!("{:?}", lexer.tokens);
-        panic!();
+        assert_eq!(lexer.tokens, ans);
+        
     }
     #[test]
     fn lexing_strings(){
         let code = " \"Hello, world!\" ";
         let ans = vec![Token::TypeValue(TypeValue::QuotedString("Hello, world!".to_string()))];
+        let mut lexer = Lexer::new(code);
+        lexer.run();
+        println!("{:?}", lexer.tokens);
+        assert_eq!(lexer.tokens, ans);
+    }
+    #[test]
+    fn lexing_complex(){
+        let code = "fn main() -> void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\nprintln(\"Hello, world!\");\nreturn;\n}";
+        let ans = vec![
+            Token::Statement(Statement::Function),
+            Token::TypeValue(TypeValue::Identifier("main".to_string())),
+            Token::Symbol(Symbol::OpenParen),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Arrow),
+            Token::TypeName(TypeName::Void),
+            Token::Symbol(Symbol::OpenBrace),
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::TypeValue(TypeValue::Identifier("a".to_string())),
+            Token::Assign(Assign::Assign),
+            Token::TypeValue(TypeValue::Number(5.to_string())),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::TypeValue(TypeValue::Identifier("b".to_string())),
+            Token::Assign(Assign::Assign),
+            Token::TypeValue(TypeValue::Number(0.to_string())),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Statement(Statement::Println),
+            Token::Symbol(Symbol::OpenParen),
+            Token::TypeValue(TypeValue::QuotedString("Hello, world!".to_string())),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Statement(Statement::Return),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Symbol(Symbol::CloseBrace),
+        ];
         let mut lexer = Lexer::new(code);
         lexer.run();
         println!("{:?}", lexer.tokens);
