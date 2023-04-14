@@ -498,6 +498,23 @@ mod test {
         assert_eq!(lexer.tokens, ans);
     }
     #[test]
+    fn lexing_negative_number_assign(){
+        let code = "let:i32 a = -5;";
+        let ans = vec![
+            Token::Statement(Statement::Let),
+            Token::Symbol(Symbol::Colon),
+            Token::TypeName(TypeName::I32),
+            Token::TypeValue(TypeValue::Identifier("a".to_string())),
+            Token::Assign(Assign::Assign),
+            Token::TypeValue(TypeValue::Numbera(-5.to_string())),
+            Token::Symbol(Symbol::Semicolon),
+        ];
+        let mut lexer = Lexer::new(code);
+        lexer.run();
+        println!("{:?}", lexer.tokens);
+        assert_eq!(lexer.tokens, ans);
+    }
+    #[test]
     fn lexing_complex() {
         let code = "fn main() -> void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\nprintln(\"Hello, world!\");\nreturn;\n}";
         let ans = vec![
