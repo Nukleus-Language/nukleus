@@ -38,24 +38,40 @@ impl<'a> Lexer<'a> {
         }
     }
     fn run(&mut self) {
-        let mut state = State::StateDefault;
+        //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
-
+            println!("---------------------------------");
             println!("Current Char: {}", c);
-            println!("Current State: {:?}", state);
+            println!("Current State: {:?}", self.state);
             println!("Current Buffer: {}", self.buffer);
-            if state == State::DoubleState{
+            if self.state == State::DoubleState{
                 self.buffer.clear();
-                State::StateEmpty;
+                println!("Double");
+                self.state = State::StateEmpty;
+                
                 continue;
             }
-            if is_whitespace(c) && state != State::QuotedString {
+            if is_whitespace(c) && self.state != State::QuotedString {
                 self.buffer.clear();
-                state = State::StateEmpty;
+                self.state = State::StateEmpty;
                 continue;
             }
             // Check if the buffer is empty and the current character when is empty
             if self.buffer.is_empty(){
+                // check if is a double symbol
+                self.buffer.push(c);
+                let peeked_char = self.peek_char();
+                self.buffer.push(peeked_char);
+                let double_symbol = double_symbol_to_token(self.buffer.clone(), self.line, self.column);
+                match double_symbol {
+                    Ok(double_symbol) => {
+                        self.insert_token(double_symbol);
+                        self.buffer.clear();
+                        self.state = State::DoubleState;
+                        continue;
+                    }
+                    Err(_) => {self.buffer.clear();}
+                }
                 // run the symbol_to token to check if is a symbol
                 let symbol = symbol_to_token(c, self.line, self.column);
                 match symbol {
@@ -67,7 +83,7 @@ impl<'a> Lexer<'a> {
                 }
                 self.buffer.push(c);
                 
-                state = State::StateDefault;
+                self.state = State::StateDefault;
                 continue;
             }
             println!("Current First Char: {}", self.buffer.chars().nth(0).unwrap());
@@ -75,14 +91,14 @@ impl<'a> Lexer<'a> {
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().nth(0).unwrap();
-            if state == State::StateDefault && ((first_char == '-' || is_numeric(first_char)) && is_numeric(self.peek_char())) {
-                state = State::Number;
+            if self.state == State::StateDefault && ((first_char == '-' || is_numeric(first_char)) && is_numeric(self.peek_char())) {
+                self.state = State::Number;
                 self.buffer.push(c);
             }
-            else if state == State::Number && is_numeric(c) {
+            else if self.state == State::Number && is_numeric(c) {
                 self.buffer.push(c);
             }
-            if state == State::Number && !is_numeric(self.peek_char()) {
+            if self.state == State::Number && !is_numeric(self.peek_char()) {
                 //let number = buffer.parse::<i32>().unwrap();
                 let number = number_to_token(self.buffer.clone(), self.line, self.column);
                 match number {
@@ -90,50 +106,50 @@ impl<'a> Lexer<'a> {
                     Err(error) => self.report_error(error),
                 }
                 self.buffer.clear();
-                state = State::StateEmpty;
+                self.state = State::StateEmpty;
                 continue;
             }
 
             // if the first character is a " then it is a string
-            if state == State::StateDefault && is_quote(first_char) {
-                state = State::QuotedString;
+            if self.state == State::StateDefault && is_quote(first_char) {
+                self.state = State::QuotedString;
                 self.buffer.push(c);
                 continue;
             }
-            else if state == State::QuotedString && !is_quote(c) {
+            else if self.state == State::QuotedString && !is_quote(c) {
                 self.buffer.push(c);
                 continue;
             }
-            else if state == State::QuotedString && is_quote(c) {
+            else if self.state == State::QuotedString && is_quote(c) {
                 let string = self.buffer.clone();
                 self.buffer.push(c);
                 // trim the quotes
                 let string = string.trim_matches('"').to_string();
                 self.insert_token(Token::TypeValue(TypeValue::QuotedString(string)));
                 self.buffer.clear();
-                state = State::StateEmpty;
+                self.state = State::StateEmpty;
                 continue;
             }
             
 
 
             // check if is a identifier, statement, or symbol
-            if state == State::StateDefault && is_first_identifierable(first_char) {
-                state = State::Identifier;
+            if self.state == State::StateDefault && is_first_identifierable(first_char) {
+                self.state = State::Identifier;
                 self.buffer.push(c);
             }
-            else if state == State::Identifier && is_identifierable(c) {
+            else if self.state == State::Identifier && is_identifierable(c) {
                 self.buffer.push(c);
                 
             }
-            if state == State::Identifier {
+            if self.state == State::Identifier {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
                 let statement = statement_to_token(self.buffer.clone(), self.line, self.column);
                 match statement {
                     Ok(statement) => {
                         self.insert_token(statement);
                         self.buffer.clear();
-                        state = State::StateEmpty;
+                        self.state = State::StateEmpty;
                         continue;
                     }
                     Err(_) => {}
@@ -324,6 +340,15 @@ fn typename_to_token(typename:String, line:usize, column:usize) -> Result<Token,
     }
 }
 
+fn double_symbol_to_token(double_symbol: String, line:usize, column:usize) -> Result<Token, LexcialError>{
+    match double_symbol.as_str() {
+        "==" => Ok(Token::Logical(Logical::Equals)),
+        "!=" => Ok(Token::Logical(Logical::NotEquals)),
+        "->" => Ok(Token::Symbol(Symbol::Arrow)),
+        "::" => Ok(Token::Symbol(Symbol::DoubleColon)),
+        _ => return Err(LexcialError{line, column, message: LexError::InvalidDoubleSymbol(double_symbol.to_string())}),
+    }
+}
 
 #[cfg(test)]
 mod test{
