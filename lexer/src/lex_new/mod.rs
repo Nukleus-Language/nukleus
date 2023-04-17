@@ -6,6 +6,9 @@ mod value;
 use errors::LexError;
 use errors::LexcialError;
 use value::number_to_token;
+use identifier::statement_to_token;
+use symbol::symbol_to_token;
+use symbol::double_symbol_to_token;
 
 use std::iter::Peekable;
 use std::str::Chars;
@@ -77,7 +80,7 @@ impl<'a> Lexer<'a> {
                 self.buffer.push(c);
                 self.buffer.push(peeked_char);
                 let double_symbol =
-                    double_symbol_to_token(self.buffer.clone(), self.line, self.column);
+                    symbol::double_symbol_to_token(self.buffer.clone(), self.line, self.column);
                 match double_symbol {
                     Ok(double_symbol) => {
                         if double_symbol == Token::Symbol(Symbol::Comment) {
@@ -95,13 +98,23 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 // run the symbol_to token to check if is a symbol
-                let symbol = symbol_to_token(c, self.line, self.column);
+                let symbol = symbol::symbol_to_token(c, self.line, self.column);
                 match symbol {
                     Ok(symbol) => {
                         self.insert_token(symbol);
                         continue;
                     }
                     Err(_) => {}
+                }
+                if !peeked_char.is_numeric(){
+                    let operator = symbol::operator_to_token(c, self.line, self.column);
+                    match operator {
+                        Ok(operator) => {
+                            self.insert_token(operator);
+                            continue;
+                        }
+                        Err(_) => {}
+                    }
                 }
                 self.buffer.push(c);
 
@@ -162,7 +175,7 @@ impl<'a> Lexer<'a> {
             }
             if self.state == State::Identifier && !is_identifierable(peeked_char) {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
-                let statement = statement_to_token(self.buffer.clone(), self.line, self.column);
+                let statement = identifier::statement_to_token(self.buffer.clone(), self.line, self.column);
                 match statement {
                     Ok(statement) => {
                         self.insert_token(statement);
@@ -229,18 +242,7 @@ fn is_quote(c: char) -> bool {
         _ => false,
     }
 }
-fn is_operator(c: char) -> bool {
-    match c {
-        '+' | '-' | '*' | '/' | '%' => true,
-        _ => false,
-    }
-}
-fn is_symbol(c: char) -> bool {
-    match c {
-        '(' | ')' | '{' | '}' | '[' | ']' | ',' | ';' | ':' | '.' => true,
-        _ => false,
-    }
-}
+
 fn is_quoted_string(c: char) -> bool {
     match c {
         '"' => true,
@@ -253,13 +255,16 @@ fn is_identifierable(c: char) -> bool {
 fn is_first_identifierable(c: char) -> bool {
     c.is_alphabetic() || c == '_'
 }
-fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token, LexcialError> {
+/*fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token, LexcialError> {
     match operator {
         '+' => Ok(Token::Operator(Operator::Add)),
         '-' => Ok(Token::Operator(Operator::Subtract)),
         '*' => Ok(Token::Operator(Operator::Multiply)),
         '/' => Ok(Token::Operator(Operator::Divide)),
         '%' => Ok(Token::Operator(Operator::Remainder)),
+        '&' => Ok(Token::Operator(Operator::And)),
+        '|' => Ok(Token::Operator(Operator::Or)),
+        '^' => Ok(Token::Operator(Operator::Xor)),
         _ => {
             Err(LexcialError {
                 line,
@@ -268,81 +273,9 @@ fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token
             })
         }
     }
-}
-//fn quoted_string_to_token(string: String, line:usize, column:usize) -> Result<Token, LexcialError> {
-//    Ok(Token::String(string))
-//}
-fn symbol_to_token(symbol: char, line: usize, column: usize) -> Result<Token, LexcialError> {
-    match symbol {
-        ',' => Ok(Token::Symbol(Symbol::Comma)),
-        ':' => Ok(Token::Symbol(Symbol::Colon)),
-        '.' => Ok(Token::Symbol(Symbol::Dot)),
-        '=' => Ok(Token::Assign(Assign::Assign)),
-        //'-' => Token::Operator(Operator::Subtract),
-        '(' => Ok(Token::Symbol(Symbol::OpenParen)),
-        '{' => Ok(Token::Symbol(Symbol::OpenBrace)),
-        //"<' => Ok(Token::Logical(Logical::LessThan)),
-        '[' => Ok(Token::Symbol(Symbol::OpenSquare)),
-        ')' => Ok(Token::Symbol(Symbol::CloseParen)),
-        '}' => Ok(Token::Symbol(Symbol::CloseBrace)),
-        //'>' => Ok(Token::Logical(Logical::GreaterThan)),
-        ']' => Ok(Token::Symbol(Symbol::CloseSquare)),
-        //'+' => Token::Operator(Operator::Add),
-        //'%' => Token::Operator(Operator::Remainder),
-        ';' => Ok(Token::Symbol(Symbol::Semicolon)),
-        '/' => Ok(Token::Operator(Operator::Divide)),
-        //"," => Ok(Token::Symbol(Symbol::Comma)),
-        //"!" => Ok(Token::Logical(Logical::Not)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidSymbol(symbol.to_string()),
-            })
-        }
-    }
-}
-fn statement_to_token(
-    statement: String,
-    line: usize,
-    column: usize,
-) -> Result<Token, LexcialError> {
-    match statement.as_str() {
-        "let" => Ok(Token::Statement(Statement::Let)),
-        "fn" => Ok(Token::Statement(Statement::Function)),
-        //"->" => Token::Symbol(Symbol::Arrow),
-        //"::" => Token::Symbol(Symbol::DoubleColon),
-        "return" => Ok(Token::Statement(Statement::Return)),
-        "import" => Ok(Token::Statement(Statement::Import)),
-        //"==" => Token::Logical(Logical::Equals),
-        //"!=" => Token::Logical(Logical::NotEquals),
-        "public" => Ok(Token::Statement(Statement::Public)),
-        "if" => Ok(Token::Statement(Statement::If)),
-        "else" => Ok(Token::Statement(Statement::Else)),
-        "while" => Ok(Token::Statement(Statement::While)),
-        "print" => Ok(Token::Statement(Statement::Print)),
-        "println" => Ok(Token::Statement(Statement::Println)),
-        "for" => Ok(Token::Statement(Statement::For)),
-        "void" => Ok(Token::TypeName(TypeName::Void)),
-        "bool" => Ok(Token::TypeName(TypeName::Bool)),
-        "string" => Ok(Token::TypeName(TypeName::QuotedString)),
-        "i8" => Ok(Token::TypeName(TypeName::I8)),
-        "i16" => Ok(Token::TypeName(TypeName::I16)),
-        "i32" => Ok(Token::TypeName(TypeName::I32)),
-        "i64" => Ok(Token::TypeName(TypeName::I64)),
-        "u8" => Ok(Token::TypeName(TypeName::U8)),
-        "u16" => Ok(Token::TypeName(TypeName::U16)),
-        "u32" => Ok(Token::TypeName(TypeName::U32)),
-        "u64" => Ok(Token::TypeName(TypeName::U64)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidStatement(statement.to_string()),
-            })
-        }
-    }
-}
+}*/
+
+
 fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
     match typename.as_str() {
         "void" => Ok(Token::TypeName(TypeName::Void)),
@@ -366,35 +299,6 @@ fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Tok
     }
 }
 
-fn double_symbol_to_token(
-    double_symbol: String,
-    line: usize,
-    column: usize,
-) -> Result<Token, LexcialError> {
-    match double_symbol.as_str() {
-        "==" => Ok(Token::Logical(Logical::Equals)),
-        "!=" => Ok(Token::Logical(Logical::NotEquals)),
-        "->" => Ok(Token::Symbol(Symbol::Arrow)),
-        "::" => Ok(Token::Symbol(Symbol::DoubleColon)),
-        "&&" => Ok(Token::Logical(Logical::And)),
-        "||" => Ok(Token::Logical(Logical::Or)),
-        "<<" => Ok(Token::Operator(Operator::ShiftLeft)),
-        ">>" => Ok(Token::Operator(Operator::ShiftRight)),
-        "//" => Ok(Token::Symbol(Symbol::Comment)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidDoubleSymbol(double_symbol.to_string()),
-            })
-        }
-    }
-}
-/*fn identifier_to_token(identifier: String, line:usize, column:usize) -> Result<Token, LexcialError>{
-    match identifier.as_str() {
-        _ => Ok(Token::Identifier(identifier)),
-    }
-}*/
 
 #[cfg(test)]
 mod test {
