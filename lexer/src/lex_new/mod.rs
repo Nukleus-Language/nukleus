@@ -7,6 +7,7 @@ use errors::LexError;
 use errors::LexcialError;
 use value::number_to_token;
 use identifier::statement_to_token;
+use identifier::type_name_to_token;
 use symbol::symbol_to_token;
 use symbol::double_symbol_to_token;
 
@@ -185,6 +186,16 @@ impl<'a> Lexer<'a> {
                     }
                     Err(_) => {}
                 }
+                let type_name = identifier::type_name_to_token(self.buffer.clone(), self.line, self.column);
+                match type_name {
+                    Ok(type_name) => {
+                        self.insert_token(type_name);
+                        self.buffer.clear();
+                        self.state = State::StateEmpty;
+                        continue;
+                    }
+                    Err(_) => {}
+                }
                 let identifier = Token::TypeValue(TypeValue::Identifier(self.buffer.clone()));
                 self.insert_token(identifier);
                 self.buffer.clear();
@@ -255,27 +266,9 @@ fn is_identifierable(c: char) -> bool {
 fn is_first_identifierable(c: char) -> bool {
     c.is_alphabetic() || c == '_'
 }
-/*fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token, LexcialError> {
-    match operator {
-        '+' => Ok(Token::Operator(Operator::Add)),
-        '-' => Ok(Token::Operator(Operator::Subtract)),
-        '*' => Ok(Token::Operator(Operator::Multiply)),
-        '/' => Ok(Token::Operator(Operator::Divide)),
-        '%' => Ok(Token::Operator(Operator::Remainder)),
-        '&' => Ok(Token::Operator(Operator::And)),
-        '|' => Ok(Token::Operator(Operator::Or)),
-        '^' => Ok(Token::Operator(Operator::Xor)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidOperator(operator.to_string()),
-            })
-        }
-    }
-}*/
 
 
+/*
 fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
     match typename.as_str() {
         "void" => Ok(Token::TypeName(TypeName::Void)),
@@ -298,8 +291,7 @@ fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Tok
         }
     }
 }
-
-
+*/
 #[cfg(test)]
 mod test {
     use super::*;
