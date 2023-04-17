@@ -16,6 +16,7 @@ pub enum TypeName {
     QuotedString,
     Bool,
     Float,
+    Number,
 }
 impl TypeName {
     /// Returns a string representation of the type.
@@ -72,6 +73,7 @@ impl fmt::Display for TypeValue {
             TypeValue::QuotedString(ref s) => write!(f, "{}", s),      
             //TypeValue::Float(n) => write!(f, "Float({})", n),
             TypeValue::Identifier(ref s) => write!(f, "{}", s),
+            TypeValue::Bool(b) => write!(f, "{}", b),
             TypeValue::Number(ref s) => write!(f, "{}", s),
         }
     }

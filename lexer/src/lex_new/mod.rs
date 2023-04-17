@@ -265,11 +265,16 @@ fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token
 }
 fn number_to_token(number: String, line: usize, column: usize) -> Result<Token, LexcialError> {
     //check if the number is parseable while not changing the type of number to i32
-    //println!("BEF Number: {}", number);
-    let test_parse = number.parse::<u64>();
-    //println!("AFT Number: {}", number);
+    println!("BEF Number: {}", number);
+
+    let trimed_number = number.clone();
+    let test_parse = trimed_number.trim_matches('-').parse::<u64>();
+    println!("AFT Number: {}", number);
+
     match test_parse {
-        Ok(number) => Ok(Token::TypeValue(TypeValue::Number(number.to_string()))),
+        Ok(_) => {
+            Ok(Token::TypeValue(TypeValue::Number(number.to_string())))
+        }
         Err(_) => {
             Err(LexcialError {
                 line,
@@ -386,6 +391,10 @@ fn double_symbol_to_token(
         "!=" => Ok(Token::Logical(Logical::NotEquals)),
         "->" => Ok(Token::Symbol(Symbol::Arrow)),
         "::" => Ok(Token::Symbol(Symbol::DoubleColon)),
+        "&&" => Ok(Token::Logical(Logical::And)),
+        "||" => Ok(Token::Logical(Logical::Or)),
+        "<<" => Ok(Token::Operator(Operator::ShiftLeft)),
+        ">>" => Ok(Token::Operator(Operator::ShiftRight)),
         _ => {
             Err(LexcialError {
                 line,
@@ -506,7 +515,7 @@ mod test {
             Token::TypeName(TypeName::I32),
             Token::TypeValue(TypeValue::Identifier("a".to_string())),
             Token::Assign(Assign::Assign),
-            Token::TypeValue(TypeValue::Numbera(-5.to_string())),
+            Token::TypeValue(TypeValue::Number("-5".to_string())),
             Token::Symbol(Symbol::Semicolon),
         ];
         let mut lexer = Lexer::new(code);
