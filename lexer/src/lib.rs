@@ -1,6 +1,6 @@
 mod errors;
 mod lex;
-mod lex_new;
+pub mod lex_new;
 mod tokens;
 mod tokens_new;
 
