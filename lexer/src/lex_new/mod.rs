@@ -5,6 +5,7 @@ mod value;
 
 use errors::LexError;
 use errors::LexcialError;
+use value::number_to_token;
 
 use std::iter::Peekable;
 use std::str::Chars;
@@ -19,6 +20,7 @@ enum State {
     Identifier,
     QuotedString,
     DoubleState,
+    Comment,
 }
 
 struct Lexer<'a> {
@@ -56,7 +58,15 @@ impl<'a> Lexer<'a> {
 
                 continue;
             }
-            if is_whitespace(c) && self.state != State::QuotedString {
+            if self.state == State::Comment {
+                if c == '\n'{
+                    self.state = State::StateEmpty;
+                    self.buffer.clear();
+                    continue;
+                }
+                continue;
+            }
+            if c.is_whitespace() && self.state != State::QuotedString {
                 self.buffer.clear();
                 self.state = State::StateEmpty;
                 continue;
@@ -70,6 +80,11 @@ impl<'a> Lexer<'a> {
                     double_symbol_to_token(self.buffer.clone(), self.line, self.column);
                 match double_symbol {
                     Ok(double_symbol) => {
+                        if double_symbol == Token::Symbol(Symbol::Comment) {
+                            self.state = State::Comment;
+                            self.buffer.clear();
+                            continue;
+                        }
                         self.insert_token(double_symbol);
                         self.buffer.clear();
                         self.state = State::DoubleState;
@@ -101,15 +116,15 @@ impl<'a> Lexer<'a> {
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().next().unwrap();
-            if self.state == State::StateDefault && (first_char == '-' || is_numeric(first_char)) {
+            if self.state == State::StateDefault && (first_char == '-' || first_char.is_numeric() ) {
                 self.state = State::Number;
                 //self.buffer.push(c);
-            } else if self.state == State::Number && is_numeric(c) {
+            } else if self.state == State::Number && c.is_numeric(){
                 self.buffer.push(c);
             }
-            if self.state == State::Number && !is_numeric(peeked_char) {
+            if self.state == State::Number && !peeked_char.is_numeric() {
                 //let number = buffer.parse::<i32>().unwrap();
-                let number = number_to_token(self.buffer.clone(), self.line, self.column);
+                let number = value::number_to_token(self.buffer.clone(), self.line, self.column);
                 match number {
                     Ok(number) => self.insert_token(number),
                     Err(error) => self.report_error(error),
@@ -208,15 +223,6 @@ impl<'a> Lexer<'a> {
     }
 }
 
-fn is_numeric(c: char) -> bool {
-    c.is_numeric()
-}
-fn is_alpha(c: char) -> bool {
-    c.is_alphabetic()
-}
-fn is_whitespace(c: char) -> bool {
-    c.is_whitespace()
-}
 fn is_quote(c: char) -> bool {
     match c {
         '"' => true,
@@ -242,10 +248,10 @@ fn is_quoted_string(c: char) -> bool {
     }
 }
 fn is_identifierable(c: char) -> bool {
-    is_alpha(c) || is_numeric(c) || c == '_'
+    c.is_alphanumeric() || c == '_'
 }
 fn is_first_identifierable(c: char) -> bool {
-    is_alpha(c) || c == '_'
+    c.is_alphabetic() || c == '_'
 }
 fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token, LexcialError> {
     match operator {
@@ -259,27 +265,6 @@ fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token
                 line,
                 column,
                 message: LexError::InvalidOperator(operator.to_string()),
-            })
-        }
-    }
-}
-fn number_to_token(number: String, line: usize, column: usize) -> Result<Token, LexcialError> {
-    //check if the number is parseable while not changing the type of number to i32
-    println!("BEF Number: {}", number);
-
-    let trimed_number = number.clone();
-    let test_parse = trimed_number.trim_matches('-').parse::<u64>();
-    println!("AFT Number: {}", number);
-
-    match test_parse {
-        Ok(_) => {
-            Ok(Token::TypeValue(TypeValue::Number(number.to_string())))
-        }
-        Err(_) => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidNumber(number),
             })
         }
     }
@@ -395,6 +380,7 @@ fn double_symbol_to_token(
         "||" => Ok(Token::Logical(Logical::Or)),
         "<<" => Ok(Token::Operator(Operator::ShiftLeft)),
         ">>" => Ok(Token::Operator(Operator::ShiftRight)),
+        "//" => Ok(Token::Symbol(Symbol::Comment)),
         _ => {
             Err(LexcialError {
                 line,
@@ -467,6 +453,27 @@ mod test {
         let ans = vec![Token::TypeValue(TypeValue::QuotedString(
             "Hello, world!".to_string(),
         ))];
+        let mut lexer = Lexer::new(code);
+        lexer.run();
+        println!("{:?}", lexer.tokens);
+        assert_eq!(lexer.tokens, ans);
+    }
+    #[test]
+    fn lexing_comments(){
+        let code = "public fn main() -> void \n{\n//println(\"Hello, world!\");\nreturn;\n}";
+        let ans = vec![
+            Token::Statement(Statement::Public),
+            Token::Statement(Statement::Function),
+            Token::TypeValue(TypeValue::Identifier("main".to_string())),
+            Token::Symbol(Symbol::OpenParen),
+            Token::Symbol(Symbol::CloseParen),
+            Token::Symbol(Symbol::Arrow),
+            Token::TypeName(TypeName::Void),
+            Token::Symbol(Symbol::OpenBrace),          
+            Token::Statement(Statement::Return),
+            Token::Symbol(Symbol::Semicolon),
+            Token::Symbol(Symbol::CloseBrace),
+        ];
         let mut lexer = Lexer::new(code);
         lexer.run();
         println!("{:?}", lexer.tokens);
