@@ -16,6 +16,7 @@ pub enum Symbol {
     CloseBrace,
     //CloseAngle,
     CloseSquare,
+    Comment,
     Arrow,
     Semicolon,
 }
@@ -37,6 +38,7 @@ impl Symbol {
             Symbol::CloseSquare => "]",
             Symbol::Arrow => "->",
             Symbol::Semicolon => ";",
+            Symbol::Comment => "//",
         }
     }
 }
