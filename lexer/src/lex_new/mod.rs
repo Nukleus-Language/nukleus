@@ -5,11 +5,11 @@ mod value;
 
 use errors::LexError;
 use errors::LexcialError;
-use value::number_to_token;
 use identifier::statement_to_token;
 use identifier::type_name_to_token;
-use symbol::symbol_to_token;
 use symbol::double_symbol_to_token;
+use symbol::symbol_to_token;
+use value::number_to_token;
 
 use std::iter::Peekable;
 use std::str::Chars;
@@ -63,7 +63,7 @@ impl<'a> Lexer<'a> {
                 continue;
             }
             if self.state == State::Comment {
-                if c == '\n'{
+                if c == '\n' {
                     self.state = State::StateEmpty;
                     self.buffer.clear();
                     continue;
@@ -107,7 +107,7 @@ impl<'a> Lexer<'a> {
                     }
                     Err(_) => {}
                 }
-                if !peeked_char.is_numeric(){
+                if !peeked_char.is_numeric() {
                     let operator = symbol::operator_to_token(c, self.line, self.column);
                     match operator {
                         Ok(operator) => {
@@ -130,10 +130,10 @@ impl<'a> Lexer<'a> {
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().next().unwrap();
-            if self.state == State::StateDefault && (first_char == '-' || first_char.is_numeric() ) {
+            if self.state == State::StateDefault && (first_char == '-' || first_char.is_numeric()) {
                 self.state = State::Number;
                 //self.buffer.push(c);
-            } else if self.state == State::Number && c.is_numeric(){
+            } else if self.state == State::Number && c.is_numeric() {
                 self.buffer.push(c);
             }
             if self.state == State::Number && !peeked_char.is_numeric() {
@@ -176,7 +176,8 @@ impl<'a> Lexer<'a> {
             }
             if self.state == State::Identifier && !is_identifierable(peeked_char) {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
-                let statement = identifier::statement_to_token(self.buffer.clone(), self.line, self.column);
+                let statement =
+                    identifier::statement_to_token(self.buffer.clone(), self.line, self.column);
                 match statement {
                     Ok(statement) => {
                         self.insert_token(statement);
@@ -186,7 +187,8 @@ impl<'a> Lexer<'a> {
                     }
                     Err(_) => {}
                 }
-                let type_name = identifier::type_name_to_token(self.buffer.clone(), self.line, self.column);
+                let type_name =
+                    identifier::type_name_to_token(self.buffer.clone(), self.line, self.column);
                 match type_name {
                     Ok(type_name) => {
                         self.insert_token(type_name);
@@ -266,7 +268,6 @@ fn is_identifierable(c: char) -> bool {
 fn is_first_identifierable(c: char) -> bool {
     c.is_alphabetic() || c == '_'
 }
-
 
 /*
 fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
@@ -355,7 +356,7 @@ mod test {
         assert_eq!(lexer.tokens, ans);
     }
     #[test]
-    fn lexing_comments(){
+    fn lexing_comments() {
         let code = "public fn main() -> void \n{\n//println(\"Hello, world!\");\nreturn;\n}";
         let ans = vec![
             Token::Statement(Statement::Public),
@@ -365,7 +366,7 @@ mod test {
             Token::Symbol(Symbol::CloseParen),
             Token::Symbol(Symbol::Arrow),
             Token::TypeName(TypeName::Void),
-            Token::Symbol(Symbol::OpenBrace),          
+            Token::Symbol(Symbol::OpenBrace),
             Token::Statement(Statement::Return),
             Token::Symbol(Symbol::Semicolon),
             Token::Symbol(Symbol::CloseBrace),
@@ -410,7 +411,7 @@ mod test {
         assert_eq!(lexer.tokens, ans);
     }
     #[test]
-    fn lexing_negative_number_assign(){
+    fn lexing_negative_number_assign() {
         let code = "let:i32 a = -5;";
         let ans = vec![
             Token::Statement(Statement::Let),

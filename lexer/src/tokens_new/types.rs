@@ -70,7 +70,7 @@ impl fmt::Display for TypeValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             TypeValue::NoneVoid => write!(f, "None"),
-            TypeValue::QuotedString(ref s) => write!(f, "{}", s),      
+            TypeValue::QuotedString(ref s) => write!(f, "{}", s),
             //TypeValue::Float(n) => write!(f, "Float({})", n),
             TypeValue::Identifier(ref s) => write!(f, "{}", s),
             TypeValue::Bool(b) => write!(f, "{}", b),
