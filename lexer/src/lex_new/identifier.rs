@@ -34,16 +34,18 @@ pub fn statement_to_token(
         "u16" => Ok(Token::TypeName(TypeName::U16)),
         "u32" => Ok(Token::TypeName(TypeName::U32)),
         "u64" => Ok(Token::TypeName(TypeName::U64)),*/
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidStatement(statement.to_string()),
-            })
-        }
+        _ => Err(LexcialError {
+            line,
+            column,
+            message: LexError::InvalidStatement(statement.to_string()),
+        }),
     }
 }
-pub fn type_name_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
+pub fn type_name_to_token(
+    typename: String,
+    line: usize,
+    column: usize,
+) -> Result<Token, LexcialError> {
     match typename.as_str() {
         "void" => Ok(Token::TypeName(TypeName::Void)),
         "bool" => Ok(Token::TypeName(TypeName::Bool)),
@@ -56,13 +58,10 @@ pub fn type_name_to_token(typename: String, line: usize, column: usize) -> Resul
         "u16" => Ok(Token::TypeName(TypeName::U16)),
         "u32" => Ok(Token::TypeName(TypeName::U32)),
         "u64" => Ok(Token::TypeName(TypeName::U64)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidTypeName(typename.to_string()),
-            })
-        }
+        _ => Err(LexcialError {
+            line,
+            column,
+            message: LexError::InvalidTypeName(typename.to_string()),
+        }),
     }
 }
-

@@ -6,8 +6,6 @@ use std::str::Chars;
 
 use crate::tokens_new::*;
 
-
-
 pub fn symbol_to_token(symbol: char, line: usize, column: usize) -> Result<Token, LexcialError> {
     match symbol {
         ',' => Ok(Token::Symbol(Symbol::Comma)),
@@ -29,13 +27,11 @@ pub fn symbol_to_token(symbol: char, line: usize, column: usize) -> Result<Token
         '/' => Ok(Token::Operator(Operator::Divide)),
         //"," => Ok(Token::Symbol(Symbol::Comma)),
         //"!" => Ok(Token::Logical(Logical::Not)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidSymbol(symbol.to_string()),
-            })
-        }
+        _ => Err(LexcialError {
+            line,
+            column,
+            message: LexError::InvalidSymbol(symbol.to_string()),
+        }),
     }
 }
 pub fn double_symbol_to_token(
@@ -53,17 +49,19 @@ pub fn double_symbol_to_token(
         "<<" => Ok(Token::Operator(Operator::ShiftLeft)),
         ">>" => Ok(Token::Operator(Operator::ShiftRight)),
         "//" => Ok(Token::Symbol(Symbol::Comment)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidDoubleSymbol(double_symbol.to_string()),
-            })
-        }
+        _ => Err(LexcialError {
+            line,
+            column,
+            message: LexError::InvalidDoubleSymbol(double_symbol.to_string()),
+        }),
     }
 }
 
-pub fn operator_to_token(operator: char, line: usize, column: usize) -> Result<Token, LexcialError> {
+pub fn operator_to_token(
+    operator: char,
+    line: usize,
+    column: usize,
+) -> Result<Token, LexcialError> {
     match operator {
         '+' => Ok(Token::Operator(Operator::Add)),
         '-' => Ok(Token::Operator(Operator::Subtract)),
@@ -73,14 +71,10 @@ pub fn operator_to_token(operator: char, line: usize, column: usize) -> Result<T
         '&' => Ok(Token::Operator(Operator::BitAnd)),
         '|' => Ok(Token::Operator(Operator::BitOr)),
         '^' => Ok(Token::Operator(Operator::BitXor)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidOperator(operator.to_string()),
-            })
-        }
+        _ => Err(LexcialError {
+            line,
+            column,
+            message: LexError::InvalidOperator(operator.to_string()),
+        }),
     }
 }
-
-
