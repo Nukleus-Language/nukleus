@@ -1,11 +1,8 @@
 use crate::lex_new::errors::LexError;
 use crate::lex_new::errors::LexcialError;
-
-use std::iter::Peekable;
-use std::str::Chars;
-
 use crate::tokens_new::*;
 
+#[allow(dead_code)]
 pub fn statement_to_token(
     statement: String,
     line: usize,
@@ -41,6 +38,7 @@ pub fn statement_to_token(
         }),
     }
 }
+#[allow(dead_code)]
 pub fn type_name_to_token(
     typename: String,
     line: usize,
@@ -64,4 +62,30 @@ pub fn type_name_to_token(
             message: LexError::InvalidTypeName(typename.to_string()),
         }),
     }
+}
+
+#[allow(dead_code)]
+pub fn is_quote(c: char) -> bool {
+    match c {
+        '"' => true,
+        _ => false,
+    }
+}
+
+#[allow(dead_code)]
+pub fn is_quoted_string(c: char) -> bool {
+    match c {
+        '"' => true,
+        _ => false,
+    }
+}
+
+#[allow(dead_code)]
+pub fn is_identifierable(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+#[allow(dead_code)]
+pub fn is_first_identifierable(c: char) -> bool {
+    c.is_alphabetic() || c == '_'
 }

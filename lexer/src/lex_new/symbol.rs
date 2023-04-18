@@ -1,11 +1,8 @@
 use crate::lex_new::errors::LexError;
 use crate::lex_new::errors::LexcialError;
-
-use std::iter::Peekable;
-use std::str::Chars;
-
 use crate::tokens_new::*;
 
+#[allow(dead_code)]
 pub fn symbol_to_token(symbol: char, line: usize, column: usize) -> Result<Token, LexcialError> {
     match symbol {
         ',' => Ok(Token::Symbol(Symbol::Comma)),
@@ -34,6 +31,7 @@ pub fn symbol_to_token(symbol: char, line: usize, column: usize) -> Result<Token
         }),
     }
 }
+#[allow(dead_code)]
 pub fn double_symbol_to_token(
     double_symbol: String,
     line: usize,
@@ -56,7 +54,7 @@ pub fn double_symbol_to_token(
         }),
     }
 }
-
+#[allow(dead_code)]
 pub fn operator_to_token(
     operator: char,
     line: usize,

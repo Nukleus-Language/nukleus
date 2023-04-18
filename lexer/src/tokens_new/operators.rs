@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Operator {
     Add,
     Subtract,
@@ -41,6 +42,7 @@ impl fmt::Display for Operator {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Logical {
     Equals,
     NotEquals,
@@ -53,7 +55,8 @@ pub enum Logical {
     Not,
 }
 impl Logical {
-    /// Returns a string representation of the operator.
+    // Returns a string representation of the operator.
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match *self {
             Logical::Equals => "==",
@@ -76,6 +79,7 @@ impl fmt::Display for Logical {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Assign {
     // Default
     Assign,
@@ -93,7 +97,8 @@ pub enum Assign {
     BitXorAssign,
 }
 impl Assign {
-    /// Returns a string representation of the operator.
+    // Returns a string representation of the operator.
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match *self {
             Assign::Assign => "=",

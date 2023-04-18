@@ -10,7 +10,9 @@ impl fmt::Display for LexcialError {
         write!(f, "Lexical Error: {}", self.message)
     }
 }
-
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum LexError {
     InvalidCharacter(char),
     InvalidNumber(String),
