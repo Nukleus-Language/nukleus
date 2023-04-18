@@ -1,8 +1,8 @@
-use super::Token;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum TypeName {
     Void,
     I8,
@@ -19,7 +19,8 @@ pub enum TypeName {
     Number,
 }
 impl TypeName {
-    /// Returns a string representation of the type.
+    // Returns a string representation of the type.
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match *self {
             TypeName::Void => "void",
@@ -46,6 +47,7 @@ impl fmt::Display for TypeName {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum TypeValue {
     NoneVoid,
     Number(String),
@@ -55,6 +57,8 @@ pub enum TypeValue {
     Identifier(String),
 }
 impl TypeValue {
+    // Returns a string representation of the type.
+    #[allow(dead_code)]
     pub fn get_type(&self) -> TypeName {
         match *self {
             TypeValue::NoneVoid => TypeName::Void,

@@ -17,6 +17,8 @@ pub use types::TypeValue;
 pub use symbols::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Token {
     Operator(Operator),
     Logical(Logical),
@@ -25,16 +27,9 @@ pub enum Token {
     TypeName(TypeName),
     TypeValue(TypeValue),
     Symbol(Symbol),
-    EOF,
+    //EOF,
 }
-impl Token {
-    pub fn is_identifier(&self) -> bool {
-        match self {
-            Token::TypeValue(TypeValue::Identifier(_)) => true,
-            _ => false,
-        }
-    }
-}
+
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -45,7 +40,7 @@ impl fmt::Display for Token {
             Token::TypeName(tn) => write!(f, "{}", tn),
             Token::TypeValue(tv) => write!(f, "{}", tv),
             Token::Symbol(sym) => write!(f, "{}", sym),
-            Token::EOF => write!(f, "EOF"),
+            //Token::EOF => write!(f, "EOF"),
         }
     }
 }

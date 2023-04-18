@@ -3,13 +3,7 @@ mod identifier;
 mod symbol;
 mod value;
 
-use errors::LexError;
 use errors::LexcialError;
-use identifier::statement_to_token;
-use identifier::type_name_to_token;
-use symbol::double_symbol_to_token;
-use symbol::symbol_to_token;
-use value::number_to_token;
 
 use std::iter::Peekable;
 use std::str::Chars;
@@ -37,6 +31,7 @@ struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
+    #[allow(dead_code)]
     fn new(code: &'a str) -> Self {
         Lexer {
             code: code.chars().peekable(),
@@ -47,6 +42,7 @@ impl<'a> Lexer<'a> {
             column: 1,
         }
     }
+    #[allow(dead_code)]
     fn run(&mut self) {
         //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
@@ -149,14 +145,14 @@ impl<'a> Lexer<'a> {
             }
 
             // if the first character is a " then it is a string
-            if self.state == State::StateDefault && is_quote(first_char) {
+            if self.state == State::StateDefault && identifier::is_quote(first_char) {
                 self.state = State::QuotedString;
                 //self.buffer.push(c);
                 continue;
-            } else if self.state == State::QuotedString && !is_quote(c) {
+            } else if self.state == State::QuotedString && !identifier::is_quote(c) {
                 self.buffer.push(c);
                 continue;
-            } else if self.state == State::QuotedString && is_quote(c) {
+            } else if self.state == State::QuotedString && identifier::is_quote(c) {
                 let string = self.buffer.clone();
                 self.buffer.push(c);
                 // trim the quotes
@@ -168,13 +164,13 @@ impl<'a> Lexer<'a> {
             }
 
             // check if is a identifier, statement, or symbol
-            if self.state == State::StateDefault && is_first_identifierable(first_char) {
+            if self.state == State::StateDefault && identifier::is_first_identifierable(first_char) {
                 self.state = State::Identifier;
                 //self.buffer.push(c);
-            } else if self.state == State::Identifier && is_identifierable(c) {
+            } else if self.state == State::Identifier && identifier::is_identifierable(c) {
                 self.buffer.push(c);
             }
-            if self.state == State::Identifier && !is_identifierable(peeked_char) {
+            if self.state == State::Identifier && !identifier::is_identifierable(peeked_char) {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
                 let statement =
                     identifier::statement_to_token(self.buffer.clone(), self.line, self.column);
@@ -206,6 +202,7 @@ impl<'a> Lexer<'a> {
             }
         }
     }
+    #[allow(dead_code)]
     fn next_char(&mut self) -> Option<char> {
         let next = self.code.next();
         match next {
@@ -231,6 +228,7 @@ impl<'a> Lexer<'a> {
         }
         next
     }
+    #[allow(dead_code)]
     fn peek_char(&mut self) -> char {
         let peek = self.code.peek();
         match peek {
@@ -238,9 +236,11 @@ impl<'a> Lexer<'a> {
             None => ' ',
         }
     }
+    #[allow(dead_code)]
     fn insert_token(&mut self, token: Token) {
         self.tokens.push(token);
     }
+    #[allow(dead_code)]
     fn report_error(&self, error: LexcialError) {
         println!(
             "{} \n-------------> Line: {}, Column: {}",
@@ -249,7 +249,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
-fn is_quote(c: char) -> bool {
+/*fn is_quote(c: char) -> bool {
     match c {
         '"' => true,
         _ => false,
@@ -268,7 +268,7 @@ fn is_identifierable(c: char) -> bool {
 fn is_first_identifierable(c: char) -> bool {
     c.is_alphabetic() || c == '_'
 }
-
+*/
 /*
 fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
     match typename.as_str() {

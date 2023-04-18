@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Symbol {
     Colon,
     Comma,
@@ -21,6 +22,7 @@ pub enum Symbol {
     Semicolon,
 }
 impl Symbol {
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &'static str {
         match self {
             Symbol::Colon => ":",

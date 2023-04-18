@@ -1,11 +1,8 @@
 use crate::lex_new::errors::LexError;
 use crate::lex_new::errors::LexcialError;
-
-use std::iter::Peekable;
-use std::str::Chars;
-
 use crate::tokens_new::*;
 
+#[allow(dead_code)]
 pub fn number_to_token(number: String, line: usize, column: usize) -> Result<Token, LexcialError> {
     //check if the number is parseable while not changing the type of number to i32
     let trimed_number = number.clone();

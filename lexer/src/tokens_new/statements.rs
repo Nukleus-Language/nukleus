@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Statement {
     Public,
     Let,
@@ -18,7 +19,8 @@ pub enum Statement {
     Import,
 }
 impl Statement {
-    /// Returns a string representation of the statement.
+    // Returns a string representation of the statement.
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match *self {
             Statement::Public => "public",
