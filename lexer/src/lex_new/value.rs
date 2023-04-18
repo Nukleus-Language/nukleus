@@ -9,7 +9,7 @@ pub fn number_to_token(number: String, line: usize, column: usize) -> Result<Tok
     let test_parse = trimed_number.trim_matches('-').parse::<u64>();
 
     match test_parse {
-        Ok(_) => Ok(Token::TypeValue(TypeValue::Number(number.to_string()))),
+        Ok(_) => Ok(Token::TypeValue(TypeValue::Number(number))),
         Err(_) => Err(LexcialError {
             line,
             column,
