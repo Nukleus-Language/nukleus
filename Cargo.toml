@@ -9,12 +9,12 @@ edition = "2021"
 
 [dependencies]
 #inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm12-0"] }
-cranelift = "0.93.0"
-cranelift-codegen = "0.93.0"
-cranelift-module = "0.93.0"
-cranelift-jit = "0.93.0"
-cranelift-native = "0.93.0"
-cranelift-frontend = "0.93.0"
+#cranelift = "0.93.0"
+#cranelift-codegen = "0.93.0"
+#cranelift-module = "0.93.0"
+#cranelift-jit = "0.93.0"
+#cranelift-native = "0.93.0"
+#cranelift-frontend = "0.93.0"
 snafu = "0.7.4"
 clap = "4.2.0"
 

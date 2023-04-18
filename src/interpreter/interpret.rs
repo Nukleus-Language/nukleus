@@ -141,8 +141,12 @@ impl Interpreter {
 
     fn run_function(&mut self, statements: Vec<AST>, arguments: Vec<Token>) {
         // Define args as variables
-        let arg_base = self.functions.get(&self.cur_function).unwrap().function_get_args_format();
-        
+        let arg_base = self
+            .functions
+            .get(&self.cur_function)
+            .unwrap()
+            .function_get_args_format();
+
         for (i, arg) in arg_base.iter().enumerate() {
             let getten_value = self.eval_expr(&arguments[i].clone());
             let func = self
@@ -401,7 +405,17 @@ impl Interpreter {
     fn eval_expr(&mut self, expr: &Token) -> TypeValue {
         if let Token::TypeValue(inner_expr) = expr {
             match inner_expr {
-                TypeValue::None | TypeValue::I8(_) | TypeValue::I16(_) | TypeValue::I32(_) | TypeValue::I64(_) | TypeValue::U8(_) | TypeValue::U16(_) | TypeValue::U32(_) | TypeValue::U64(_) | TypeValue::QuotedString(_) | TypeValue::Bool(_) => inner_expr.clone(),
+                TypeValue::None
+                | TypeValue::I8(_)
+                | TypeValue::I16(_)
+                | TypeValue::I32(_)
+                | TypeValue::I64(_)
+                | TypeValue::U8(_)
+                | TypeValue::U16(_)
+                | TypeValue::U32(_)
+                | TypeValue::U64(_)
+                | TypeValue::QuotedString(_)
+                | TypeValue::Bool(_) => inner_expr.clone(),
                 TypeValue::Identifier(id) => {
                     let func = self
                         .functions
@@ -410,7 +424,17 @@ impl Interpreter {
                     if let value = func.function_get_variable(id.to_string()) {
                         if let Token::TypeValue(inner_value) = value {
                             match inner_value {
-                                 TypeValue::None | TypeValue::I8(_) | TypeValue::I16(_) | TypeValue::I32(_) | TypeValue::I64(_) | TypeValue::U8(_) | TypeValue::U16(_) | TypeValue::U32(_) | TypeValue::U64(_) | TypeValue::QuotedString(_) | TypeValue::Bool(_) => inner_value.clone(),                                
+                                TypeValue::None
+                                | TypeValue::I8(_)
+                                | TypeValue::I16(_)
+                                | TypeValue::I32(_)
+                                | TypeValue::I64(_)
+                                | TypeValue::U8(_)
+                                | TypeValue::U16(_)
+                                | TypeValue::U32(_)
+                                | TypeValue::U64(_)
+                                | TypeValue::QuotedString(_)
+                                | TypeValue::Bool(_) => inner_value,
                                 TypeValue::Identifier(_) => {
                                     panic!("Invalid identifier reference")
                                 }

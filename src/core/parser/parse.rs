@@ -184,7 +184,7 @@ impl<'a> Parser<'a> {
         let mut statements = Vec::new();
         //println!("{:?}", self.tokens.peek());
         while let Some(token) = self.tokens.peek() {
-            println!("{:?}", token);
+            //println!("{:?}", token);
             match token {
                 Token::Statement(Statement::Let) => {
                     let let_statement = self.let_parser()?;
@@ -278,18 +278,15 @@ impl<'a> Parser<'a> {
                         });
                     }
                     break;
-                }
-                else if token == &Token::Symbol(Symbol::Comma) {
+                } else if token == &Token::Symbol(Symbol::Comma) {
                     self.consume(); // Consume Comma
                     is_after_comma = true;
-                }
-                else if is_after_comma || is_after_open_paren {
+                } else if is_after_comma || is_after_open_paren {
                     args.push(token.clone());
                     self.consume(); // Consume Argument
                     is_after_comma = false;
                     is_after_open_paren = false;
-                }
-                else {
+                } else {
                     return Err(AstParseError::ExpectedOther {
                         token: "Argument".to_owned(),
                     });
@@ -536,7 +533,7 @@ impl<'a> Parser<'a> {
                 }
                 Some(Token::Symbol(Symbol::Comma)) => {
                     self.consume(); // Consume Comma
-                    // Check if there is another argument
+                                    // Check if there is another argument
                     if self.tokens.peek() == Some(&Token::Symbol(Symbol::CloseParen)) {
                         return Err(AstParseError::ExpectedOther {
                             token: "Argument".to_owned(),
@@ -552,9 +549,8 @@ impl<'a> Parser<'a> {
                                 token: "Argument".to_owned(),
                             })?;
                     self.consume(); // Consume Argument Name
-                    //println!("Argument: {:?}", arg_name);
+                                    //println!("Argument: {:?}", arg_name);
                     arguments.push(arg_name);
-                    
                 }
             }
         }

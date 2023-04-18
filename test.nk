@@ -6,3 +6,812 @@ fn main() -> void{
 	}
 	println(ans);
 }
+fn test6() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn teat5() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn test4() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn test3() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn test2() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn test1() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+fn main9() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main8() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main7() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main5() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main6() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main3() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main4() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main2() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main1() -> void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:int j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+
