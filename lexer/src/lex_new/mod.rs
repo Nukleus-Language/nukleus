@@ -21,7 +21,7 @@ enum State {
     Comment,
 }
 
-struct Lexer<'a> {
+pub struct Lexer<'a> {
     code: Peekable<Chars<'a>>,
     tokens: Vec<Token>,
     state: State,
@@ -32,7 +32,7 @@ struct Lexer<'a> {
 
 impl<'a> Lexer<'a> {
     #[allow(dead_code)]
-    fn new(code: &'a str) -> Self {
+    pub fn new(code: &'a str) -> Self {
         Lexer {
             code: code.chars().peekable(),
             tokens: Vec::new(),
@@ -43,17 +43,16 @@ impl<'a> Lexer<'a> {
         }
     }
     #[allow(dead_code)]
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
             let peeked_char = self.peek_char();
-            println!("---------------------------------");
-            println!("Current Char: {}", c);
-            println!("Current State: {:?}", self.state);
-            println!("Current Buffer: {}", self.buffer);
+            //println!("---------------------------------");
+            //println!("Current Char: {}", c);
+            //println!("Current State: {:?}", self.state);
+            //println!("Current Buffer: {}", self.buffer);
             if self.state == State::DoubleState {
                 self.buffer.clear();
-                println!("Double");
                 self.state = State::StateEmpty;
 
                 continue;
@@ -118,10 +117,10 @@ impl<'a> Lexer<'a> {
                 self.state = State::StateDefault;
                 //continue;
             }
-            println!(
-                "Current First Char: {}",
-                self.buffer.chars().next().unwrap()
-            );
+            //println!(
+            //    "Current First Char: {}",
+            //    self.buffer.chars().next().unwrap()
+            //);
 
             // if the first character is a - or number and the next character is a number
             // then it is a number
@@ -164,7 +163,8 @@ impl<'a> Lexer<'a> {
             }
 
             // check if is a identifier, statement, or symbol
-            if self.state == State::StateDefault && identifier::is_first_identifierable(first_char) {
+            if self.state == State::StateDefault && identifier::is_first_identifierable(first_char)
+            {
                 self.state = State::Identifier;
                 //self.buffer.push(c);
             } else if self.state == State::Identifier && identifier::is_identifierable(c) {
@@ -247,52 +247,12 @@ impl<'a> Lexer<'a> {
             error, self.line, self.column
         );
     }
-}
-
-/*fn is_quote(c: char) -> bool {
-    match c {
-        '"' => true,
-        _ => false,
+    #[allow(dead_code)]
+    pub fn get_tokens(&self) -> Vec<Token> {
+        self.tokens.clone()
     }
 }
 
-fn is_quoted_string(c: char) -> bool {
-    match c {
-        '"' => true,
-        _ => false,
-    }
-}
-fn is_identifierable(c: char) -> bool {
-    c.is_alphanumeric() || c == '_'
-}
-fn is_first_identifierable(c: char) -> bool {
-    c.is_alphabetic() || c == '_'
-}
-*/
-/*
-fn typename_to_token(typename: String, line: usize, column: usize) -> Result<Token, LexcialError> {
-    match typename.as_str() {
-        "void" => Ok(Token::TypeName(TypeName::Void)),
-        "bool" => Ok(Token::TypeName(TypeName::Bool)),
-        "string" => Ok(Token::TypeName(TypeName::QuotedString)),
-        "i8" => Ok(Token::TypeName(TypeName::I8)),
-        "i16" => Ok(Token::TypeName(TypeName::I16)),
-        "i32" => Ok(Token::TypeName(TypeName::I32)),
-        "i64" => Ok(Token::TypeName(TypeName::I64)),
-        "u8" => Ok(Token::TypeName(TypeName::U8)),
-        "u16" => Ok(Token::TypeName(TypeName::U16)),
-        "u32" => Ok(Token::TypeName(TypeName::U32)),
-        "u64" => Ok(Token::TypeName(TypeName::U64)),
-        _ => {
-            Err(LexcialError {
-                line,
-                column,
-                message: LexError::InvalidTypeName(typename.to_string()),
-            })
-        }
-    }
-}
-*/
 #[cfg(test)]
 mod test {
     use super::*;
