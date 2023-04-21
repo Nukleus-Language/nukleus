@@ -9,6 +9,7 @@ pub enum Statement {
     Return,
     Print,
     Println,
+    Scanln,
     Break,
     If,
     Else,
@@ -16,7 +17,7 @@ pub enum Statement {
     For,
     While,
     Function,
-    Import,
+    Inject,
 }
 impl Statement {
     // Returns a string representation of the statement.
@@ -27,7 +28,8 @@ impl Statement {
             Statement::Let => "let",
             Statement::Return => "return",
             Statement::Print => "print",
-            Statement::Println => "println",
+            Statement::Println => "println"
+            Statement::Scanln => "scanln",
             Statement::Break => "break",
             Statement::If => "if",
             Statement::Else => "else",
@@ -35,7 +37,7 @@ impl Statement {
             Statement::For => "for",
             Statement::While => "while",
             Statement::Function => "fn",
-            Statement::Import => "import",
+            Statement::Inject => "inject",
         }
     }
 }
