@@ -28,7 +28,7 @@ impl Statement {
             Statement::Let => "let",
             Statement::Return => "return",
             Statement::Print => "print",
-            Statement::Println => "println"
+            Statement::Println => "println",
             Statement::Scanln => "scanln",
             Statement::Break => "break",
             Statement::If => "if",
