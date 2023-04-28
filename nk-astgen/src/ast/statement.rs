@@ -1,4 +1,10 @@
+use crate::
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#![allow(missing_docs)]
+#![allow(dead_code)]
+pub enum ASTmemoryspace {
 
+}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #![allow(missing_docs)]
 #![allow(dead_code)]
@@ -83,5 +89,12 @@ pub enum ASTstatement{
     },
 }
 impl ASTstatement{
-    pub get_mem_template
+    // return the memory template for the statements
+    pub fn memory_template(&self) -> String {
+        match self {
+            
+
+
+        }
+    }
 }
