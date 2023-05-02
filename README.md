@@ -3,6 +3,8 @@
 </div>
 
 # The Nukleus Programming Language
+[![Rust](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml)
+[![rust-clippy analyze](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml)
 
 Nukleus is a simple, fast, and versatile programming language designed for AI, GUI, and cross-platform development. Built with Rust, Nukleus offers excellent performance, reliability, and maintainability.
 
