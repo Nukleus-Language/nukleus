@@ -5,13 +5,11 @@ use lexer::tokens_new::Token;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
-pub enum ASTmemoryspace {
-
-}
+pub enum ASTmemoryspace {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
-pub enum ASTstatement{
+pub enum ASTstatement {
     Import {
         //path: String,
         name: String,
@@ -91,4 +89,3 @@ pub enum ASTstatement{
         value: Token,
     },
 }
-

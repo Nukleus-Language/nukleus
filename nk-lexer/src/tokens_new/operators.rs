@@ -40,7 +40,6 @@ impl fmt::Display for Operator {
     }
 }
 
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -119,4 +118,3 @@ impl fmt::Display for Assign {
         write!(f, "{}", self.as_str())
     }
 }
-

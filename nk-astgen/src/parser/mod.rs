@@ -1,11 +1,11 @@
 use lexer::tokens_new::*;
 
 mod error;
-use error::{AstGenError,AstError};
 use crate::ast::AST;
+use error::{AstError, AstGenError};
 
-use std::iter::Peekable;
 use std::iter::Cloned;
+use std::iter::Peekable;
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -14,7 +14,7 @@ enum State {
     PublicFunction,
     Function,
     Inject,
-    GlobalLet
+    GlobalLet,
 }
 
 pub struct Parser<'a> {
@@ -26,7 +26,6 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-
     #[allow(dead_code)]
     pub fn new(tokens: &'a [Token]) -> Self {
         let peeked = tokens.iter().cloned().peekable();
@@ -37,12 +36,11 @@ impl<'a> Parser<'a> {
             asts: Vec::new(),
             buffer: Vec::new(),
         }
-        
     }
     #[allow(dead_code)]
     fn next_token(&mut self) -> Token {
         let token = self.tokens.next();
-        
+
         match token {
             Some(t) => t,
             None => Token::EOF,
@@ -51,24 +49,23 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn peek_token(&mut self) -> Token {
         let peek = self.tokens.peek().clone();
-        
+
         match peek {
             Some(t) => t.clone(),
             None => Token::EOF,
-        }    
+        }
     }
     #[allow(dead_code)]
     fn expect(&mut self, expected: Token, cur_token: Token) -> Result<(), AstGenError> {
         match expected {
             cur_token => Ok(()),
-            Token::EOF => Err(AstGenError{
+            Token::EOF => Err(AstGenError {
                 message: AstError::UnexpectedEOF(),
             }),
-            _ => Err(AstGenError{
+            _ => Err(AstGenError {
                 message: AstError::ExpectedToken(expected),
             }),
         }
-        
     }
     #[allow(dead_code)]
     fn report_error(&self, error: AstGenError) {
@@ -102,9 +99,12 @@ impl<'a> Parser<'a> {
                         break;
                     }
                     _ => {
-                        panic!("{}",AstGenError{
-                            message: AstError::ExpectedStatement(),
-                        });
+                        panic!(
+                            "{}",
+                            AstGenError {
+                                message: AstError::ExpectedStatement(),
+                            }
+                        );
                     }
                 }
             }
@@ -112,8 +112,7 @@ impl<'a> Parser<'a> {
                 State::PublicFunction => {
                     if token == Token::Symbol(Symbol::OpenBrace) {
                         self.brace_inner += 1;
-                    }
-                    else if token == Token::Symbol(Symbol::CloseBrace) {
+                    } else if token == Token::Symbol(Symbol::CloseBrace) {
                         self.brace_inner -= 1;
                     }
                     //self.buffer.push(token);
@@ -127,7 +126,6 @@ impl<'a> Parser<'a> {
                         //self.buffer.clear();
                         self.next_token();
                     }
-                
                 }
                 State::Function => {
                     if token == Token::Symbol(Symbol::OpenBrace) {
@@ -138,7 +136,6 @@ impl<'a> Parser<'a> {
                     self.brace_inner = 0;
                     //self.buffer.clear();
                     self.next_token();
-                    
                 }
                 State::Inject => {
                     //self.buffer.push(token);
@@ -162,14 +159,14 @@ impl<'a> Parser<'a> {
                         self.next_token();
                     }
                 }
-                
+
                 _ => {
                     continue;
                 }
             }
         }
     }
-    fn parse_function(&mut self, is_public: bool){
+    fn parse_function(&mut self, is_public: bool) {
         //println!("Brace: {}", self.brace_inner);
         while let token = self.peek_token() {
             //println!("cur: {:?}", token);
@@ -185,9 +182,9 @@ impl<'a> Parser<'a> {
                     //println!("Brace: {}", self.brace_inner);
                     if self.brace_inner == 0 {
                         //self.buffer.push(token);
-                        
+
                         //println!("{} Function: {:?} {}", "\x1b[34m", self.buffer,"\x1b[0m");
-                        return; 
+                        return;
                     }
                     self.next_token();
                 }
@@ -195,12 +192,11 @@ impl<'a> Parser<'a> {
                     //self.buffer.push(token);
                     self.next_token();
                 }
-            }            
+            }
         }
-
     }
     /*fn parse_statement(&mut self) -> Result<AST, AstGenError> {
-        
+
     }*/
 
     #[allow(dead_code)]
@@ -208,6 +204,3 @@ impl<'a> Parser<'a> {
         self.asts.clone()
     }
 }
-
-
-

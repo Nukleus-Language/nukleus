@@ -26,7 +26,7 @@
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
-pub enum ASTtypename{
+pub enum ASTtypename {
     TypeVoid,
     I8,
     I16,
@@ -48,7 +48,7 @@ pub enum ASTtypename{
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
-pub enum ASTtypevalue{
+pub enum ASTtypevalue {
     TypeVoid,
     I8(i8),
     I16(i16),
@@ -63,19 +63,18 @@ pub enum ASTtypevalue{
     Bool(bool),
     QuotedString(String),
     Identifier(String),
-   
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
-pub enum ASTtypecomp{
+pub enum ASTtypecomp {
     Array(Vec<ASTtypevalue>),
-    Argument{
+    Argument {
         type_name: ASTtypename,
         identifier: ASTtypevalue,
     },
-    FunctionCall{
+    FunctionCall {
         name: String,
         args: Vec<ASTtypevalue>,
-    },   
+    },
 }

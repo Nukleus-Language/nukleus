@@ -7,9 +7,9 @@ pub mod interpreter;
 use std::fs::File;
 use std::io::prelude::*;
 
+use astgen::Parser;
 use clap::{Arg, Command};
 use lexer::lexer;
-use astgen::Parser;
 
 fn cli() -> Command {
     Command::new("nukleus")
@@ -65,7 +65,7 @@ fn main() {
     let duration_old = end_time_old.duration_since(start_time_old);
 
     println!("New Lexer Time: {:?}", duration_new);
-    println!("Old Lexer Time: {:?}", duration_old); 
+    println!("Old Lexer Time: {:?}", duration_old);
 
     // calulate how times faster the new lexer is
     let speedup = duration_old.as_nanos() as f64 / duration_new.as_nanos() as f64;
@@ -76,7 +76,7 @@ fn main() {
     // calculate how much characters the new lexer can lex per second
     let new_chars_per_second = contents.len() as f64 / duration_new.as_secs_f64();
     println!("New Chars Per Second: {}", new_chars_per_second);
-    
+
     ///println!("Tokens: {:?}", tokens);
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
@@ -92,7 +92,7 @@ fn main() {
     let end_time_parser_new = std::time::Instant::now();
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     println!("New Parser Time: {:?}", duration_parser_new);
-    
+
     let speedup = duration_parser_old.as_nanos() as f64 / duration_parser_new.as_nanos() as f64;
     println!("Speedup: {}x", speedup);
     //println!("{:?}", ast);

@@ -48,4 +48,3 @@ impl fmt::Display for Statement {
         write!(f, "{}", self.as_str())
     }
 }
-

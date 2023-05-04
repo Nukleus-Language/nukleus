@@ -7,5 +7,4 @@ pub mod tokens_new;
 pub use lex::lexer;
 pub use tokens::*;
 
-
 // benchmark between the two lexers

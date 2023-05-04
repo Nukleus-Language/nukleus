@@ -49,4 +49,3 @@ impl fmt::Display for Symbol {
         write!(f, "{}", self.as_str())
     }
 }
-

@@ -68,7 +68,7 @@ impl<'a> Lexer<'a> {
             if c.is_whitespace() && self.state != State::QuotedString {
                 self.buffer.clear();
                 self.state = State::EmptyState;
-                continue;    
+                continue;
             }
             // Check if the buffer is empty and the current character when is empty
             if self.buffer.is_empty() {

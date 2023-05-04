@@ -57,7 +57,6 @@ impl Iterator for Operator {
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum Logical {

@@ -45,8 +45,6 @@ impl fmt::Display for TypeName {
     }
 }
 
-
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -84,4 +82,3 @@ impl fmt::Display for TypeValue {
         }
     }
 }
-
