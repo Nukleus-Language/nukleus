@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum TypeName {
@@ -45,6 +45,8 @@ impl fmt::Display for TypeName {
     }
 }
 
+
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -82,3 +84,4 @@ impl fmt::Display for TypeValue {
         }
     }
 }
+

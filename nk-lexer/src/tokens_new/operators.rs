@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Operator {
@@ -40,7 +40,8 @@ impl fmt::Display for Operator {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Logical {
@@ -77,7 +78,7 @@ impl fmt::Display for Logical {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Assign {
@@ -118,3 +119,4 @@ impl fmt::Display for Assign {
         write!(f, "{}", self.as_str())
     }
 }
+

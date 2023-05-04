@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Symbol {
@@ -49,3 +49,4 @@ impl fmt::Display for Symbol {
         write!(f, "{}", self.as_str())
     }
 }
+

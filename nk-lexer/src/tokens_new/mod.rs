@@ -16,6 +16,8 @@ pub use types::TypeValue;
 
 pub use symbols::Symbol;
 
+// FEAT:TASK: add trait for the Tokens for error line, pos support
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -27,7 +29,7 @@ pub enum Token {
     TypeName(TypeName),
     TypeValue(TypeValue),
     Symbol(Symbol),
-    //EOF,
+    EOF,
 }
 
 impl fmt::Display for Token {
@@ -40,7 +42,9 @@ impl fmt::Display for Token {
             Token::TypeName(tn) => write!(f, "{}", tn),
             Token::TypeValue(tv) => write!(f, "{}", tv),
             Token::Symbol(sym) => write!(f, "{}", sym),
-            //Token::EOF => write!(f, "EOF"),
+            Token::EOF => write!(f, "EOF"),
         }
     }
 }
+
+

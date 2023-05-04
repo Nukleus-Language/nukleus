@@ -12,8 +12,8 @@ use crate::tokens_new::*;
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
-    StateEmpty,
-    StateDefault,
+    EmptyState,
+    DefaultState,
     Number,
     Identifier,
     QuotedString,
@@ -36,7 +36,7 @@ impl<'a> Lexer<'a> {
         Lexer {
             code: code.chars().peekable(),
             tokens: Vec::new(),
-            state: State::StateEmpty,
+            state: State::EmptyState,
             buffer: String::new(),
             line: 1,
             column: 1,
@@ -53,13 +53,13 @@ impl<'a> Lexer<'a> {
             //println!("Current Buffer: {}", self.buffer);
             if self.state == State::DoubleState {
                 self.buffer.clear();
-                self.state = State::StateEmpty;
+                self.state = State::EmptyState;
 
                 continue;
             }
             if self.state == State::Comment {
                 if c == '\n' {
-                    self.state = State::StateEmpty;
+                    self.state = State::EmptyState;
                     self.buffer.clear();
                     continue;
                 }
@@ -67,8 +67,8 @@ impl<'a> Lexer<'a> {
             }
             if c.is_whitespace() && self.state != State::QuotedString {
                 self.buffer.clear();
-                self.state = State::StateEmpty;
-                continue;
+                self.state = State::EmptyState;
+                continue;    
             }
             // Check if the buffer is empty and the current character when is empty
             if self.buffer.is_empty() {
@@ -114,7 +114,7 @@ impl<'a> Lexer<'a> {
                 }
                 self.buffer.push(c);
 
-                self.state = State::StateDefault;
+                self.state = State::DefaultState;
                 //continue;
             }
             //println!(
@@ -125,7 +125,7 @@ impl<'a> Lexer<'a> {
             // if the first character is a - or number and the next character is a number
             // then it is a number
             let first_char = self.buffer.chars().next().unwrap();
-            if self.state == State::StateDefault && (first_char == '-' || first_char.is_numeric()) {
+            if self.state == State::DefaultState && (first_char == '-' || first_char.is_numeric()) {
                 self.state = State::Number;
                 //self.buffer.push(c);
             } else if self.state == State::Number && c.is_numeric() {
@@ -139,12 +139,12 @@ impl<'a> Lexer<'a> {
                     Err(error) => self.report_error(error),
                 }
                 self.buffer.clear();
-                self.state = State::StateEmpty;
+                self.state = State::EmptyState;
                 continue;
             }
 
             // if the first character is a " then it is a string
-            if self.state == State::StateDefault && identifier::is_quote(first_char) {
+            if self.state == State::DefaultState && identifier::is_quote(first_char) {
                 self.state = State::QuotedString;
                 //self.buffer.push(c);
                 continue;
@@ -158,12 +158,12 @@ impl<'a> Lexer<'a> {
                 let string = string.trim_matches('"').to_string();
                 self.insert_token(Token::TypeValue(TypeValue::QuotedString(string)));
                 self.buffer.clear();
-                self.state = State::StateEmpty;
+                self.state = State::EmptyState;
                 continue;
             }
 
             // check if is a identifier, statement, or symbol
-            if self.state == State::StateDefault && identifier::is_first_identifierable(first_char)
+            if self.state == State::DefaultState && identifier::is_first_identifierable(first_char)
             {
                 self.state = State::Identifier;
                 //self.buffer.push(c);
@@ -178,7 +178,7 @@ impl<'a> Lexer<'a> {
                     Ok(statement) => {
                         self.insert_token(statement);
                         self.buffer.clear();
-                        self.state = State::StateEmpty;
+                        self.state = State::EmptyState;
                         continue;
                     }
                     Err(_) => {}
@@ -189,7 +189,7 @@ impl<'a> Lexer<'a> {
                     Ok(type_name) => {
                         self.insert_token(type_name);
                         self.buffer.clear();
-                        self.state = State::StateEmpty;
+                        self.state = State::EmptyState;
                         continue;
                     }
                     Err(_) => {}
@@ -197,7 +197,7 @@ impl<'a> Lexer<'a> {
                 let identifier = Token::TypeValue(TypeValue::Identifier(self.buffer.clone()));
                 self.insert_token(identifier);
                 self.buffer.clear();
-                self.state = State::StateEmpty;
+                self.state = State::EmptyState;
                 continue;
             }
         }

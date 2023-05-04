@@ -1,3 +1,6 @@
+inject idunno;
+let:i32 yay = 10;
+
 fn main() -> void{
 	let:i64 i = 0;
 	let:i64 ans = 0;

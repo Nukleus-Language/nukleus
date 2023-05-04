@@ -1,10 +1,11 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Statement {
     Public,
+    //Import,
     Let,
     Return,
     Print,
@@ -25,6 +26,7 @@ impl Statement {
     pub fn as_str(&self) -> &str {
         match *self {
             Statement::Public => "public",
+            //Statement::Import => "import",
             Statement::Let => "let",
             Statement::Return => "return",
             Statement::Print => "print",
@@ -46,3 +48,4 @@ impl fmt::Display for Statement {
         write!(f, "{}", self.as_str())
     }
 }
+

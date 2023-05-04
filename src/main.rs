@@ -9,6 +9,7 @@ use std::io::prelude::*;
 
 use clap::{Arg, Command};
 use lexer::lexer;
+use astgen::Parser;
 
 fn cli() -> Command {
     Command::new("nukleus")
@@ -57,7 +58,7 @@ fn main() {
     let end_time_new = std::time::Instant::now();
     let duration_new = end_time_new.duration_since(start_time_new);
     let new_tokens = new_lexer.get_tokens();
-    println!("New Tokens: {:?}", new_tokens);
+    //println!("New Tokens: {:?}", new_tokens);
     let start_time_old = std::time::Instant::now();
     let tokens = lexer(&contents);
     let end_time_old = std::time::Instant::now();
@@ -80,7 +81,20 @@ fn main() {
     //let ast = core::parser_new::parse::Parser::new(tokens).parse();
     //println!("{:?}", ast);
     // Pass contents to the lexer here
+    let start_time_parser_old = std::time::Instant::now();
     let ast = core::parser::parse::Parser::new(&tokens).parse();
+    let end_time_parser_old = std::time::Instant::now();
+    let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
+    println!("Old Parser Time: {:?}", duration_parser_old);
+
+    let start_time_parser_new = std::time::Instant::now();
+    let new_ast = Parser::new(&new_tokens).run();
+    let end_time_parser_new = std::time::Instant::now();
+    let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
+    println!("New Parser Time: {:?}", duration_parser_new);
+    
+    let speedup = duration_parser_old.as_nanos() as f64 / duration_parser_new.as_nanos() as f64;
+    println!("Speedup: {}x", speedup);
     //println!("{:?}", ast);
     /*match ast.clone() {
         Ok(ast) => {

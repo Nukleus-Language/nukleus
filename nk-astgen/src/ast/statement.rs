@@ -1,13 +1,16 @@
-use crate::
+use crate::ast::AST;
+
+use lexer::tokens_new::Token;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#![allow(missing_docs)]
-#![allow(dead_code)]
+#[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum ASTmemoryspace {
 
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-#![allow(missing_docs)]
-#![allow(dead_code)]
+#[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum ASTstatement{
     Import {
         //path: String,
@@ -61,7 +64,7 @@ pub enum ASTstatement{
         //else_: Option<Box<AST>>,
     },
     ElseIf {
-        condition: Vec<Token>,
+        condition: Vec<AST>,
         statements: Vec<AST>,
     },
     Else {
@@ -88,13 +91,4 @@ pub enum ASTstatement{
         value: Token,
     },
 }
-impl ASTstatement{
-    // return the memory template for the statements
-    pub fn memory_template(&self) -> String {
-        match self {
-            
 
-
-        }
-    }
-}
