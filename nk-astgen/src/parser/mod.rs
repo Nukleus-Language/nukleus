@@ -1,7 +1,7 @@
 use lexer::tokens_new::*;
 
 mod error;
-use crate::ast::AST;
+use crate::ast::*;
 use error::{AstError, AstGenError};
 
 use std::iter::Cloned;
@@ -56,7 +56,8 @@ impl<'a> Parser<'a> {
         }
     }
     #[allow(dead_code)]
-    fn expect(&mut self, expected: Token, cur_token: Token) -> Result<(), AstGenError> {
+    fn expect(&mut self,current: Token, expected: Token) -> Result<(), AstGenError> {                   
+        println!("{} Current Token: {:?}{}", "\x1b[37m", current,"\x1b[0m");
         match expected {
             cur_token => Ok(()),
             Token::EOF => Err(AstGenError {
@@ -67,9 +68,33 @@ impl<'a> Parser<'a> {
             }),
         }
     }
+    fn parse_statement(&mut self) {
+        let mut statements: Vec<AST> = Vec::new();
+        // parse statements
+        while let token = self.next_token() {
+            match token {
+                Token::Statement(Statement::If) => {
+                    self.parse_if();
+                }
+                Token::Statement(Statement::For) => {
+                    self.parse_for();
+                }
+
+                Token::Symbol(Symbol::OpenBrace) => {
+                    continue;
+                }
+                Token::Symbol(Symbol::CloseBrace) => {
+                    break;
+                }
+                _ => {
+                    continue;
+                }
+            }
+        }
+    }
     #[allow(dead_code)]
     fn report_error(&self, error: AstGenError) {
-        println!("{}", error);
+        panic!("{}", error);
     }
     pub fn run(&mut self) {
         //println!("{:?}", self.tokens.peek());
@@ -85,7 +110,10 @@ impl<'a> Parser<'a> {
                     }
                     Token::Statement(Statement::Public) => {
                         self.state = State::PublicFunction;
-                        //println!("Founded Public Function");
+                        // parse the public function in order of
+                        // public -> fn -> function_name -> Arguments -> Arrow -> return type -> { ->
+                        // function_body -> }
+                        
                     }
                     Token::Statement(Statement::Let) => {
                         self.state = State::GlobalLet;
@@ -110,22 +138,17 @@ impl<'a> Parser<'a> {
             }
             match self.state {
                 State::PublicFunction => {
-                    if token == Token::Symbol(Symbol::OpenBrace) {
-                        self.brace_inner += 1;
-                    } else if token == Token::Symbol(Symbol::CloseBrace) {
-                        self.brace_inner -= 1;
-                    }
+                    
+                    //if token == Token::Symbol(Symbol::OpenBrace) {
+                    //    self.brace_inner += 1;
+                    //} else if token == Token::Symbol(Symbol::CloseBrace) {
+                    //    self.brace_inner -= 1;
+                    //}
+                    self.parse_function(true);
                     //self.buffer.push(token);
-                    if peeked == Token::Symbol(Symbol::CloseBrace) && self.brace_inner == 1 {
-                        self.state = State::EmptyState;
-                        //self.buffer.push(peeked);
-                        //parse_function(self.buffer.clone(), true);
-                        //println!("{} Function: {:?} {}","\x1b[34m" , self.buffer,"\x1b[0m");
-                        //self.buffer.clear();
-                        self.brace_inner = 0;
-                        //self.buffer.clear();
-                        self.next_token();
-                    }
+                   
+                    self.state = State::EmptyState;
+                    
                 }
                 State::Function => {
                     if token == Token::Symbol(Symbol::OpenBrace) {
@@ -133,9 +156,9 @@ impl<'a> Parser<'a> {
                     }
                     self.parse_function(false);
                     self.state = State::EmptyState;
-                    self.brace_inner = 0;
+                   
                     //self.buffer.clear();
-                    self.next_token();
+                    
                 }
                 State::Inject => {
                     //self.buffer.push(token);
@@ -168,39 +191,136 @@ impl<'a> Parser<'a> {
     }
     fn parse_function(&mut self, is_public: bool) {
         //println!("Brace: {}", self.brace_inner);
-        while let token = self.peek_token() {
-            //println!("cur: {:?}", token);
-            match token {
-                Token::Symbol(Symbol::OpenBrace) => {
-                    //self.buffer.push(token);
-                    self.brace_inner += 1;
-                    //println!("Brace: {}", self.brace_inner);
-                    self.next_token();
-                }
-                Token::Symbol(Symbol::CloseBrace) => {
-                    self.brace_inner -= 1;
-                    //println!("Brace: {}", self.brace_inner);
-                    if self.brace_inner == 0 {
-                        //self.buffer.push(token);
+        let mut cur_token = self.next_token();
+        if is_public {
+            cur_token = self.next_token();
+        }
+        let mut statements: Vec<ASTstatement> = Vec::new();
+        let mut args: Vec<ASTtypecomp> = Vec::new();
+        
+        // parse arguments and function header 
+        //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
+        let function_name = cur_token.to_string();
+        
+        //println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
 
-                        //println!("{} Function: {:?} {}", "\x1b[34m", self.buffer,"\x1b[0m");
-                        return;
-                    }
-                    self.next_token();
+        let arguments = self.parse_arguments();
+        // parse statements
+        self.parse_statement();    
+    }
+    
+    fn parse_for(&mut self ){
+        //let mut statements: Vec<ASTstatement> = Vec::new();
+        // parse arguments and for header 
+        //println!("{} Start of For: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
+        let mut condition = Vec::new();
+        while let token = self.next_token() {
+            match token {
+                Token::Symbol(Symbol::OpenParen) => {
+                    continue;
+                }
+                Token::Symbol(Symbol::CloseParen) => {
+                    break;
                 }
                 _ => {
-                    //self.buffer.push(token);
-                    self.next_token();
+                    condition.push(token);
                 }
             }
         }
+        // parse statements
+        self.parse_statement();    
+
+        // parse statements
+        //while let token = self.peek_token() {
+
+        //}
+      
     }
-    /*fn parse_statement(&mut self) -> Result<AST, AstGenError> {
+    fn parse_if(&mut self){
+        //let mut statements: Vec<ASTstatement> = Vec::new();
+        // parse arguments and if header 
+        //println!("{} Start of If: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
+        let mut condition = Vec::new();
+        while let token = self.next_token() {
+            match token {
+                Token::Symbol(Symbol::OpenParen) => {
+                    continue;
+                }
+                Token::Symbol(Symbol::CloseParen) => {
+                    break;
+                }
+                _ => {
+                    condition.push(token);
+                }
+            }
+        }
+        // parse statements
+        self.parse_statement();      
+    }
+    fn parse_arguments(&mut self) -> Vec<ASTtypecomp> {
+        let mut args: Vec<ASTtypecomp> = Vec::new();
+        let mut state = 1;
+        
+        while let token = self.next_token() {
+            let peeked = self.peek_token();
+            //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
+            match token {
+                Token::TypeName(TypeName::I32 ) => {
+                    if state == 1 {
+                        state = 2;
+                    }
+                }
+                Token::Symbol(Symbol::Colon) => {
+                    if state == 2 {
+                        state = 3;
+                    }
+                    
+                }
+                Token::TypeValue(TypeValue::Identifier(identifier)) => {
+                    if state == 3 {
+                        let identifier_ast = ASTtypevalue::Identifier(identifier.to_string());
+                        let argument = ASTtypecomp::Argument{ type_name: ASTtypename::I32, identifier: identifier_ast};
+                        //println!("{} {:?} {}", "\x1b[33m", argument, "\x1b[0m");
+                        state =4;
+                        args.push(argument);
+                    }
+                }
+                Token::Symbol(Symbol::Comma) => {
+                    state = 1;
+                }
+                Token::Symbol(Symbol::CloseParen) => {
+                    //println!("{} end of function args {}", "\x1b[35m",  "\x1b[0m");
+                    break;
+                }
+                Token::Symbol(Symbol::OpenParen) => {
+                    continue;
+                }
+                _ => {
+                    if state == 1 {
+                        panic!("{} Require a type to construct an argument! {}", "\x1b[31m", "\x1b[0m");
+                    }
+                    else if state == 2 {
+                        panic!("{} Require a \":\" after the type! {}", "\x1b[31m", "\x1b[0m");
+                    }
+                    else if state == 3 {
+                        panic!("{} Require a name for a argument! {}", "\x1b[31m", "\x1b[0m");
+                    }
+                    else if state == 4 {
+                        panic!("{} Require a \",\" after the first argument! {}", "\x1b[31m", "\x1b[0m");
+                    }
+                    else {
+                        panic!("{} Unexpected token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
+                    }
+                }
+            }
+        }   
 
-    }*/
-
+        args
+    }  
     #[allow(dead_code)]
     pub fn get_asts(&self) -> Vec<AST> {
         self.asts.clone()
     }
 }
+
+
