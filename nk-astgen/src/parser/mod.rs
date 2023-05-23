@@ -6,6 +6,7 @@ use error::{AstError, AstGenError};
 
 use std::iter::Cloned;
 use std::iter::Peekable;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -267,65 +268,33 @@ impl<'a> Parser<'a> {
         let mut args: Vec<ASTtypecomp> = Vec::new();
         let mut state: ArgumentParseState = ArgumentParseState::WaitForType;
         let mut cur_type = ASTtypename::TypeVoid;
-
+        let type_map: HashMap<TypeName, ASTtypename> = [
+            (TypeName::I8, ASTtypename::I8),
+            (TypeName::I16, ASTtypename::I16),
+            (TypeName::I32, ASTtypename::I32),
+            (TypeName::I64, ASTtypename::I64),
+            (TypeName::U8, ASTtypename::U8),
+            (TypeName::U16, ASTtypename::U16),
+            (TypeName::U32, ASTtypename::U32),
+            (TypeName::U64, ASTtypename::U64),
+            (TypeName::Bool, ASTtypename::Bool),
+            (TypeName::QuotedString, ASTtypename::QuotedString)
+        ].iter().cloned().collect();
         while let token = self.next_token() {
             let peeked = self.peek_token();
             //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
             match (token.clone(), &state) {
-                (Token::Symbol(Symbol::CloseParen), ArgumentParseState::WaitForCommaOrCloseParen) => {
-                    break;
-                }
-                (Token::Symbol(Symbol::CloseParen), ArgumentParseState::WaitForType) => {
+                (Token::Symbol(Symbol::CloseParen), (ArgumentParseState::WaitForCommaOrCloseParen | ArgumentParseState::WaitForType)) => {
                     break;
                 }
                 (Token::Symbol(Symbol::OpenParen), ArgumentParseState::WaitForType) => {
                     continue;
                 }
-                (Token::TypeName(TypeName::I8), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::I8;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::I16), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::I16;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::I32), &ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::I32;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::I64), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::I64;
-                    state = ArgumentParseState::WaitForColon
-                }
-                (Token::TypeName(TypeName::U8), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::U8;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::U16), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::U16;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::U32), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::U32;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::U64), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::U64;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                /*(Token::TypeName(TypeName::F32), ArgumentParseState::WaitForType) => {
-                    
-                }
-                (Token::TypeName(TypeName::F64), ArgumentParseState::WaitForType) => {
-                    
-                }*/
-                (Token::TypeName(TypeName::Bool), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::Bool;
-                    state = ArgumentParseState::WaitForColon;
-                }
-                (Token::TypeName(TypeName::QuotedString), ArgumentParseState::WaitForType) => {
-                    cur_type = ASTtypename::QuotedString;
-                    state = ArgumentParseState::WaitForColon;
+                (Token::TypeName(type_name), ArgumentParseState::WaitForType) => {
+                    if let Some(ast_type) = type_map.get(&type_name) {
+                        cur_type = *ast_type;
+                        state = ArgumentParseState::WaitForColon;
+                    }
                 }
                 (Token::Symbol(Symbol::Colon), ArgumentParseState::WaitForColon) => {
                     state = ArgumentParseState::WaitForIdentifier;

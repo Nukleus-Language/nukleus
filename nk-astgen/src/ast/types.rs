@@ -23,7 +23,7 @@
         args: Vec<ASTtype>,
     },
 }*/
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum ASTtypename {
