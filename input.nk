@@ -1,4 +1,4 @@
-public fn main(i32:a, i32:b, i32:c) -> void
+public fn main() -> void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;

@@ -100,7 +100,6 @@ fn main() {
 
     let speedup = duration_parser_old.as_nanos() as f64 / duration_parser_new.as_nanos() as f64;
     println!("Speedup: {}x", speedup);
-   
 
     let old_tokens_per_second = tokens.len() as f64 / duration_parser_old.as_secs_f64();
     println!("Old Tokens Per Second: {}", old_tokens_per_second);
