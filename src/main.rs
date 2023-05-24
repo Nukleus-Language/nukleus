@@ -91,10 +91,12 @@ fn main() {
     let end_time_parser_old = std::time::Instant::now();
     let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     println!("Old Parser Time: {:?}", duration_parser_old);
+    let mut mid_ir = Parser::new(&new_tokens);
 
     let start_time_parser_new = std::time::Instant::now();
-    Parser::new(&new_tokens).run();
+    mid_ir.run();
     let end_time_parser_new = std::time::Instant::now();
+    let ast_new = mid_ir.get_asts(); 
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     println!("New Parser Time: {:?}", duration_parser_new);
 
@@ -126,6 +128,9 @@ fn main() {
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
     //let mut interpreter = interpreter::Interpreter::new();
     interpreter.run(ast.unwrap());
+
+    println!("NEW MID_IR (AST)");
+    println!("{:?}", ast_new);
 
     //println!("{:?}",ast);
 }

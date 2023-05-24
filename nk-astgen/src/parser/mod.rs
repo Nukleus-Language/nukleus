@@ -4,9 +4,8 @@ mod error;
 use crate::ast::*;
 use error::{AstError, AstGenError};
 
-use std::iter::Cloned;
-use std::iter::Peekable;
 use std::collections::HashMap;
+use std::iter::{Cloned, Peekable};
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -76,7 +75,7 @@ impl<'a> Parser<'a> {
             }),
         }
     }
-    fn parse_statement(&mut self) {
+    fn parse_statement(&mut self) -> Vec<AST> {
         let mut statements: Vec<AST> = Vec::new();
         // parse statements
         while let token = self.next_token() {
@@ -85,7 +84,7 @@ impl<'a> Parser<'a> {
                     self.parse_if();
                 }
                 Token::Statement(Statement::For) => {
-                    self.parse_for();
+                    statements.push(self.parse_for());
                 }
 
                 Token::Symbol(Symbol::OpenBrace) => {
@@ -99,6 +98,8 @@ impl<'a> Parser<'a> {
                 }
             }
         }
+
+        statements
     }
     #[allow(dead_code)]
     fn report_error(&self, error: AstGenError) {
@@ -113,14 +114,10 @@ impl<'a> Parser<'a> {
                 //println!("{:?}", token);
                 match token {
                     Token::Statement(Statement::Function) => {
-                        self.state = State::Function;
-                        //println!("Founded Function");
+                        self.parse_function(false);
                     }
                     Token::Statement(Statement::Public) => {
-                        self.state = State::PublicFunction;
-                        // parse the public function in order of
-                        // public -> fn -> function_name -> Arguments -> Arrow -> return type -> { ->
-                        // function_body -> }
+                        self.parse_function(true);
                     }
                     Token::Statement(Statement::Let) => {
                         self.state = State::GlobalLet;
@@ -144,26 +141,6 @@ impl<'a> Parser<'a> {
                 }
             }
             match self.state {
-                State::PublicFunction => {
-                    //if token == Token::Symbol(Symbol::OpenBrace) {
-                    //    self.brace_inner += 1;
-                    //} else if token == Token::Symbol(Symbol::CloseBrace) {
-                    //    self.brace_inner -= 1;
-                    //}
-                    self.parse_function(true);
-                    //self.buffer.push(token);
-
-                    self.state = State::EmptyState;
-                }
-                State::Function => {
-                    if token == Token::Symbol(Symbol::OpenBrace) {
-                        self.brace_inner += 1;
-                    }
-                    self.parse_function(false);
-                    self.state = State::EmptyState;
-
-                    //self.buffer.clear();
-                }
                 State::Inject => {
                     //self.buffer.push(token);
                     if peeked == Token::Symbol(Symbol::Semicolon) {
@@ -195,50 +172,142 @@ impl<'a> Parser<'a> {
     }
     fn parse_function(&mut self, is_public: bool) {
         //println!("Brace: {}", self.brace_inner);
+        let type_map: HashMap<TypeName, ASTtypename> = [
+            (TypeName::Void, ASTtypename::TypeVoid),
+            (TypeName::I8, ASTtypename::I8),
+            (TypeName::I16, ASTtypename::I16),
+            (TypeName::I32, ASTtypename::I32),
+            (TypeName::I64, ASTtypename::I64),
+            (TypeName::U8, ASTtypename::U8),
+            (TypeName::U16, ASTtypename::U16),
+            (TypeName::U32, ASTtypename::U32),
+            (TypeName::U64, ASTtypename::U64),
+            (TypeName::Bool, ASTtypename::Bool),
+            (TypeName::QuotedString, ASTtypename::QuotedString),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+        
         let mut cur_token = self.next_token();
         if is_public {
             cur_token = self.next_token();
         }
-        let mut statements: Vec<ASTstatement> = Vec::new();
-        let mut args: Vec<ASTtypecomp> = Vec::new();
+         let mut args: Vec<ASTtypecomp> = Vec::new();
 
         // parse arguments and function header
         //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
         let function_name = cur_token.to_string();
+        
+        println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
+        
+        println!("cur: {:?}", cur_token);
+        // Parse parameters of the function
+        let arguments = self.parse_arguments(); 
+        println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
 
-        //println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
+        // Parse function return type
+        // -> <type>
+        let mut return_type = ASTtypename::TypeVoid;
+        if self.next_token() == Token::Symbol(Symbol::Arrow){
+            //self.next_token();
+            match self.next_token() {
+                Token::TypeName(type_name) => {
+                    if let Some(ast_type) = type_map.get(&type_name) {
+                        return_type = *ast_type;
+                    }
 
-        let arguments = self.parse_arguments();
+                }
+                _ => {
+                    panic!("{} Require type to construct function! {}", "\x1b[31m", "\x1b[0m");
+                }
+            }
+                    }
+
         // parse statements
-        self.parse_statement();
-    }
+        let statements = self.parse_statement();
 
-    fn parse_for(&mut self) {
+        self.asts.push(AST::Statement(ASTstatement::Function{
+            public: is_public,
+            name: function_name,
+            args: arguments,
+            statements,
+            return_type
+
+        }));
+    }
+    fn pares_print(&mut self) {
+        
+    }
+    fn parse_println(&mut self) {
+        
+    }
+    fn parse_for(&mut self) -> AST {
         //let mut statements: Vec<ASTstatement> = Vec::new();
         // parse arguments and for header
         //println!("{} Start of For: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
-        let mut condition = Vec::new();
+        
         let mut status = 1;
+        let mut start_val:ASTtypevalue =ASTtypevalue::TypeVoid;
+        let mut end_val:ASTtypevalue =ASTtypevalue::TypeVoid;
+        let mut val:ASTtypevalue =ASTtypevalue::TypeVoid;
+
         while let token = self.next_token() {
-            match token {
-                Token::Symbol(Symbol::OpenParen) => {
+            match (token.clone(), &status) {
+                (Token::TypeValue(TypeValue::Identifier(ident)), 2) => {
+                    start_val = ASTtypevalue::Identifier(ident);
+                    status = 3;
                     continue;
                 }
-                Token::Symbol(Symbol::CloseParen) => {
+                (Token::Symbol(Symbol::Arrow), 3) => {
+                    status = 4;
+                    continue;
+                }
+                (Token::TypeValue(TypeValue::Identifier(ident)), 4) => {
+                    end_val = ASTtypevalue::Identifier(ident);
+                    status = 5;
+                    continue;
+                }
+                (Token::TypeValue(TypeValue::Number(num)), 4) => {
+                    end_val =  ASTtypevalue::I64(num.parse::<i64>().unwrap());
+                    status = 5;
+                    continue;
+                }
+                (Token::Symbol(Symbol::DoubleColon), 5) => {
+                    status = 6;
+                    continue;
+                }
+                (Token::TypeValue(TypeValue::Number(num)), 6) => {
+                    val = ASTtypevalue::I64(num.parse::<i64>().unwrap());
+                    status = 7;
+                    continue;
+                }
+                (Token::Symbol(Symbol::CloseParen), 7) => {
                     break;
                 }
+                (Token::Symbol(Symbol::OpenParen), 1) => {
+                    status = 2;
+                    continue;
+                } 
                 _ => {
-                    condition.push(token);
+                    println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
+                    println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
+                    panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");    
                 }
+                
+
             }
         }
         // parse statements
-        self.parse_statement();
-
-        // parse statements
-        //while let token = self.peek_token() {
-
-        //}
+        let statements = self.parse_statement();
+        
+        AST::Statement(ASTstatement::For {
+            start: start_val,
+            end: end_val,
+            value: val,
+            statements: statements,
+            
+        })
     }
     fn parse_if(&mut self) {
         //let mut statements: Vec<ASTstatement> = Vec::new();
@@ -261,8 +330,6 @@ impl<'a> Parser<'a> {
         }
         // parse statements
         self.parse_statement();
-
-        
     }
     fn parse_arguments(&mut self) -> Vec<ASTtypecomp> {
         let mut args: Vec<ASTtypecomp> = Vec::new();
@@ -278,13 +345,23 @@ impl<'a> Parser<'a> {
             (TypeName::U32, ASTtypename::U32),
             (TypeName::U64, ASTtypename::U64),
             (TypeName::Bool, ASTtypename::Bool),
-            (TypeName::QuotedString, ASTtypename::QuotedString)
-        ].iter().cloned().collect();
+            (TypeName::QuotedString, ASTtypename::QuotedString),
+        ]
+        .iter()
+        .cloned()
+        .collect();
         while let token = self.next_token() {
             let peeked = self.peek_token();
-            //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
+            println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
+            println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
-                (Token::Symbol(Symbol::CloseParen), (ArgumentParseState::WaitForCommaOrCloseParen | ArgumentParseState::WaitForType)) => {
+                (
+                    Token::Symbol(Symbol::CloseParen),
+                    (ArgumentParseState::WaitForCommaOrCloseParen),
+                ) => {
+                    break;
+                }
+                (Token::Symbol(Symbol::CloseParen), ArgumentParseState::WaitForType) => {
                     break;
                 }
                 (Token::Symbol(Symbol::OpenParen), ArgumentParseState::WaitForType) => {
@@ -299,29 +376,39 @@ impl<'a> Parser<'a> {
                 (Token::Symbol(Symbol::Colon), ArgumentParseState::WaitForColon) => {
                     state = ArgumentParseState::WaitForIdentifier;
                 }
-                (Token::TypeValue(TypeValue::Identifier(ident)), ArgumentParseState::WaitForIdentifier) => {
+                (
+                    Token::TypeValue(TypeValue::Identifier(ident)),
+                    ArgumentParseState::WaitForIdentifier,
+                ) => {
                     let ident_name = ASTtypevalue::Identifier(ident.to_string());
                     args.push(ASTtypecomp::Argument {
                         identifier: ident_name,
                         type_name: cur_type,
                     });
                     state = ArgumentParseState::WaitForCommaOrCloseParen;
-                    cur_type = ASTtypename::TypeVoid; 
+                    cur_type = ASTtypename::TypeVoid;
                 }
                 (Token::Symbol(Symbol::Comma), ArgumentParseState::WaitForCommaOrCloseParen) => {
                     state = ArgumentParseState::WaitForType;
                 }
                 
                 _ => {
-                    println!("{} Unexpected token: {:?} {}", "\x1b[31m", &token, "\x1b[0m");
-                    println!("{} state: {:?} {}", "\x1b[31m", state, "\x1b[0m");
                     let error_msg = match state {
-                        ArgumentParseState::WaitForType => "Require a type to construct an argument!",
-                        ArgumentParseState::WaitForColon => "Require a colon to construct an argument!",
-                        ArgumentParseState::WaitForIdentifier => "Require an identifier to construct an argument!",
-                        ArgumentParseState::WaitForCommaOrCloseParen => "Require a comma or close paren to construct an argument!",
+                        ArgumentParseState::WaitForType => {
+                            "Require a type to construct an argument!"
+                        }
+                        ArgumentParseState::WaitForColon => {
+                            "Require a colon to construct an argument!"
+                        }
+                        ArgumentParseState::WaitForIdentifier => {
+                            "Require an identifier to construct an argument!"
+                        }
+                        ArgumentParseState::WaitForCommaOrCloseParen => {
+                            "Require a comma or close paren to construct an argument!"
+                        }
                     };
-                    panic!("{} {} {}", "\x1b[31m", error_msg, "\x1b[0m");                    
+                    println!("{} {} {}", "\x1b[33m", token, "\x1b[0m");
+                    panic!("{} {} {}", "\x1b[31m", error_msg, "\x1b[0m");
                 }
             }
         }

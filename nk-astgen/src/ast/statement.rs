@@ -1,5 +1,4 @@
-use crate::ast::AST;
-
+use crate::ast::*;
 use lexer::tokens_new::Token;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -19,9 +18,9 @@ pub enum ASTstatement {
     Function {
         public: bool,
         name: String,
-        args: Vec<(Token, Token)>,
+        args: Vec<ASTtypecomp>,
         statements: Vec<AST>,
-        return_type: Token,
+        return_type: ASTtypename
     },
 
     Let {
@@ -70,9 +69,9 @@ pub enum ASTstatement {
     },
 
     For {
-        start: Token,
-        end: Token,
-        value: Token,
+        start: ASTtypevalue,
+        end: ASTtypevalue,
+        value: ASTtypevalue,
         statements: Vec<AST>,
     },
     Print {
@@ -80,10 +79,6 @@ pub enum ASTstatement {
     },
     Println {
         value: Token,
-    },
-    FunctionCall {
-        name: Token,
-        args: Vec<Token>,
     },
     Return {
         value: Token,
