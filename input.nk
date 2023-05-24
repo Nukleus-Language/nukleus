@@ -1,4 +1,4 @@
-public fn main() -> void
+fn main() -> void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
