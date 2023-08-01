@@ -2,38 +2,37 @@
   <img src="https://github.com/Nukleus-Language/nukleus/blob/main/images/logo.png" alt="Nukleus Logo" width="140" height="140"></img>
 </div>
 
-# The Nukleus Programming Language
+# Welcome to Nukleus: Redefining Simplicity and Speed in Programming
 [![Rust](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml)
 [![rust-clippy analyze](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml)
 
-Nukleus is a simple, fast, and versatile programming language designed for AI, GUI, and cross-platform development. Built with Rust, Nukleus offers excellent performance, reliability, and maintainability.
+Introducing Nukleus, a revolutionary programming language designed with a focus on AI, GUI, and cross-platform development. Underpinned by the robustness of Rust, Nukleus promises high performance, reliability, and ease of maintenance.
 
-## Note
+## Project Status
+While Nukleus is still in its early stages, our team is devoted to bringing an array of exciting features to life. Stay tuned for the journey ahead!
+<!-- We're just getting warmed up! -->
 
-Nukleus is still in a very early stage, and many features described below are working in progress.
-<!-- it barely started to compile lol -->
+- [ ] Under Development
+- [x] Live Now
 
-- [ ] Working In Progress
-- [x] Now Available
+## Features on the Horizon
 
-## Features
+- [x] Intuitive syntax influenced by the elegance of modern programming languages
+- [ ] Top-notch efficiency powered by the might of Rust
+- [ ] Versatility that stands out
+	+ [x] Cross-platform capabilities
+	+ [ ] Integrated GUI toolkit
+	+ [ ] Comprehensive AI toolkit
+- [x] Strongly typed language ensuring enhanced reliability and maintainability
+- [ ] Rich and extensive standard library
+- [ ] Expandability with Rust libraries
+- [ ] User-centric documentation filled with practical examples
 
-- [x] Easy-to-learn syntax inspired by modern programming languages
-- [ ] Highly efficient performance through the power of Rust
-- [ ] Versatile use cases
-	+ [x] cross-platform
-	+ [ ] GUI toolkit
-	+ [ ] AI toolkit
-- [x] Strongly typed language for increased reliability and maintainability
-- [ ] Comprehensive standard library
-- [ ] Extensible with Rust libraries
-- [ ] User friendly documentations with examples
+## Your First Steps with Nukleus
 
-## Getting Started
+Embark on your journey with Nukleus by following these simple steps:
 
-To get started with Nukleus, follow these steps:
-
-1. Install the Nukleus compiler (WIP: slow, experimental interpreter for testing) and set up your development environment.
-2. Explore the Nukleus documentation (WIP) to familiarize yourself with the language syntax and features.
-3. Try out the example programs provided in the repository.
-4. Write your own Nukleus programs and contribute to the growing community!
+1. Set up your workspace by installing the Nukleus compiler (currently a WIP: experimental interpreter for testing purposes).
+2. Dive into our detailed Nukleus documentation (currently under development) to get well-acquainted with our unique language syntax and features.
+3. Test your knowledge and understanding with the example programs available in our repository.
+4. Make your mark! Write your own Nukleus programs and be part of our dynamic community!
