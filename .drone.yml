@@ -1,0 +1,24 @@
+kind: pipeline
+name: build_pipe
+trigger:
+  branch:
+  - main
+steps:
+- name: build
+  image: rust:1.71
+  commands:
+  - cargo build --verbose --all
+
+---
+kind: pipeline
+name: test_pipe
+trigger:
+  branch:
+  - main
+steps:
+- name: test
+  image: rust:1.71
+  commands:
+  - cargo test --verbose --all
+
+  
