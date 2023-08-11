@@ -5,6 +5,7 @@
 # Welcome to Nukleus: Redefining Simplicity and Speed in Programming
 [![Rust](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust.yml)
 [![rust-clippy analyze](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml/badge.svg)](https://github.com/Nukleus-Language/nukleus/actions/workflows/rust-clippy.yml)
+[![Build Status](https://drone.nornity.com/api/badges/Nukleus-Language/nukleus/status.svg)](https://drone.nornity.com/Nukleus-Language/nukleus)
 
 Introducing Nukleus, a revolutionary programming language designed with a focus on AI, GUI, and cross-platform development. Underpinned by the robustness of Rust, Nukleus promises high performance, reliability, and ease of maintenance.
 
