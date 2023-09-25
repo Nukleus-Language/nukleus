@@ -236,9 +236,29 @@ impl<'a> Parser<'a> {
 
         }));
     }
-    fn pares_print(&mut self) {
+    /*fn parse_print(&mut self) -> AST {
+        // Get the token inside the parentheses
+        let mut inside_parentheses = Vec::new();
+
+        while let token = self.next_token() {
+            match token {
+                Token::Symbol(Symbol::OpenParen) => {
+                    continue;
+                }
+                Token::Symbol(Symbol::CloseParen) => {
+                    break;
+                }
+                _ => {
         
-    }
+                }
+            }
+        }
+
+        // Construct the AST
+        AST::Statement(ASTstatement::Print {
+            value: inside_parentheses,
+        })
+    }*/
     fn parse_println(&mut self) {
         
     }

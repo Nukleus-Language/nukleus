@@ -8,7 +8,30 @@ use errors::LexcialError;
 use std::iter::Peekable;
 use std::str::Chars;
 
+use inksac::types::*;
+
 use crate::tokens_new::*;
+
+
+
+
+const ERRORTXTSTYLE: Style = Style {
+    forground: Some(Color::Red),
+    background: None,
+    bold: true,
+    dim:false,
+    italic: true,
+    underline: false
+};
+
+/*const ERRORLINESTYLE: Style = Style {
+    forground: Some(Color::Green),
+    background: None,
+    bold: false,
+    dim:false,
+    italic: false,
+    underline: false
+};*/
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -242,9 +265,11 @@ impl<'a> Lexer<'a> {
     }
     #[allow(dead_code)]
     fn report_error(&self, error: LexcialError) {
+        let errortxt = ColoredString::new(error.to_string().as_str(), ERRORTXTSTYLE);
+
         println!(
             "{} \n-------------> Line: {}, Column: {}",
-            error, self.line, self.column
+            errortxt, self.line, self.column
         );
     }
     #[allow(dead_code)]

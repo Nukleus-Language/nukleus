@@ -21,6 +21,7 @@ clap = "4.2.0"
 
 lexer = { path = "./nk-lexer" }
 astgen = { path = "./nk-astgen" }
+inksac = "0.1.3"
 
 #[lib]
 #crate-type = ["cdylib", "rlib"]

@@ -10,6 +10,7 @@ use std::io::prelude::*;
 use astgen::Parser;
 use clap::{Arg, Command};
 use lexer::lexer;
+// use inksac::types::*;
 
 fn cli() -> Command {
     Command::new("nukleus")
@@ -34,10 +35,10 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
     Ok(contents)
 }
 
-fn run_interpreter_environment() {
-    let _interpreter = interpreter::Interpreter::new();
+// fn run_interpreter_environment() {
+    // let _interpreter = interpreter::Interpreter::new();
     //interpreter.run_repl();
-}
+// }
 
 fn main() {
     let matches = cli().get_matches();
@@ -79,12 +80,13 @@ fn main() {
     // measure speed in mb/s
     let old_chars_mb_per_second = old_chars_per_second * 4.0 / 1024.0 / 1024.0;
     let new_chars_mb_per_second = new_chars_per_second * 4.0 / 1024.0 / 1024.0;
+    
     println!("Old Chars MB/s: {}", old_chars_mb_per_second);
     println!("New Chars MB/s: {}", new_chars_mb_per_second);
 
-    ///println!("Tokens: {:?}", tokens);
-    //let ast = core::parser_new::parse::Parser::new(tokens).parse();
-    //println!("{:?}", ast);
+    // println!("Tokens: {:?}", tokens);
+    // let ast = core::parser_new::parse::Parser::new(tokens).parse();
+    // println!("{:?}", ast);
     // Pass contents to the lexer here
     let start_time_parser_old = std::time::Instant::now();
     let ast = core::parser::parse::Parser::new(&tokens).parse();
