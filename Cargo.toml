@@ -20,7 +20,6 @@ snafu = "0.7.4"
 clap = "4.2.0"
 
 lexer = { path = "./nk-lexer" }
-parser = { path = "./nk-parser" }
 astgen = { path = "./nk-astgen" }
 
 #[lib]
@@ -31,8 +30,6 @@ astgen = { path = "./nk-astgen" }
 [workspace]
 members = [
 	"nk-lexer",
-	"nk-ast",
 	"nk-astgen",
-	"nk-parser"
 ]
 

@@ -199,12 +199,12 @@ impl<'a> Parser<'a> {
         //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
         let function_name = cur_token.to_string();
         
-        println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
+        //println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
         
-        println!("cur: {:?}", cur_token);
+        //println!("cur: {:?}", cur_token);
         // Parse parameters of the function
         let arguments = self.parse_arguments(); 
-        println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
+        //println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
 
         // Parse function return type
         // -> <type>
@@ -290,8 +290,8 @@ impl<'a> Parser<'a> {
                     continue;
                 } 
                 _ => {
-                    println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
-                    println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
+                    //println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
+                    //println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
                     panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");    
                 }
                 
@@ -352,8 +352,8 @@ impl<'a> Parser<'a> {
         .collect();
         while let token = self.next_token() {
             let peeked = self.peek_token();
-            println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
-            println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
+            //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
+            //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
                 (
                     Token::Symbol(Symbol::CloseParen),
@@ -407,7 +407,7 @@ impl<'a> Parser<'a> {
                             "Require a comma or close paren to construct an argument!"
                         }
                     };
-                    println!("{} {} {}", "\x1b[33m", token, "\x1b[0m");
+                    //println!("{} {} {}", "\x1b[33m", token, "\x1b[0m");
                     panic!("{} {} {}", "\x1b[31m", error_msg, "\x1b[0m");
                 }
             }
