@@ -20,7 +20,7 @@ pub enum ASTstatement {
         name: String,
         args: Vec<ASTtypecomp>,
         statements: Vec<AST>,
-        return_type: ASTtypename
+        return_type: ASTtypename,
     },
 
     Let {

@@ -36,8 +36,8 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 }
 
 // fn run_interpreter_environment() {
-    // let _interpreter = interpreter::Interpreter::new();
-    //interpreter.run_repl();
+// let _interpreter = interpreter::Interpreter::new();
+//interpreter.run_repl();
 // }
 
 fn main() {
@@ -80,7 +80,7 @@ fn main() {
     // measure speed in mb/s
     let old_chars_mb_per_second = old_chars_per_second * 4.0 / 1024.0 / 1024.0;
     let new_chars_mb_per_second = new_chars_per_second * 4.0 / 1024.0 / 1024.0;
-    
+
     println!("Old Chars MB/s: {}", old_chars_mb_per_second);
     println!("New Chars MB/s: {}", new_chars_mb_per_second);
 
@@ -98,7 +98,7 @@ fn main() {
     let start_time_parser_new = std::time::Instant::now();
     mid_ir.run();
     let end_time_parser_new = std::time::Instant::now();
-    let ast_new = mid_ir.get_asts(); 
+    let ast_new = mid_ir.get_asts();
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     println!("New Parser Time: {:?}", duration_parser_new);
 

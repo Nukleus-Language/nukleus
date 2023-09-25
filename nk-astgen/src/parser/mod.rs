@@ -188,52 +188,53 @@ impl<'a> Parser<'a> {
         .iter()
         .cloned()
         .collect();
-        
+
         let mut cur_token = self.next_token();
         if is_public {
             cur_token = self.next_token();
         }
-         let mut args: Vec<ASTtypecomp> = Vec::new();
+        let mut args: Vec<ASTtypecomp> = Vec::new();
 
         // parse arguments and function header
         //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
         let function_name = cur_token.to_string();
-        
+
         //println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
-        
+
         //println!("cur: {:?}", cur_token);
         // Parse parameters of the function
-        let arguments = self.parse_arguments(); 
+        let arguments = self.parse_arguments();
         //println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
 
         // Parse function return type
         // -> <type>
         let mut return_type = ASTtypename::TypeVoid;
-        if self.next_token() == Token::Symbol(Symbol::Arrow){
+        if self.next_token() == Token::Symbol(Symbol::Arrow) {
             //self.next_token();
             match self.next_token() {
                 Token::TypeName(type_name) => {
                     if let Some(ast_type) = type_map.get(&type_name) {
                         return_type = *ast_type;
                     }
-
                 }
                 _ => {
-                    panic!("{} Require type to construct function! {}", "\x1b[31m", "\x1b[0m");
+                    panic!(
+                        "{} Require type to construct function! {}",
+                        "\x1b[31m", "\x1b[0m"
+                    );
                 }
             }
-                    }
+        }
 
         // parse statements
         let statements = self.parse_statement();
 
-        self.asts.push(AST::Statement(ASTstatement::Function{
+        self.asts.push(AST::Statement(ASTstatement::Function {
             public: is_public,
             name: function_name,
             args: arguments,
             statements,
-            return_type
-
+            return_type,
         }));
     }
     /*fn parse_print(&mut self) -> AST {
@@ -249,7 +250,7 @@ impl<'a> Parser<'a> {
                     break;
                 }
                 _ => {
-        
+
                 }
             }
         }
@@ -259,18 +260,16 @@ impl<'a> Parser<'a> {
             value: inside_parentheses,
         })
     }*/
-    fn parse_println(&mut self) {
-        
-    }
+    fn parse_println(&mut self) {}
     fn parse_for(&mut self) -> AST {
         //let mut statements: Vec<ASTstatement> = Vec::new();
         // parse arguments and for header
         //println!("{} Start of For: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
-        
+
         let mut status = 1;
-        let mut start_val:ASTtypevalue =ASTtypevalue::TypeVoid;
-        let mut end_val:ASTtypevalue =ASTtypevalue::TypeVoid;
-        let mut val:ASTtypevalue =ASTtypevalue::TypeVoid;
+        let mut start_val: ASTtypevalue = ASTtypevalue::TypeVoid;
+        let mut end_val: ASTtypevalue = ASTtypevalue::TypeVoid;
+        let mut val: ASTtypevalue = ASTtypevalue::TypeVoid;
 
         while let token = self.next_token() {
             match (token.clone(), &status) {
@@ -289,7 +288,7 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 (Token::TypeValue(TypeValue::Number(num)), 4) => {
-                    end_val =  ASTtypevalue::I64(num.parse::<i64>().unwrap());
+                    end_val = ASTtypevalue::I64(num.parse::<i64>().unwrap());
                     status = 5;
                     continue;
                 }
@@ -308,25 +307,22 @@ impl<'a> Parser<'a> {
                 (Token::Symbol(Symbol::OpenParen), 1) => {
                     status = 2;
                     continue;
-                } 
+                }
                 _ => {
                     //println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
                     //println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
-                    panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");    
+                    panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");
                 }
-                
-
             }
         }
         // parse statements
         let statements = self.parse_statement();
-        
+
         AST::Statement(ASTstatement::For {
             start: start_val,
             end: end_val,
             value: val,
             statements: statements,
-            
         })
     }
     fn parse_if(&mut self) {
@@ -411,7 +407,7 @@ impl<'a> Parser<'a> {
                 (Token::Symbol(Symbol::Comma), ArgumentParseState::WaitForCommaOrCloseParen) => {
                     state = ArgumentParseState::WaitForType;
                 }
-                
+
                 _ => {
                     let error_msg = match state {
                         ArgumentParseState::WaitForType => {

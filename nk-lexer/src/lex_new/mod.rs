@@ -12,16 +12,13 @@ use inksac::types::*;
 
 use crate::tokens_new::*;
 
-
-
-
 const ERRORTXTSTYLE: Style = Style {
     forground: Some(Color::Red),
     background: None,
     bold: true,
-    dim:false,
+    dim: false,
     italic: true,
-    underline: false
+    underline: false,
 };
 
 /*const ERRORLINESTYLE: Style = Style {
