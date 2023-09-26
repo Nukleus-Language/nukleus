@@ -1,3 +1,5 @@
+use std::fmt;
+
 use crate::ast::*;
 use lexer::tokens_new::Token;
 
@@ -77,6 +79,93 @@ pub enum ASTstatement {
         value: Box<AST>,
     },
     Return {
-        value: Token,
+        value: Box<AST>,
     },
+}
+impl fmt::Display for ASTstatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ASTstatement::Import { name } => write!(f, "import {}", name),
+            ASTstatement::Function {
+                public,
+                name,
+                args,
+                statements,
+                return_type,
+            } => {
+                let args_string = args
+                    .iter()
+                    .map(|arg| arg.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                let statements_string = statements
+                    .iter()
+                    .map(|statement| statement.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                write!(
+                    f,
+                    "function {}({}) {{\n{}\n}}",
+                    name, args_string, statements_string
+                )
+            }
+            ASTstatement::Let { name, type_name, value } => {
+                write!(f, "let {} : {} = {}", name, type_name.clone().unwrap().to_string(), value)
+            }
+            ASTstatement::Assign { l_var, r_var } => {
+                write!(f, "{} = {}", l_var, r_var)
+            }
+            ASTstatement::AddAssign { l_var, r_var } => {
+                write!(f, "{} += {}", l_var, r_var)
+            }
+            ASTstatement::SubAssign { l_var, r_var } => {
+                write!(f, "{} -= {}", l_var, r_var)
+            }
+            ASTstatement::MulAssign { l_var, r_var } => {
+                write!(f, "{} *= {}", l_var, r_var)
+            }
+            ASTstatement::DivAssign { l_var, r_var } => {
+                write!(f, "{} /= {}", l_var, r_var)
+            }
+            ASTstatement::RemAssign { l_var, r_var } => {
+                write!(f, "{} %= {}", l_var, r_var)
+            }
+            ASTstatement::If { condition, statements } => {
+                write!(
+                    f,
+                    "if {} {{\n{}\n}}",
+                    condition.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n"),
+                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                )
+            }
+            ASTstatement::ElseIf { condition, statements } => {
+                write!(
+                    f,
+                    "else if {} {{\n{}\n}}",
+                    condition.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n"),
+                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                )
+            }
+            ASTstatement::Else { statements } => {
+                write!(
+                    f,
+                    "else {{\n{}\n}}",
+                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                )
+            }
+            ASTstatement::For { start, end, value, statements } => {
+                write!(
+                    f,
+                    "for {} {} {} {{\n{}\n}}",
+                    start.to_string(),
+                    end.to_string(),
+                    value.to_string(),
+                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                )
+            }
+            ASTstatement::Print { value } => write!(f, "print {}", value),
+            ASTstatement::Println { value } => write!(f, "print {} \\n", value),
+            ASTstatement::Return { value } => write!(f, "return {}", value),
+        }
+    }
 }
