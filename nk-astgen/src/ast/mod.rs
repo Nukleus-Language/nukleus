@@ -1,13 +1,13 @@
+mod logic;
 mod statement;
 mod types;
-mod logic;
 
+pub use logic::ASTOperator;
+pub use logic::ASTlogic;
 pub use statement::ASTstatement;
 pub use types::ASTtypecomp;
 pub use types::ASTtypename;
 pub use types::ASTtypevalue;
-pub use logic::ASTlogic;
-pub use logic::ASTOperator;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
@@ -19,5 +19,4 @@ pub enum AST {
     TypeComp(ASTtypecomp),
     Operator(ASTOperator),
     Logic(ASTlogic),
-    
 }

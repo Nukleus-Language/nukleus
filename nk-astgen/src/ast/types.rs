@@ -78,4 +78,4 @@ pub enum ASTtypecomp {
         name: String,
         args: Vec<ASTtypevalue>,
     },
-}            
+}

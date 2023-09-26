@@ -30,7 +30,6 @@ impl fmt::Display for AstError {
             AstError::ExpectedStatement() => write!(f, "Expected statement"),
             AstError::UnexpectedEOF() => write!(f, "Unexpected EOF"),
             AstError::ExpectedExpression() => write!(f, "Expected expression"),
-
         }
     }
 }

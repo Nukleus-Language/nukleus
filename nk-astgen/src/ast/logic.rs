@@ -1,6 +1,5 @@
 use crate::AST;
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ASTOperator {
     Add,
@@ -23,11 +22,11 @@ pub enum ASTOperator {
     GreaterEquals,
 }
 
-#[derive(Debug,  Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ASTlogic {
     BinaryOperation {
         left: Box<AST>,
         op: ASTOperator,
-        right: Box<AST>
+        right: Box<AST>,
     },
 }

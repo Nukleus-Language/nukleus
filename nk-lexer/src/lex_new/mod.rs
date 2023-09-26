@@ -238,7 +238,6 @@ impl<'a> Lexer<'a> {
         next
     }
 
-    
     fn peek_char(&mut self) -> char {
         let peek = self.code.peek();
         match peek {
@@ -252,7 +251,10 @@ impl<'a> Lexer<'a> {
 
     fn report_error(&self, error: LexcialError) {
         let errortxt = ColoredString::new(&error.to_string(), ERRORTXTSTYLE);
-        println!("{} \n-------------> Line: {}, Column: {}", errortxt, self.line, self.column);
+        println!(
+            "{} \n-------------> Line: {}, Column: {}",
+            errortxt, self.line, self.column
+        );
     }
 
     pub fn get_tokens(&self) -> Vec<Token> {
