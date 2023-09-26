@@ -1,4 +1,7 @@
+use std::fmt;
+
 use crate::AST;
+
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ASTOperator {
@@ -29,4 +32,11 @@ pub enum ASTlogic {
         op: ASTOperator,
         right: Box<AST>,
     },
+}
+impl fmt::Display for ASTlogic {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ASTlogic::BinaryOperation { left, op, right } => write!(f, "{} {} {}", left, op, right),
+        }
+    }
 }
