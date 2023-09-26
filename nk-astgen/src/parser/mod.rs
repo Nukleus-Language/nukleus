@@ -47,7 +47,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn next_token(&mut self) -> Token {
         let token = self.tokens.next();
-        println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
+        // println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
         match token {
             Some(t) => t,
             None => Token::EOF,
