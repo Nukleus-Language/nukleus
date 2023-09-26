@@ -47,7 +47,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn next_token(&mut self) -> Token {
         let token = self.tokens.next();
-
+        println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
         match token {
             Some(t) => t,
             None => Token::EOF,
@@ -80,13 +80,18 @@ impl<'a> Parser<'a> {
         // parse statements
         while let token = self.next_token() {
             match token {
-                Token::Statement(Statement::If) => {
-                    self.parse_if();
-                }
                 Token::Statement(Statement::For) => {
                     statements.push(self.parse_for());
                 }
-
+                Token::Statement(Statement::Print) => {
+                    statements.push(self.parse_print());
+                }
+                Token::Statement(Statement::Println) => {
+                    statements.push(self.parse_println());
+                }
+                Token::Statement(Statement::If) => {
+                    statements.push(self.parse_if());
+                }
                 Token::Symbol(Symbol::OpenBrace) => {
                     continue;
                 }
@@ -237,30 +242,267 @@ impl<'a> Parser<'a> {
             return_type,
         }));
     }
-    /*fn parse_print(&mut self) -> AST {
-        // Get the token inside the parentheses
-        let mut inside_parentheses = Vec::new();
+    fn parse_expression(&mut self) -> AST {
+        self.parse_level1()
+    }
 
-        while let token = self.next_token() {
-            match token {
-                Token::Symbol(Symbol::OpenParen) => {
-                    continue;
+    fn parse_level1(&mut self) -> AST {
+        let mut node = self.parse_level2();
+        while let Token::Logical(op) = self.peek_token() {
+            match op {
+                Logical::Or => {
+                    self.next_token();
+                    let right_node = self.parse_level2();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: ASTOperator::Or,
+                        right: Box::new(right_node),
+                    });
                 }
+                _ => break,
+            }
+        }
+        node
+    }
+
+    fn parse_level2(&mut self) -> AST {
+        let mut node = self.parse_level3();
+        while let Token::Logical(op) = self.peek_token() {
+            match op {
+                Logical::And => {
+                    self.next_token();
+                    let right_node = self.parse_level3();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: ASTOperator::And,
+                        right: Box::new(right_node),
+                    });
+                }
+                _ => break,
+            }
+        }
+        node
+    }
+
+    fn parse_level3(&mut self) -> AST {
+        let mut node = self.parse_level4();
+        while let Token::Logical(op) = self.peek_token() {
+            match op {
+                Logical::Equals | Logical::NotEquals => {
+                    self.next_token();
+                    let right_node = self.parse_level4();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: match op {
+                            Logical::Equals => ASTOperator::Equals,
+                            Logical::NotEquals => ASTOperator::NotEquals,
+                            _ => unreachable!(),
+                        },
+                        right: Box::new(right_node),
+                    });
+                }
+                _ => break,
+            }
+        }
+        node
+    }
+
+    fn parse_level4(&mut self) -> AST {
+        let mut node = self.parse_level5();
+        while let Token::Logical(op) = self.peek_token() {
+            match op {
+                Logical::LessThan | Logical::LessThanEquals | Logical::GreaterThan | Logical::GreaterThanEquals => {
+                    self.next_token();
+                    let right_node = self.parse_level5();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: match op {
+                            Logical::LessThan => ASTOperator::Less,
+                            Logical::LessThanEquals => ASTOperator::LessEquals,
+                            Logical::GreaterThan => ASTOperator::Greater,
+                            Logical::GreaterThanEquals => ASTOperator::GreaterEquals,
+                            _ => unreachable!(),
+                        },
+                        right: Box::new(right_node),
+                    });
+                }
+                _ => break,
+            }
+        }
+        node
+    }
+
+    fn parse_level5(&mut self) -> AST {
+        let mut node = self.parse_level6();
+        while let Token::Operator(op) = self.peek_token() {
+            match op {
+                Operator::Add | Operator::Subtract => {
+                    self.next_token();
+                    let right_node = self.parse_level6();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: match op {
+                            Operator::Add => ASTOperator::Add,
+                            Operator::Subtract => ASTOperator::Subtract,
+                            _ => unreachable!(),
+                        },
+                        right: Box::new(right_node),
+                    });
+                }
+                _ => break,
+            }
+        }
+        node
+    }
+
+    fn parse_level6(&mut self) -> AST {
+        let mut node = self.parse_primary();
+        while let Token::Operator(op) = self.peek_token() {
+            match op {
+                Operator::Multiply | Operator::Divide => {
+                    self.next_token();
+                    let right_node = self.parse_primary();
+                    node = AST::Logic(ASTlogic::BinaryOperation {
+                        left: Box::new(node),
+                        op: match op {
+                            Operator::Multiply => ASTOperator::Multiply,
+                            Operator::Divide => ASTOperator::Divide,
+                            _ => unreachable!(),
+                        },
+                        right: Box::new(right_node),
+                    });
+                }
+                _ => break,
+            }
+        }
+        node
+    }
+    fn parse_primary(&mut self) -> AST {
+        let next_token = self.peek_token();
+        if let Token::Symbol(Symbol::OpenParen) = next_token {
+            self.next_token(); // Consume the opening parenthesis
+            let node = self.parse_expression();
+            match self.peek_token() {
                 Token::Symbol(Symbol::CloseParen) => {
-                    break;
-                }
+                    self.next_token(); // Consume the closing parenthesis only if it's the next token
+                    return node;
+                },
                 _ => {
-
+                    // If there's no closing parenthesis, just return the parsed node without consuming any token
+                    // self.next_token();
+                    return node;
                 }
             }
         }
 
-        // Construct the AST
-        AST::Statement(ASTstatement::Print {
-            value: inside_parentheses,
-        })
-    }*/
-    fn parse_println(&mut self) {}
+        // Handle literals and identifiers
+        match next_token {
+            Token::TypeValue(TypeValue::Number(num)) => {
+                self.next_token(); // Consume the token
+                AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap()))
+            },
+            Token::TypeValue(TypeValue::Identifier(ident)) => {
+                self.next_token(); // Consume the token
+                AST::TypeValue(ASTtypevalue::Identifier(ident.to_string()))
+            },
+            Token::TypeValue(TypeValue::QuotedString(s)) => {
+                self.next_token(); // Consume the token
+                AST::TypeValue(ASTtypevalue::QuotedString(s.to_string()))
+            },
+            Token::Logical(_) => self.parse_expression(),
+            _ => {
+                println!("{} Current Token: {:?}{}", "\x1b[36m", next_token, "\x1b[0m");
+                self.report_error(AstGenError {
+                    message: AstError::ExpectedExpression(),
+                });
+                AST::TypeValue(ASTtypevalue::TypeVoid) // Placeholder
+            }
+        }
+    }
+
+
+
+
+    fn parse_print(&mut self) -> AST {
+        // Consume the opening parenthesis
+        if self.next_token() != Token::Symbol(Symbol::OpenParen) {
+            self.report_error(AstGenError {
+                message: AstError::ExpectedToken(Token::Symbol(Symbol::OpenParen)),
+            });
+        }
+
+        let value = self.parse_expression();
+        let cur_token = self.next_token();
+        // Consume the closing parenthesis
+        if  cur_token!= Token::Symbol(Symbol::CloseParen) {
+            println!("Consume the closing parenthesis");
+            println!("cur token: {:?}", cur_token);
+            println!("next token: {:?}", self.peek_token());
+            self.report_error(AstGenError {
+                message: AstError::ExpectedToken(Token::Symbol(Symbol::CloseParen)),
+            });
+        }
+
+        AST::Statement(ASTstatement::Print{value: Box::new(value)})
+    }
+    fn parse_println(&mut self) -> AST {
+        // Consume the opening parenthesis
+        if self.next_token() != Token::Symbol(Symbol::OpenParen) {
+            self.report_error(AstGenError {
+                message: AstError::ExpectedToken(Token::Symbol(Symbol::OpenParen)),
+            });
+        }
+
+        let value = self.parse_expression();
+
+        // Consume the closing parenthesis
+        if self.next_token() != Token::Symbol(Symbol::CloseParen) {
+            self.report_error(AstGenError {
+                message: AstError::ExpectedToken(Token::Symbol(Symbol::CloseParen)),
+            });
+        }
+
+        AST::Statement(ASTstatement::Println{value: Box::new(value)})
+    }
+    fn parse_if(&mut self) -> AST {
+        // Parse the condition
+        let condition = self.parse_expression();
+
+        // Parse the statements
+        let statements = self.parse_statement();
+
+        // Create the If AST node
+        let if_node = AST::Statement(ASTstatement::If {
+            condition: vec![condition],
+            statements,
+        });
+
+        // Check for else or else if
+        match self.peek_token() {
+            Token::Statement(Statement::Else) => {
+                self.next_token(); // consume the else token
+                match self.peek_token() {
+                    Token::Statement(Statement::If) => {
+                        self.next_token(); // consume the if token
+                        let else_if_node = self.parse_if();
+                        AST::Statement(ASTstatement::ElseIf {
+                            condition: vec![else_if_node],
+                            statements: vec![],
+                        })
+                    }
+                    _ => {
+                        let else_statements = self.parse_statement();
+                        AST::Statement(ASTstatement::Else {
+                            statements: else_statements,
+                        })
+                    }
+                }
+            }
+            _ => if_node,
+        }
+    }
+
+
     fn parse_for(&mut self) -> AST {
         //let mut statements: Vec<ASTstatement> = Vec::new();
         // parse arguments and for header
@@ -325,28 +567,28 @@ impl<'a> Parser<'a> {
             statements: statements,
         })
     }
-    fn parse_if(&mut self) {
-        //let mut statements: Vec<ASTstatement> = Vec::new();
-        // parse arguments and if header
-        //println!("{} Start of If: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
-        let mut condition = Vec::new();
+    /*fn parse_if(&mut self) {
+    //let mut statements: Vec<ASTstatement> = Vec::new();
+    // parse arguments and if header
+    //println!("{} Start of If: {:?} {}", "\x1b[34m", self.next_token(), "\x1b[0m");
+    let mut condition = Vec::new();
 
-        while let token = self.next_token() {
-            match token {
-                Token::Symbol(Symbol::OpenParen) => {
-                    continue;
-                }
-                Token::Symbol(Symbol::CloseParen) => {
-                    break;
-                }
-                _ => {
-                    condition.push(token);
-                }
-            }
-        }
-        // parse statements
-        self.parse_statement();
+    while let token = self.next_token() {
+    match token {
+    Token::Symbol(Symbol::OpenParen) => {
+    continue;
     }
+    Token::Symbol(Symbol::CloseParen) => {
+    break;
+    }
+    _ => {
+    condition.push(token);
+    }
+    }
+    }
+    // parse statements
+    self.parse_statement();
+    }*/
     fn parse_arguments(&mut self) -> Vec<ASTtypecomp> {
         let mut args: Vec<ASTtypecomp> = Vec::new();
         let mut state: ArgumentParseState = ArgumentParseState::WaitForType;
@@ -372,8 +614,8 @@ impl<'a> Parser<'a> {
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
                 (
-                    Token::Symbol(Symbol::CloseParen),
-                    (ArgumentParseState::WaitForCommaOrCloseParen),
+                Token::Symbol(Symbol::CloseParen),
+                (ArgumentParseState::WaitForCommaOrCloseParen),
                 ) => {
                     break;
                 }
@@ -393,8 +635,8 @@ impl<'a> Parser<'a> {
                     state = ArgumentParseState::WaitForIdentifier;
                 }
                 (
-                    Token::TypeValue(TypeValue::Identifier(ident)),
-                    ArgumentParseState::WaitForIdentifier,
+                Token::TypeValue(TypeValue::Identifier(ident)),
+                ArgumentParseState::WaitForIdentifier,
                 ) => {
                     let ident_name = ASTtypevalue::Identifier(ident.to_string());
                     args.push(ASTtypecomp::Argument {

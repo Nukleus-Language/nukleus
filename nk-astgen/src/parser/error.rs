@@ -21,6 +21,7 @@ pub enum AstError {
     ExpectedToken(Token),
     ExpectedStatement(),
     UnexpectedEOF(),
+    ExpectedExpression(),
 }
 impl fmt::Display for AstError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -28,6 +29,8 @@ impl fmt::Display for AstError {
             AstError::ExpectedToken(t) => write!(f, "Expected token: {}", t),
             AstError::ExpectedStatement() => write!(f, "Expected statement"),
             AstError::UnexpectedEOF() => write!(f, "Unexpected EOF"),
+            AstError::ExpectedExpression() => write!(f, "Expected expression"),
+
         }
     }
 }

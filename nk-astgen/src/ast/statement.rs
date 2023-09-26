@@ -53,12 +53,8 @@ pub enum ASTstatement {
         r_var: Token,
     },
     If {
-        l_var: Token,
-        logic: Token,
-        r_var: Token,
+        condition: Vec<AST>,
         statements: Vec<AST>,
-        //else_if: Vec<AST>,
-        //else_: Option<Box<AST>>,
     },
     ElseIf {
         condition: Vec<AST>,
@@ -75,10 +71,10 @@ pub enum ASTstatement {
         statements: Vec<AST>,
     },
     Print {
-        value: Token,
+        value: Box<AST>,
     },
     Println {
-        value: Token,
+        value: Box<AST>,
     },
     Return {
         value: Token,

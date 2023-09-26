@@ -64,6 +64,7 @@ pub enum ASTtypevalue {
     QuotedString(String),
     Identifier(String),
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -77,4 +78,4 @@ pub enum ASTtypecomp {
         name: String,
         args: Vec<ASTtypevalue>,
     },
-}
+}            
