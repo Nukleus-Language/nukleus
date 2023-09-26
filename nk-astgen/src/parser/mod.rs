@@ -92,6 +92,9 @@ impl<'a> Parser<'a> {
                 Token::Statement(Statement::If) => {
                     statements.push(self.parse_if());
                 }
+                Token::Statement(Statement::Return) => {
+                    statements.push(self.parse_return());
+                }
                 Token::Symbol(Symbol::OpenBrace) => {
                     continue;
                 }
@@ -132,6 +135,7 @@ impl<'a> Parser<'a> {
                         self.state = State::Inject;
                         //println!("Founded Import");
                     }
+                    
                     Token::EOF => {
                         break;
                     }
@@ -241,6 +245,9 @@ impl<'a> Parser<'a> {
             statements,
             return_type,
         }));
+    }
+    fn parse_return(&mut self) {
+        AST::Statement(ASTstatement::Return{ value: Box::new(self.parse_expression()) });
     }
     fn parse_expression(&mut self) -> AST {
         self.parse_level1()
