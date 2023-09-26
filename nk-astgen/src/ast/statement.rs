@@ -103,10 +103,11 @@ impl fmt::Display for ASTstatement {
                     .map(|statement| statement.to_string())
                     .collect::<Vec<String>>()
                     .join("\n");
+                let pub_eval = if *public { "public" } else { "" };
                 write!(
                     f,
-                    "function {}({}) {{\n{}\n}}",
-                    name, args_string, statements_string
+                    "{} function {}({})  {}\n{{\n{}\n}}",
+                    pub_eval, name, args_string, return_type, statements_string
                 )
             }
             ASTstatement::Let { name, type_name, value } => {
