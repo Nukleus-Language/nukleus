@@ -13,7 +13,7 @@ use inksac::types::*;
 use crate::tokens_new::*;
 
 const ERRORTXTSTYLE: Style = Style {
-    forground: Some(Color::Red),
+    foreground: Some(Color::Red),
     background: None,
     bold: true,
     dim: false,
@@ -222,33 +222,23 @@ impl<'a> Lexer<'a> {
             }
         }
     }
-    #[allow(dead_code)]
+
     fn next_char(&mut self) -> Option<char> {
         let next = self.code.next();
         match next {
             Some('\n') => {
                 self.line += 1;
                 self.column = 1;
-                //println!("Line Change: {}", self.line);
-                //println!("Column Change: {}", self.column);
             }
-            Some(' ') => {
-                self.column += 1;
-                //println!("Column Change: {}", self.column);
-            }
-            Some('\t') => {
-                self.column += 4;
-                //println!("Column Change: {}", self.column);
-            }
-            Some(_) => {
-                self.column += 1;
-                //println!("Column Change: {}", self.column);
-            }
+            Some(' ') => self.column += 1,
+            Some('\t') => self.column += 4,
+            Some(_) => self.column += 1,
             None => {}
         }
         next
     }
-    #[allow(dead_code)]
+
+    
     fn peek_char(&mut self) -> char {
         let peek = self.code.peek();
         match peek {
@@ -256,20 +246,15 @@ impl<'a> Lexer<'a> {
             None => ' ',
         }
     }
-    #[allow(dead_code)]
     fn insert_token(&mut self, token: Token) {
         self.tokens.push(token);
     }
-    #[allow(dead_code)]
-    fn report_error(&self, error: LexcialError) {
-        let errortxt = ColoredString::new(error.to_string().as_str(), ERRORTXTSTYLE);
 
-        println!(
-            "{} \n-------------> Line: {}, Column: {}",
-            errortxt, self.line, self.column
-        );
+    fn report_error(&self, error: LexcialError) {
+        let errortxt = ColoredString::new(&error.to_string(), ERRORTXTSTYLE);
+        println!("{} \n-------------> Line: {}, Column: {}", errortxt, self.line, self.column);
     }
-    #[allow(dead_code)]
+
     pub fn get_tokens(&self) -> Vec<Token> {
         self.tokens.clone()
     }
