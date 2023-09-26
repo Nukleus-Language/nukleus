@@ -8,6 +8,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use astgen::Parser;
+use codegen::generate_ir;
 use clap::{Arg, Command};
 use lexer::lexer;
 // use inksac::types::*;
@@ -135,4 +136,7 @@ fn main() {
     println!("{:?}", ast_new);
 
     //println!("{:?}",ast);
+    //
+    println!("NEW IR");
+    println!("{}", generate_ir(ast_new));
 }
