@@ -51,7 +51,7 @@ impl fmt::Display for ASTtypename {
         match self {
             ASTtypename::TypeVoid => write!(f, "TypeVoid"),
             ASTtypename::I8 => write!(f, "I8"),
-            ASTtypename::I16 => write!(f, "I16"),   
+            ASTtypename::I16 => write!(f, "I16"),
             ASTtypename::I32 => write!(f, "I32"),
             ASTtypename::I64 => write!(f, "I64"),
             ASTtypename::U8 => write!(f, "U8"),
@@ -103,7 +103,7 @@ impl fmt::Display for ASTtypevalue {
             ASTtypevalue::Bool(val) => write!(f, "{}", val),
             ASTtypevalue::QuotedString(val) => write!(f, "{}", val),
             ASTtypevalue::Identifier(val) => write!(f, "{}", val),
-        }   
+        }
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -123,9 +123,27 @@ pub enum ASTtypecomp {
 impl fmt::Display for ASTtypecomp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ASTtypecomp::Array(val) => write!(f, "[{}]", val.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")),
-            ASTtypecomp::Argument { type_name, identifier } => write!(f, "{} {}", type_name, identifier),
-            ASTtypecomp::FunctionCall { name, args } => write!(f, "{}({})", name, args.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")),
+            ASTtypecomp::Array(val) => write!(
+                f,
+                "[{}]",
+                val.iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
+            ASTtypecomp::Argument {
+                type_name,
+                identifier,
+            } => write!(f, "{} {}", type_name, identifier),
+            ASTtypecomp::FunctionCall { name, args } => write!(
+                f,
+                "{}({})",
+                name,
+                args.iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         }
     }
 }

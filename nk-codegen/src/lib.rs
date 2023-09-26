@@ -1,5 +1,5 @@
-use astgen::AST;
 use astgen::ast::*;
+use astgen::AST;
 pub fn generate_ir(asts: Vec<AST>) -> String {
     let mut ir = String::new();
     for ast in asts {
@@ -99,7 +99,5 @@ fn generate_ast_ir(ast: AST) -> String {
     }
 }
 
-
 // Example usage:
 // let ir_code = generate_ir(your_ast_vector);
-

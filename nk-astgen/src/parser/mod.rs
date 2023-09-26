@@ -135,7 +135,7 @@ impl<'a> Parser<'a> {
                         self.state = State::Inject;
                         //println!("Founded Import");
                     }
-                    
+
                     Token::EOF => {
                         break;
                     }
@@ -247,10 +247,8 @@ impl<'a> Parser<'a> {
         }));
     }
     fn parse_return(&mut self) -> AST {
-        let return_value = match  self.peek_token(){
-            Token::Symbol(Symbol::Semicolon) => {
-                AST::TypeValue(ASTtypevalue::TypeVoid)
-            }
+        let return_value = match self.peek_token() {
+            Token::Symbol(Symbol::Semicolon) => AST::TypeValue(ASTtypevalue::TypeVoid),
             _ => {
                 let value = self.parse_expression();
                 if self.next_token() != Token::Symbol(Symbol::Semicolon) {
@@ -261,8 +259,10 @@ impl<'a> Parser<'a> {
                 value
             }
         };
-        
-        AST::Statement(ASTstatement::Return{ value: Box::new(return_value) })
+
+        AST::Statement(ASTstatement::Return {
+            value: Box::new(return_value),
+        })
     }
     fn parse_expression(&mut self) -> AST {
         self.parse_level1()
@@ -640,8 +640,8 @@ impl<'a> Parser<'a> {
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
                 (
-                Token::Symbol(Symbol::CloseParen),
-                (ArgumentParseState::WaitForCommaOrCloseParen),
+                    Token::Symbol(Symbol::CloseParen),
+                    (ArgumentParseState::WaitForCommaOrCloseParen),
                 ) => {
                     break;
                 }
@@ -661,8 +661,8 @@ impl<'a> Parser<'a> {
                     state = ArgumentParseState::WaitForIdentifier;
                 }
                 (
-                Token::TypeValue(TypeValue::Identifier(ident)),
-                ArgumentParseState::WaitForIdentifier,
+                    Token::TypeValue(TypeValue::Identifier(ident)),
+                    ArgumentParseState::WaitForIdentifier,
                 ) => {
                     let ident_name = ASTtypevalue::Identifier(ident.to_string());
                     args.push(ASTtypecomp::Argument {

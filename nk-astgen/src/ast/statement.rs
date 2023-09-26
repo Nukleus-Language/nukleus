@@ -110,8 +110,18 @@ impl fmt::Display for ASTstatement {
                     pub_eval, name, args_string, return_type, statements_string
                 )
             }
-            ASTstatement::Let { name, type_name, value } => {
-                write!(f, "let {} : {} = {}", name, type_name.clone().unwrap().to_string(), value)
+            ASTstatement::Let {
+                name,
+                type_name,
+                value,
+            } => {
+                write!(
+                    f,
+                    "let {} : {} = {}",
+                    name,
+                    type_name.clone().unwrap().to_string(),
+                    value
+                )
             }
             ASTstatement::Assign { l_var, r_var } => {
                 write!(f, "{} = {}", l_var, r_var)
@@ -131,37 +141,72 @@ impl fmt::Display for ASTstatement {
             ASTstatement::RemAssign { l_var, r_var } => {
                 write!(f, "{} %= {}", l_var, r_var)
             }
-            ASTstatement::If { condition, statements } => {
+            ASTstatement::If {
+                condition,
+                statements,
+            } => {
                 write!(
                     f,
                     "if {} {{\n{}\n}}",
-                    condition.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n"),
-                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                    condition
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n"),
+                    statements
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n")
                 )
             }
-            ASTstatement::ElseIf { condition, statements } => {
+            ASTstatement::ElseIf {
+                condition,
+                statements,
+            } => {
                 write!(
                     f,
                     "else if {} {{\n{}\n}}",
-                    condition.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n"),
-                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                    condition
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n"),
+                    statements
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n")
                 )
             }
             ASTstatement::Else { statements } => {
                 write!(
                     f,
                     "else {{\n{}\n}}",
-                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                    statements
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n")
                 )
             }
-            ASTstatement::For { start, end, value, statements } => {
+            ASTstatement::For {
+                start,
+                end,
+                value,
+                statements,
+            } => {
                 write!(
                     f,
                     "for {} {} {} {{\n{}\n}}",
                     start.to_string(),
                     end.to_string(),
                     value.to_string(),
-                    statements.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("\n")
+                    statements
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<String>>()
+                        .join("\n")
                 )
             }
             ASTstatement::Print { value } => write!(f, "print {}", value),

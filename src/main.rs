@@ -8,8 +8,8 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use astgen::Parser;
-use codegen::generate_ir;
 use clap::{Arg, Command};
+use codegen::generate_ir;
 use lexer::lexer;
 // use inksac::types::*;
 

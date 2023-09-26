@@ -144,9 +144,10 @@ impl Interpreter {
         let arg_base = self
             .functions
             .get(&self.cur_function)
-            .expect({return;})
+            .expect({
+                return;
+            })
             .function_get_args_format();
-
 
         for (i, arg) in arg_base.iter().enumerate() {
             let getten_value = self.eval_expr(&arguments[i].clone());
@@ -187,10 +188,10 @@ impl Interpreter {
                     println!("{}", self.eval_expr(&value));
                 }
                 AST::For {
-                start,
-                end,
-                value,
-                statements,
+                    start,
+                    end,
+                    value,
+                    statements,
                 } => {
                     let start_value = self.eval_expr(&start).as_i32();
                     let end_value = self.eval_expr(&end).as_i32();
@@ -209,10 +210,10 @@ impl Interpreter {
                     }
                 }
                 AST::If {
-                l_var,
-                logic,
-                r_var,
-                statements,
+                    l_var,
+                    logic,
+                    r_var,
+                    statements,
                 } => {
                     let left = self.eval_expr(&l_var);
                     let right = self.eval_expr(&r_var);

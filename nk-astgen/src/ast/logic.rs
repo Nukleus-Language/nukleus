@@ -2,7 +2,6 @@ use std::fmt;
 
 use crate::AST;
 
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ASTOperator {
     Add,
