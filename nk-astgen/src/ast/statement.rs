@@ -30,29 +30,10 @@ pub enum ASTstatement {
         type_name: Option<String>,
         value: Token,
     },
-    Assign {
-        l_var: Token,
-        r_var: Token,
-    },
-    AddAssign {
-        l_var: Token,
-        r_var: Token,
-    },
-    SubAssign {
-        l_var: Token,
-        r_var: Token,
-    },
-    MulAssign {
-        l_var: Token,
-        r_var: Token,
-    },
-    DivAssign {
-        l_var: Token,
-        r_var: Token,
-    },
-    RemAssign {
-        l_var: Token,
-        r_var: Token,
+    Assignment {
+        left: Box<AST>,
+        op: ASTOperator,
+        right: Box<AST>,
     },
     If {
         condition: Vec<AST>,
@@ -123,23 +104,18 @@ impl fmt::Display for ASTstatement {
                     value
                 )
             }
-            ASTstatement::Assign { l_var, r_var } => {
-                write!(f, "{} = {}", l_var, r_var)
-            }
-            ASTstatement::AddAssign { l_var, r_var } => {
-                write!(f, "{} += {}", l_var, r_var)
-            }
-            ASTstatement::SubAssign { l_var, r_var } => {
-                write!(f, "{} -= {}", l_var, r_var)
-            }
-            ASTstatement::MulAssign { l_var, r_var } => {
-                write!(f, "{} *= {}", l_var, r_var)
-            }
-            ASTstatement::DivAssign { l_var, r_var } => {
-                write!(f, "{} /= {}", l_var, r_var)
-            }
-            ASTstatement::RemAssign { l_var, r_var } => {
-                write!(f, "{} %= {}", l_var, r_var)
+            ASTstatement::Assignment {
+                left,
+                op,
+                right,
+            } => {
+                write!(
+                    f,
+                    "{} {} {}",
+                    left.to_string(),
+                    op.to_string(),
+                    right.to_string()
+                )
             }
             ASTstatement::If {
                 condition,
