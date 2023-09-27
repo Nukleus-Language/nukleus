@@ -67,10 +67,10 @@ impl<'a> Lexer<'a> {
         //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
             let peeked_char = self.peek_char();
-            //println!("---------------------------------");
-            //println!("Current Char: {}", c);
-            //println!("Current State: {:?}", self.state);
-            //println!("Current Buffer: {}", self.buffer);
+            // println!("---------------------------------");
+            // println!("Current Char: {}", c);
+            // println!("Current State: {:?}", self.state);
+            // println!("Current Buffer: {}", self.buffer);
             if self.state == State::DoubleState {
                 self.buffer.clear();
                 self.state = State::EmptyState;
