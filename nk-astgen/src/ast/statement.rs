@@ -104,11 +104,7 @@ impl fmt::Display for ASTstatement {
                     value
                 )
             }
-            ASTstatement::Assignment {
-                left,
-                op,
-                right,
-            } => {
+            ASTstatement::Assignment { left, op, right } => {
                 write!(
                     f,
                     "{} {} {}",
