@@ -130,7 +130,7 @@ fn main() {
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
     //let mut interpreter = interpreter::Interpreter::new();
-    interpreter.run(ast.unwrap());
+    // interpreter.run(ast.unwrap());
 
     println!("NEW MID_IR (AST)");
     println!("{:?}", ast_new);
