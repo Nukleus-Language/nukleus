@@ -81,7 +81,7 @@ impl<'a> Lexer<'a> {
             if self.state == State::Comment {
                 if c == '\n' {
                     self.state = State::EmptyState;
-                    self.buffer.clear()                            ;
+                    self.buffer.clear();
                     continue;
                 }
                 continue;
@@ -128,17 +128,17 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 // if !peeked_char.is_numeric() || c != '-' {
-                    let operator = symbol::operator_to_token(c, self.line, self.column);
-                    // println!("Operator: {}", operator.unwrap());
-                    match operator {
-                        Ok(operator) => {
-                            self.insert_token(operator);
-                            continue;
-                        }
-                        Err(_) => {
-                            self.buffer.clear();
-                        }
+                let operator = symbol::operator_to_token(c, self.line, self.column);
+                // println!("Operator: {}", operator.unwrap());
+                match operator {
+                    Ok(operator) => {
+                        self.insert_token(operator);
+                        continue;
                     }
+                    Err(_) => {
+                        self.buffer.clear();
+                    }
+                }
                 // }
                 self.buffer.push(c);
 
@@ -406,11 +406,11 @@ mod test {
     }*/
     #[test]
     fn lexing_nested_expression() {
-        let code= "let:i32 a = ((5 + a) /2)+2;";
+        let code = "let:i32 a = ((5 + a) /2)+2;";
         let ans = vec![
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),
-            Token::TypeName(TypeName::I32), 
+            Token::TypeName(TypeName::I32),
             Token::TypeValue(TypeValue::Identifier("a".to_string())),
             Token::Assign(Assign::Assign),
             Token::Symbol(Symbol::OpenParen),

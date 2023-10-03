@@ -36,6 +36,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     pub fn new(tokens: &'a [Token]) -> Self {
         let peeked = tokens.iter().cloned().peekable();
+        println!("{:?}", tokens);
         Parser {
             tokens: peeked,
             state: State::EmptyState,
@@ -56,7 +57,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn peek_token(&mut self) -> Token {
         let peek = self.tokens.peek().clone();
-
+        println!("{} Peek Token: {:?}{}", "\x1b[38m", peek, "\x1b[0m");
         match peek {
             Some(t) => t.clone(),
             None => Token::EOF,
@@ -95,6 +96,25 @@ impl<'a> Parser<'a> {
                 Token::Statement(Statement::Return) => {
                     statements.push(self.parse_return());
                 }
+                Token::TypeValue(TypeValue::Identifier(ident)) => {
+                    if let Token::Assign(op) = self.peek_token() {
+                        match op {
+                            Assign::Assign
+                            | Assign::AddAssign
+                            | Assign::SubAssign
+                            | Assign::MulAssign
+                            | Assign::DivAssign
+                            | Assign::RemAssign
+                            | Assign::BitAndAssign
+                            | Assign::BitOrAssign
+                            | Assign::BitXorAssign => {
+                                statements.push(self.parse_assignment(ident));
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
+                }
+
                 Token::Symbol(Symbol::OpenBrace) => {
                     continue;
                 }
@@ -202,7 +222,7 @@ impl<'a> Parser<'a> {
         if is_public {
             cur_token = self.next_token();
         }
-        let mut args: Vec<ASTtypecomp> = Vec::new();
+        // let args: Vec<ASTtypecomp> = Vec::new();
 
         // parse arguments and function header
         //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
@@ -262,6 +282,31 @@ impl<'a> Parser<'a> {
 
         AST::Statement(ASTstatement::Return {
             value: Box::new(return_value),
+        })
+    }
+    fn parse_assignment(&mut self, ident: String) -> AST {
+        let op = match self.next_token() {
+            Token::Assign(op) => match op {
+                Assign::Assign => ASTOperator::Assign,
+                Assign::AddAssign => ASTOperator::AddAssign,
+                Assign::SubAssign => ASTOperator::SubAssign,
+                Assign::MulAssign => ASTOperator::MulAssign,
+                Assign::DivAssign => ASTOperator::DivAssign,
+                Assign::RemAssign => ASTOperator::RemAssign,
+                Assign::BitAndAssign => ASTOperator::BitAndAssign,
+                Assign::BitOrAssign => ASTOperator::BitOrAssign,
+                Assign::BitXorAssign => ASTOperator::BitXorAssign,
+                _ => unreachable!(),
+            },
+            _ => unreachable!(),
+        };
+
+        let right_expr = self.parse_expression();
+
+        AST::Statement(ASTstatement::Assignment {
+            left: Box::new(AST::TypeValue(ASTtypevalue::Identifier(ident))),
+            op,
+            right: Box::new(right_expr),
         })
     }
     fn parse_expression(&mut self) -> AST {
@@ -384,7 +429,7 @@ impl<'a> Parser<'a> {
         let mut node = self.parse_primary();
         while let Token::Operator(op) = self.peek_token() {
             match op {
-                Operator::Multiply | Operator::Divide => {
+                Operator::Multiply | Operator::Divide | Operator::Remainder => {
                     self.next_token();
                     let right_node = self.parse_primary();
                     node = AST::Logic(ASTlogic::BinaryOperation {
@@ -392,6 +437,7 @@ impl<'a> Parser<'a> {
                         op: match op {
                             Operator::Multiply => ASTOperator::Multiply,
                             Operator::Divide => ASTOperator::Divide,
+                            Operator::Remainder => ASTOperator::Remainder,
                             _ => unreachable!(),
                         },
                         right: Box::new(right_node),
@@ -402,37 +448,100 @@ impl<'a> Parser<'a> {
         }
         node
     }
-    fn parse_primary(&mut self) -> AST {
+    /*fn parse_primary(&mut self) -> AST {
         let next_token = self.peek_token();
         if let Token::Symbol(Symbol::OpenParen) = next_token {
             self.next_token(); // Consume the opening parenthesis
             let node = self.parse_expression();
-            match self.peek_token() {
+            if let Token::Symbol(Symbol::CloseParen) = self.peek_token() {
+                self.next_token(); // Consume the closing parenthesis
+            } else {
+                self.report_error(AstGenError {
+                    message: AstError::ExpectedToken(Token::Symbol(Symbol::CloseParen)),
+                });
+                return AST::TypeValue(ASTtypevalue::TypeVoid); // Placeholder for error
+            }
+            return node;
+        }
+
+        // Handle literals and identifiers
+        let node = match next_token {
+            Token::TypeValue(TypeValue::Number(num)) => {
+                self.next_token();
+                AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap()))
+            },
+            Token::TypeValue(TypeValue::Identifier(ident)) => {
+                self.next_token();
+                AST::TypeValue(ASTtypevalue::Identifier(ident.to_string()))
+    },
+    Token::TypeValue(TypeValue::QuotedString(s)) => {
+    self.next_token();
+    AST::TypeValue(ASTtypevalue::QuotedString(s.to_string()))
+    },
+    Token::Logical(_) | Token::Operator(_) => self.parse_expression(),
+    _ => {
+    println!(
+    "{} Current Token: {:?}{}",
+    "\x1b[36m", next_token, "\x1b[0m"
+    );
+    self.report_error(AstGenError {
+    message: AstError::ExpectedExpression(),
+    });
+    AST::TypeValue(ASTtypevalue::TypeVoid) // Placeholder
+    }
+    };
+    }*/
+
+    fn parse_primary(&mut self) -> AST {
+        let next_token = self.peek_token();
+        if let Token::Symbol(Symbol::OpenParen) = next_token {
+            let cur_token = self.next_token(); // Consume the opening parenthesis
+            println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
+            let node = self.parse_expression();
+            let peek_token = self.peek_token();
+
+            let test = match peek_token {
+                Token::Logical(_) => self.parse_expression(),
+                Token::Operator(_) => self.parse_expression(),
                 Token::Symbol(Symbol::CloseParen) => {
-                    self.next_token(); // Consume the closing parenthesis only if it's the next token
+                    self.next_token();
+                    println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
                     return node;
                 }
                 _ => {
-                    return node;
+                    println!("WRYYY {} {} {} ", "\x1b[31m", peek_token, "\x1b[0m");
+                    return AST::TypeValue(ASTtypevalue::TypeVoid);
                 }
-            }
+            };
+            println!("YES IS ME ");
+
+            return test;
         }
 
         // Handle literals and identifiers
         match next_token {
-            Token::TypeValue(TypeValue::Number(num)) => {
-                self.next_token(); // Consume the token
-                AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap()))
-            }
-            Token::TypeValue(TypeValue::Identifier(ident)) => {
-                self.next_token(); // Consume the token
-                AST::TypeValue(ASTtypevalue::Identifier(ident.to_string()))
-            }
-            Token::TypeValue(TypeValue::QuotedString(s)) => {
-                self.next_token(); // Consume the token
-                AST::TypeValue(ASTtypevalue::QuotedString(s.to_string()))
-            }
-            Token::Logical(_) => self.parse_expression(),
+            Token::TypeValue(TypeValue::Number(num)) => match self.peek_token() {
+                Token::Logical(_) => self.parse_expression(),
+                _ => {
+                    self.next_token();
+                    AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap()))
+                }
+            },
+            Token::TypeValue(TypeValue::Identifier(ident)) => match self.peek_token() {
+                Token::Logical(_) => self.parse_expression(),
+                _ => {
+                    self.next_token();
+                    AST::TypeValue(ASTtypevalue::Identifier(ident.to_string()))
+                }
+            },
+            Token::TypeValue(TypeValue::QuotedString(s)) => match self.peek_token() {
+                Token::Logical(_) => panic!("Logical operator is not allowed in quoted string!"),
+                _ => {
+                    self.next_token();
+                    AST::TypeValue(ASTtypevalue::QuotedString(s.to_string()))
+                }
+            },
+            Token::Logical(_) | Token::Operator(_) => self.parse_expression(),
             _ => {
                 println!(
                     "{} Current Token: {:?}{}",

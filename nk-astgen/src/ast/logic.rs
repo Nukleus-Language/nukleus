@@ -22,6 +22,16 @@ pub enum ASTOperator {
     LessEquals,
     Greater,
     GreaterEquals,
+    Not,
+    Assign,
+    AddAssign,
+    SubAssign,
+    MulAssign,
+    DivAssign,
+    RemAssign,
+    BitAndAssign,
+    BitOrAssign,
+    BitXorAssign,
 }
 impl fmt::Display for ASTOperator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -44,6 +54,16 @@ impl fmt::Display for ASTOperator {
             ASTOperator::LessEquals => write!(f, "<="),
             ASTOperator::Greater => write!(f, ">"),
             ASTOperator::GreaterEquals => write!(f, ">="),
+            ASTOperator::Not => write!(f, "!"),
+            ASTOperator::Assign => write!(f, "="),
+            ASTOperator::AddAssign => write!(f, "+="),
+            ASTOperator::SubAssign => write!(f, "-="),
+            ASTOperator::MulAssign => write!(f, "*="),
+            ASTOperator::DivAssign => write!(f, "/="),
+            ASTOperator::RemAssign => write!(f, "%="),
+            ASTOperator::BitAndAssign => write!(f, "&="),
+            ASTOperator::BitOrAssign => write!(f, "|="),
+            ASTOperator::BitXorAssign => write!(f, "^="),
         }
     }
 }
