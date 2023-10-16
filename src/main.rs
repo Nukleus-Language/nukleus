@@ -1,16 +1,18 @@
 //pub mod compiler;
 //pub mod compiler;
-pub mod core;
+
+pub mod cores;
 mod errors;
 pub mod interpreter;
 
 use std::fs::File;
 use std::io::prelude::*;
 
-use astgen::Parser;
+use astgen::{Parser,AST};
 use clap::{Arg, Command};
-use codegen::generate_ir;
+use codegen::JIT;
 use lexer::lexer;
+use core::mem;
 // use inksac::types::*;
 
 fn cli() -> Command {
@@ -90,7 +92,7 @@ fn main() {
     // println!("{:?}", ast);
     // Pass contents to the lexer here
     let start_time_parser_old = std::time::Instant::now();
-    let ast = core::parser::parse::Parser::new(&tokens).parse();
+    let ast = cores::parser::parse::Parser::new(&tokens).parse();
     let end_time_parser_old = std::time::Instant::now();
     let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     println!("Old Parser Time: {:?}", duration_parser_old);

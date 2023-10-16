@@ -68,10 +68,10 @@ impl<'a> Lexer<'a> {
         //let mut state = State::StateDefault;
         while let Some(c) = self.next_char() {
             let peeked_char = self.peek_char();
-            println!("---------------------------------");
-            println!("Current Char: {}", c);
-            println!("Current State: {:?}", self.state);
-            println!("Current Buffer: {}", self.buffer);
+            // println!("---------------------------------");
+            // println!("Current Char: {}", c);
+            // println!("Current State: {:?}", self.state);
+            // println!("Current Buffer: {}", self.buffer);
             if self.state == State::DoubleState {
                 self.buffer.clear();
                 self.state = State::EmptyState;
@@ -96,8 +96,8 @@ impl<'a> Lexer<'a> {
                 // check if is a double symbol
                 self.buffer.push(c);
                 self.buffer.push(peeked_char);
-                println!("cur {} peek {}", c, peeked_char);
-                println!("Buffer: {}", self.buffer.clone());
+                // println!("cur {} peek {}", c, peeked_char);
+                // println!("Buffer: {}", self.buffer.clone());
                 let double_symbol =
                     symbol::double_symbol_to_token(self.buffer.clone(), self.line, self.column);
                 match double_symbol {

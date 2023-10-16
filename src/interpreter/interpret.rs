@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::{self, Write};
 
-use crate::core::ast::AST;
-use crate::core::parser::parse::Parser;
+use crate::cores::ast::AST;
+use crate::cores::parser::parse::Parser;
 
 use lexer::Logical;
 use lexer::Token;

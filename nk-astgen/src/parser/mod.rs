@@ -36,7 +36,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     pub fn new(tokens: &'a [Token]) -> Self {
         let peeked = tokens.iter().cloned().peekable();
-        println!("{:?}", tokens);
+        // println!("{:?}", tokens);
         Parser {
             tokens: peeked,
             state: State::EmptyState,
@@ -48,7 +48,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn next_token(&mut self) -> Token {
         let token = self.tokens.next();
-        println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
+        // println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
         match token {
             Some(t) => t,
             None => Token::EOF,
@@ -57,7 +57,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn peek_token(&mut self) -> Token {
         let peek = self.tokens.peek().clone();
-        println!("{} Peek Token: {:?}{}", "\x1b[38m", peek, "\x1b[0m");
+        // println!("{} Peek Token: {:?}{}", "\x1b[38m", peek, "\x1b[0m");
         match peek {
             Some(t) => t.clone(),
             None => Token::EOF,
@@ -65,7 +65,7 @@ impl<'a> Parser<'a> {
     }
     #[allow(dead_code)]
     fn expect(&mut self, current: Token, expected: Token) -> Result<(), AstGenError> {
-        println!("{} Current Token: {:?}{}", "\x1b[37m", current, "\x1b[0m");
+        // println!("{} Current Token: {:?}{}", "\x1b[37m", current, "\x1b[0m");
         match expected {
             cur_token => Ok(()),
             Token::EOF => Err(AstGenError {
@@ -496,7 +496,7 @@ impl<'a> Parser<'a> {
         let next_token = self.peek_token();
         if let Token::Symbol(Symbol::OpenParen) = next_token {
             let cur_token = self.next_token(); // Consume the opening parenthesis
-            println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
+            // println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
             let node = self.parse_expression();
             let peek_token = self.peek_token();
 
@@ -505,15 +505,15 @@ impl<'a> Parser<'a> {
                 Token::Operator(_) => self.parse_expression(),
                 Token::Symbol(Symbol::CloseParen) => {
                     self.next_token();
-                    println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
+                    // println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
                     return node;
                 }
                 _ => {
-                    println!("WRYYY {} {} {} ", "\x1b[31m", peek_token, "\x1b[0m");
+                    // println!("WRYYY {} {} {} ", "\x1b[31m", peek_token, "\x1b[0m");
                     return AST::TypeValue(ASTtypevalue::TypeVoid);
                 }
             };
-            println!("YES IS ME ");
+            // println!("YES IS ME ");
 
             return test;
         }
@@ -543,10 +543,10 @@ impl<'a> Parser<'a> {
             },
             Token::Logical(_) | Token::Operator(_) => self.parse_expression(),
             _ => {
-                println!(
-                    "{} Current Token: {:?}{}",
-                    "\x1b[36m", next_token, "\x1b[0m"
-                );
+                // println!(
+                    // "{} Current Token: {:?}{}",
+                    // "\x1b[36m", next_token, "\x1b[0m"
+                // );
                 self.report_error(AstGenError {
                     message: AstError::ExpectedExpression(),
                 });
@@ -567,9 +567,9 @@ impl<'a> Parser<'a> {
         let cur_token = self.next_token();
         // Consume the closing parenthesis
         if cur_token != Token::Symbol(Symbol::CloseParen) {
-            println!("Consume the closing parenthesis");
-            println!("cur token: {:?}", cur_token);
-            println!("next token: {:?}", self.peek_token());
+            // println!("Consume the closing parenthesis");
+            // println!("cur token: {:?}", cur_token);
+            // println!("next token: {:?}", self.peek_token());
             self.report_error(AstGenError {
                 message: AstError::ExpectedToken(Token::Symbol(Symbol::CloseParen)),
             });
