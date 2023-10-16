@@ -134,11 +134,33 @@ fn main() {
     //let mut interpreter = interpreter::Interpreter::new();
     // interpreter.run(ast.unwrap());
 
-    println!("NEW MID_IR (AST)");
+    println!("NEW AST");
     println!("{:?}", ast_new);
+    println!();
 
     //println!("{:?}",ast);
     //
-    println!("NEW IR");
-    println!("{}", generate_ir(ast_new));
+   
+    // println!("{}", generate_ir(ast_new));
+    // generate_ir(ast_new);
+    let mut jit = JIT::default();
+    let code_ptr = jit.compile(ast_new);
+    println!("result {} ",run(&mut jit, code_ptr.unwrap()).unwrap());
+}
+
+
+fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
+    unsafe {
+        run_code(codeptr, ())
+    }
+}
+unsafe fn run_code<I, O>(codeptr: *const u8,  input: I) -> Result<O, String> {
+    // Pass the string to the JIT, and it returns a raw pointer to machine code.
+
+    // Cast the raw pointer to a typed function pointer. This is unsafe, because
+    // this is the critical point where you have to trust that the generated code
+    // is safe to be called.
+    let code_fn = mem::transmute::<_, fn(I) -> O>(codeptr);
+    // And now we can call it!
+    Ok(code_fn(input))
 }
