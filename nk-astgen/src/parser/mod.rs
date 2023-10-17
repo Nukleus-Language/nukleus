@@ -496,7 +496,7 @@ impl<'a> Parser<'a> {
         let next_token = self.peek_token();
         if let Token::Symbol(Symbol::OpenParen) = next_token {
             let cur_token = self.next_token(); // Consume the opening parenthesis
-            // println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
+                                               // println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
             let node = self.parse_expression();
             let peek_token = self.peek_token();
 
@@ -544,8 +544,8 @@ impl<'a> Parser<'a> {
             Token::Logical(_) | Token::Operator(_) => self.parse_expression(),
             _ => {
                 // println!(
-                    // "{} Current Token: {:?}{}",
-                    // "\x1b[36m", next_token, "\x1b[0m"
+                // "{} Current Token: {:?}{}",
+                // "\x1b[36m", next_token, "\x1b[0m"
                 // );
                 self.report_error(AstGenError {
                     message: AstError::ExpectedExpression(),
