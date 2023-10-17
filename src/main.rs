@@ -8,11 +8,11 @@ pub mod interpreter;
 use std::fs::File;
 use std::io::prelude::*;
 
-use astgen::{Parser,AST};
+use astgen::{Parser, AST};
 use clap::{Arg, Command};
 use codegen::JIT;
-use lexer::lexer;
 use core::mem;
+use lexer::lexer;
 // use inksac::types::*;
 
 fn cli() -> Command {
@@ -131,8 +131,12 @@ fn main() {
     //println!("{:?}", ast);
 
     //let compiled = compiler::compile::compile_and_run(ast.unwrap());
-    //let mut interpreter = interpreter::Interpreter::new();
+    // let start_time_interpreter = std::time::Instant::now();
+    // let mut interpreter = interpreter::Interpreter::new();
     // interpreter.run(ast.unwrap());
+    // let end_time_interpreter = std::time::Instant::now();
+    // let duration_interpreter = end_time_interpreter.duration_since(start_time_interpreter);
+    // println!("Interpreter Time: {:?}", duration_interpreter);
 
     println!("NEW AST");
     println!("{:?}", ast_new);
@@ -140,21 +144,22 @@ fn main() {
 
     //println!("{:?}",ast);
     //
-   
+
     // println!("{}", generate_ir(ast_new));
     // generate_ir(ast_new);
+    let start_time_jit = std::time::Instant::now();
     let mut jit = JIT::default();
     let code_ptr = jit.compile(ast_new);
-    println!("result {} ",run(&mut jit, code_ptr.unwrap()).unwrap());
+    let end_time_jit = std::time::Instant::now();
+    let duration_jit = end_time_jit.duration_since(start_time_jit);
+    println!("JIT Time: {:?}", duration_jit);
+    println!("result {} ", run(&mut jit, code_ptr.unwrap()).unwrap());
 }
-
 
 fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
-    unsafe {
-        run_code(codeptr, ())
-    }
+    unsafe { run_code(codeptr, ()) }
 }
-unsafe fn run_code<I, O>(codeptr: *const u8,  input: I) -> Result<O, String> {
+unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
     // Pass the string to the JIT, and it returns a raw pointer to machine code.
 
     // Cast the raw pointer to a typed function pointer. This is unsafe, because
