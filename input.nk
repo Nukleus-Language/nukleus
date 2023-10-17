@@ -20,7 +20,7 @@ public fn main() -> void
 	print("i = ");
 	println(i);
 	a += i;
-	if ( a != 19  ) {
+	if ( a != 19 ) {
 		println("LOL");
 	}
 	
@@ -36,7 +36,7 @@ public fn main() -> void
 	a %= 3;
 	println(a);
 
-	println("Hello World!?");
+	println("\x1b[38m Hello World!? \x1b[0m");
 	print("LOLOLOL");
 	println(i);
 
@@ -47,7 +47,9 @@ public fn main() -> void
 
 	let:i32 ans = adder(3,4);
 	println(ans);
-
+	let:i32 b = 2 + 1;
+	b = ((1+b)+2)%3;
+	c = (2+(1+2))%3;
 	
 	return;
 }
