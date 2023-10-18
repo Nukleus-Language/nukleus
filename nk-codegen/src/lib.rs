@@ -6,8 +6,6 @@ use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{DataDescription, Linkage, Module};
 use std::collections::HashMap;
 
-use std::slice;
-
 /// The basic JIT class.
 pub struct JIT {
     /// The function builder context, which is reused across multiple
@@ -23,7 +21,6 @@ pub struct JIT {
     data_description: DataDescription,
 
     module: JITModule,
-
 }
 
 impl Default for JIT {
@@ -57,57 +54,58 @@ impl JIT {
         let mut ids = Vec::new();
         for ast in input {
             match ast {
-                AST::Statement(statement) => {
-                    match statement{
-                        ASTstatement::Function {
-                        public,
+                AST::Statement(statement) => match statement {
+                    ASTstatement::Function {
+                        public: _,
                         name,
                         args,
                         statements,
                         return_type,
-                        } => {
-                            self.translate(args, statements,return_type)?;
-                            println!("translate");
-                                let id = self
-                                .module
-                                .declare_function(&name, Linkage::Export, &self.ctx.func.signature)
-                                .map_err(|e| e.to_string())?;
-                            println!("adfdfad");
-                            println!("asdfasdf {}", self.ctx.func.signature);
-                            self.module
-                                .define_function(id, &mut self.ctx)
-                                .map_err(|e| e.to_string()).expect("problem defining function");
-                            println!("afsdfasdfasdfasd");
-                            self.module.clear_context(&mut self.ctx);
-                            
-                            self.module.finalize_definitions().unwrap();
-                            ids.push(id);
-                            
-                        }
-                        _ => {
-                            println!("Not a Function: {:?}", statement);
-                        }
+                    } => {
+                        self.translate(args, statements, return_type)?;
+                        // println!("translate");
+                        let id = self
+                            .module
+                            .declare_function(&name, Linkage::Export, &self.ctx.func.signature)
+                            .map_err(|e| e.to_string())?;
+                        // println!("adfdfad");
+                        // println!("asdfasdf {}", self.ctx.func.signature);
+                        self.module
+                            .define_function(id, &mut self.ctx)
+                            .map_err(|e| e.to_string())
+                            .expect("Compile Error");
+                        // println!("afsdfasdfasdfasd");
+                        self.module.clear_context(&mut self.ctx);
+
+                        self.module.finalize_definitions().unwrap();
+                        ids.push(id);
                     }
-                }
+                    _ => {
+                        println!("Not a Function: {:?}", statement);
+                    }
+                },
                 _ => {
                     println!("Not a Function: {:?}", ast);
                 }
             }
         }
 
-        // Tell the builder we're done with this function.  
+        // Tell the builder we're done with this function.
         let code = self.module.get_finalized_function(*ids.get(0).unwrap());
         println!("asdfasdf");
         println!("code: {:?}", code);
         // return Ok(());
-        return Ok(code)
+        Ok(code)
 
         // Ok(())
     }
 
-    fn translate(&mut self, args: Vec<ASTtypecomp>, statements: Vec<AST>, return_type: ASTtypename) -> Result<(), String> {
-
-
+    fn translate(
+        &mut self,
+        args: Vec<ASTtypecomp>,
+        statements: Vec<AST>,
+        return_type: ASTtypename,
+    ) -> Result<(), String> {
         let int = self.module.target_config().pointer_type();
         println!("int: {:?}", int);
         for _p in args.clone() {
@@ -127,8 +125,7 @@ impl JIT {
             .push(AbiParam::new(types::I64));
 
         // Create the builder to build a function.
-        let mut builder =
-            FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
+        let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
         println!("entry_block: {:?}", entry_block);
 
@@ -144,8 +141,14 @@ impl JIT {
         builder.seal_block(entry_block);
         println!("seal_block: {:?}", entry_block);
 
-        let variables =
-            declare_variables(int, &mut builder, &args, &return_type, &statements, entry_block);
+        let variables = declare_variables(
+            int,
+            &mut builder,
+            &args,
+            &return_type,
+            &statements,
+            entry_block,
+        );
         println!("variables: {:?}", variables);
         // Now translate the statements of the function body.
         let mut trans = FunctionTranslator {
@@ -170,7 +173,6 @@ impl JIT {
 
         Ok(())
     }
-
 }
 
 struct FunctionTranslator<'a> {
@@ -181,28 +183,49 @@ struct FunctionTranslator<'a> {
 }
 
 impl<'a> FunctionTranslator<'a> {
+    fn translate_value(&mut self, value: ASTtypevalue) -> Value {
+        match value {
+            ASTtypevalue::I8(i) => {
+                let imm: i8 = i;
+                self.builder.ins().iconst(types::I8, i64::from(imm))
+            }
+            ASTtypevalue::I16(i) => {
+                let imm: i16 = i;
+                self.builder.ins().iconst(types::I16, i64::from(imm))
+            }
+            ASTtypevalue::I32(i) => {
+                let imm: i32 = i;
+                self.builder.ins().iconst(types::I32, i64::from(imm))
+            }
+            ASTtypevalue::I64(i) => self.builder.ins().iconst(types::I64, i),
 
-
-    /// When you write out instructions in Cranelift, you get back `Value`s. You
-    /// can then use these references in other instructions.
+            // ASTtypevalue::QuotedString(s) => {
+            // self.builder.ins().iconst(types::I32, s.len() as i64)
+            // }
+            ASTtypevalue::Identifier(id) => {
+                let variable = self.variables.get(&id).unwrap();
+                self.builder.use_var(*variable)
+            }
+            _ => {
+                println!("Unsupported type: {:?}", value);
+                self.builder.ins().iconst(self.int, 0)
+            }
+        }
+    }
     fn translate_expr(&mut self, expr: AST) -> Value {
         match expr {
             AST::Statement(statement) => {
-                match statement{
-                    ASTstatement::Assignment { left, op, right } => {
-                        // let lhs = self.translate_expr(*left);   
+                match statement {
+                    ASTstatement::Assignment { left, op: _, right } => {
+                        // let lhs = self.translate_expr(*left);
                         // let rhs = self.translate_expr(*right);
 
-                        match *left{
-                            AST::TypeValue(value) => {
-                                match value {
-                                    ASTtypevalue::Identifier(id) => {
-                                        return self.translate_assign(id, *right);
-                                    }
-                                    _ => {
-                                        println!("Unsupported statement: {:?}", value);
-                                        self.builder.ins().iconst(self.int, 0)
-                                    }
+                        match *left {
+                            AST::TypeValue(value) => match value {
+                                ASTtypevalue::Identifier(id) => self.translate_assign(id, *right),
+                                _ => {
+                                    println!("Unsupported statement: {:?}", value);
+                                    self.builder.ins().iconst(self.int, 0)
                                 }
                             },
                             _ => {
@@ -212,32 +235,58 @@ impl<'a> FunctionTranslator<'a> {
                         }
                     }
                     ASTstatement::Print { value } => {
-                        let expr = self.translate_expr(*value);
-                        todo!() 
+                        self.translate_expr(*value)
+
+                        // todo!()
+                    }
+                    ASTstatement::Println { value } => self.translate_expr(*value),
+                    ASTstatement::For {
+                        start,
+                        end,
+                        value,
+                        statements,
+                    } => {
+                        // let start_val = self.translate_expr(*start);
+                        // let end_val = self.translate_expr(*end);
+                        // let value_val = self.translate_expr(*value);
+                        todo!()
                     }
                     ASTstatement::Return { value } => {
                         // let expr = self.translate_expr(*value);
-                        match *value.clone(){
+                        let value_val = self.translate_expr(*value.clone());
+                        println!("return value_val: {:?}", value_val);
+                        self.builder.def_var(
+                            *self.variables.get("return").unwrap(),
+                            value_val,
+                        );
+                        value_val
+                        /*match *value.clone() {
                             AST::TypeValue(val) => {
-                                match val{
+                                match val {
                                     ASTtypevalue::Identifier(id) => {
                                         println!("is identifier");
                                         println!("id: {:?}", id);
                                         let variable = self.variables.get(&id).unwrap();
                                         println!("variable: {:?}", variable);
                                         let return_val = self.builder.use_var(*variable);
-                                        self.builder.def_var(*self.variables.get("return").unwrap(),return_val);
+                                        self.builder.def_var(
+                                            *self.variables.get("return").unwrap(),
+                                            return_val,
+                                        );
                                         return_val
                                     }
-                                    ASTtypevalue::I32(i) => {
+                                    ASTtypevalue::I32(_i) => {
                                         todo!()
                                         // return self.builder.ins().iconst(types::I32, i);
                                     }
                                     ASTtypevalue::I64(i) => {
                                         println!("is i64");
                                         println!("i: {:?}", i);
-                                        let return_val = self.builder.ins().iconst(types::I64, i64::from(i));
-                                        self.builder.def_var(*self.variables.get("return").unwrap(),return_val);
+                                        let return_val = self.builder.ins().iconst(types::I64, i);
+                                        self.builder.def_var(
+                                            *self.variables.get("return").unwrap(),
+                                            return_val,
+                                        );
                                         return_val
                                     }
                                     _ => {
@@ -245,20 +294,18 @@ impl<'a> FunctionTranslator<'a> {
                                         self.builder.ins().iconst(self.int, 0)
                                     }
                                 }
-                            },
+                            }
                             _ => {
                                 println!("Unsupported statement: ");
                                 self.builder.ins().iconst(self.int, 0)
                             }
-                        }
-
+                        }*/
                     }
-                    _ =>{
+                    _ => {
                         println!("Unsupported statement: {:?}", statement);
                         self.builder.ins().iconst(self.int, 0)
                     }
                 }
-
             }
 
             AST::Logic(logic) => match logic {
@@ -271,40 +318,33 @@ impl<'a> FunctionTranslator<'a> {
                         ASTOperator::Multiply => self.builder.ins().imul(lhs, rhs),
                         ASTOperator::Divide => self.builder.ins().udiv(lhs, rhs),
                         ASTOperator::Equals => self.builder.ins().icmp(IntCC::Equal, lhs, rhs),
-                        ASTOperator::NotEquals => self.builder.ins().icmp(IntCC::NotEqual, lhs, rhs),
-                        ASTOperator::Less => self.builder.ins().icmp(IntCC::SignedLessThan, lhs, rhs),
-                        ASTOperator::LessEquals => self.builder.ins().icmp(IntCC::SignedLessThanOrEqual, lhs, rhs),
-                        ASTOperator::Greater => self.builder.ins().icmp(IntCC::SignedGreaterThan, lhs, rhs),
-                        ASTOperator::GreaterEquals => self.builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, lhs, rhs),
+                        ASTOperator::NotEquals => {
+                            self.builder.ins().icmp(IntCC::NotEqual, lhs, rhs)
+                        }
+                        ASTOperator::Less => {
+                            self.builder.ins().icmp(IntCC::SignedLessThan, lhs, rhs)
+                        }
+                        ASTOperator::LessEquals => {
+                            self.builder
+                                .ins()
+                                .icmp(IntCC::SignedLessThanOrEqual, lhs, rhs)
+                        }
+                        ASTOperator::Greater => {
+                            self.builder.ins().icmp(IntCC::SignedGreaterThan, lhs, rhs)
+                        }
+                        ASTOperator::GreaterEquals => {
+                            self.builder
+                                .ins()
+                                .icmp(IntCC::SignedGreaterThanOrEqual, lhs, rhs)
+                        }
                         _ => {
                             println!("Unsupported operator: {:?}", op);
                             self.builder.ins().iconst(self.int, 0)
-                        }                    
+                        }
                     }
                 }
-            }
-            AST::TypeValue(value) => match value{
-                ASTtypevalue::I32(i) => {
-                    let imm:i32 = i;
-                    self.builder.ins().iconst(types::I32, i64::from(imm))
-                },
-                ASTtypevalue::I64(i) =>{
-                    self.builder.ins().iconst(types::I64, i)
-
-                }
-                ASTtypevalue::QuotedString(s)=> {
-                    self.builder.ins().iconst(types::I32, s.len() as i64)
-                }
-                ASTtypevalue::Identifier(id) => {
-                    let variable = self.variables.get(&id).unwrap();
-                    self.builder.use_var(*variable)
-                }
-                _ => {
-                    println!("Unsupported type: {:?}", value);
-                    self.builder.ins().iconst(self.int, 0)
-                }
-
             },
+            AST::TypeValue(value) => self.translate_value(value),
             _ => {
                 println!("Unsupported expression: {:?}", expr);
                 self.builder.ins().iconst(self.int, 0)
@@ -459,7 +499,7 @@ fn declare_variables(
     int: types::Type,
     builder: &mut FunctionBuilder,
     params: &[ASTtypecomp],
-    the_return: &ASTtypename,
+    _the_return: &ASTtypename,
     stmts: &[AST],
     entry_block: Block,
 ) -> HashMap<String, Variable> {
@@ -470,7 +510,7 @@ fn declare_variables(
         println!("param: {:?}", param);
         if let ASTtypecomp::Argument { identifier, .. } = param {
             // Assuming ASTtypevalue has a method to_string() to convert it to a String
-            let name = identifier.to_string();  
+            let name = identifier.to_string();
             let val = builder.block_params(entry_block)[i];
             let var = declare_variable(int, builder, &mut variables, &mut index, &name);
             builder.def_var(var, val);
@@ -497,7 +537,6 @@ fn declare_variables(
     variables
 }
 
-
 /// Recursively descend through the AST, translating all implicit
 /// variable declarations.
 fn declare_variables_in_stmt(
@@ -510,26 +549,26 @@ fn declare_variables_in_stmt(
     match expr {
         AST::Statement(statement) => {
             match statement {
-                ASTstatement::Assignment { left, op, right } => {
-                    match *left.clone() {
-                        AST::TypeValue(value) => {
-                            match value {
-                                ASTtypevalue::Identifier(id) => {
-                                    let name = id.to_string();
-                                    let var = declare_variable(int, builder, variables, index, &name);
-                                }
-                                _ => {
-                                    println!("Unsupported statement: {:?}", value);
-                                }
-                            }
+                ASTstatement::Assignment {
+                    left,
+                    op: _,
+                    right: _,
+                } => match *left.clone() {
+                    AST::TypeValue(value) => match value {
+                        ASTtypevalue::Identifier(id) => {
+                            let name = id.to_string();
+                            let _var = declare_variable(int, builder, variables, index, &name);
                         }
                         _ => {
-                            println!("Unsupported statement");   
+                            println!("Unsupported statement: {:?}", value);
                         }
+                    },
+                    _ => {
+                        println!("Unsupported statement");
                     }
-                }
-                ASTstatement::Return { value } => {
-                    let var = declare_variable(int, builder, variables, index, "return");
+                },
+                ASTstatement::Return { value: _ } => {
+                    let _var = declare_variable(int, builder, variables, index, "return");
                     // return ;
                 }
                 // ... other cases for ASTstatement variants
@@ -544,8 +583,6 @@ fn declare_variables_in_stmt(
         }
     }
 }
-
-
 
 /// Declare a single variable declaration.
 fn declare_variable(

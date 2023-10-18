@@ -139,7 +139,9 @@ fn main() {
     // println!("Interpreter Time: {:?}", duration_interpreter);
 
     println!("NEW AST");
-    println!("{:?}", ast_new);
+    for ast in ast_new.clone() {
+        println!("{}", ast);
+    }
     println!();
 
     //println!("{:?}",ast);
