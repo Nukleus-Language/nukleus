@@ -66,7 +66,7 @@ impl JIT {
                         // println!("translate");
                         let id = self
                             .module
-                            .declare_function(&name, Linkage::Export, &self.ctx.func.signature)
+                            .declare_function(&name, Linkage::Local, &self.ctx.func.signature)
                             .map_err(|e| e.to_string())?;
                         // println!("adfdfad");
                         // println!("asdfasdf {}", self.ctx.func.signature);
@@ -212,6 +212,7 @@ impl<'a> FunctionTranslator<'a> {
             }
         }
     }
+    
     fn translate_expr(&mut self, expr: AST) -> Value {
         match expr {
             AST::Statement(statement) => {
@@ -246,13 +247,9 @@ impl<'a> FunctionTranslator<'a> {
                         value,
                         statements,
                     } => {
-                        // let start_val = self.translate_expr(*start);
-                        // let end_val = self.translate_expr(*end);
-                        // let value_val = self.translate_expr(*value);
-                        todo!()
+                        self.translate_for(start, end, value, statements)
                     }
                     ASTstatement::Return { value } => {
-                        // let expr = self.translate_expr(*value);
                         let value_val = self.translate_expr(*value.clone());
                         println!("return value_val: {:?}", value_val);
                         self.builder.def_var(
@@ -260,46 +257,6 @@ impl<'a> FunctionTranslator<'a> {
                             value_val,
                         );
                         value_val
-                        /*match *value.clone() {
-                            AST::TypeValue(val) => {
-                                match val {
-                                    ASTtypevalue::Identifier(id) => {
-                                        println!("is identifier");
-                                        println!("id: {:?}", id);
-                                        let variable = self.variables.get(&id).unwrap();
-                                        println!("variable: {:?}", variable);
-                                        let return_val = self.builder.use_var(*variable);
-                                        self.builder.def_var(
-                                            *self.variables.get("return").unwrap(),
-                                            return_val,
-                                        );
-                                        return_val
-                                    }
-                                    ASTtypevalue::I32(_i) => {
-                                        todo!()
-                                        // return self.builder.ins().iconst(types::I32, i);
-                                    }
-                                    ASTtypevalue::I64(i) => {
-                                        println!("is i64");
-                                        println!("i: {:?}", i);
-                                        let return_val = self.builder.ins().iconst(types::I64, i);
-                                        self.builder.def_var(
-                                            *self.variables.get("return").unwrap(),
-                                            return_val,
-                                        );
-                                        return_val
-                                    }
-                                    _ => {
-                                        println!("Unsupported statement: {:?}", value);
-                                        self.builder.ins().iconst(self.int, 0)
-                                    }
-                                }
-                            }
-                            _ => {
-                                println!("Unsupported statement: ");
-                                self.builder.ins().iconst(self.int, 0)
-                            }
-                        }*/
                     }
                     _ => {
                         println!("Unsupported statement: {:?}", statement);
@@ -353,9 +310,6 @@ impl<'a> FunctionTranslator<'a> {
     }
 
     fn translate_assign(&mut self, name: String, expr: AST) -> Value {
-        // `def_var` is used to write the value of a variable. Note that
-        // variables can have multiple definitions. Cranelift will
-        // convert them into SSA form for itself automatically.
         let new_value = self.translate_expr(expr);
         let variable = self.variables.get(&name).unwrap();
         self.builder.def_var(*variable, new_value);
@@ -366,6 +320,68 @@ impl<'a> FunctionTranslator<'a> {
         let lhs = self.translate_expr(lhs);
         let rhs = self.translate_expr(rhs);
         self.builder.ins().icmp(cmp, lhs, rhs)
+    }
+
+    fn translate_for(
+        &mut self,
+        start: ASTtypevalue,
+        end: ASTtypevalue,
+        value: ASTtypevalue,
+        statements: Vec<AST>,
+    ) -> Value {
+        let start_name= match start.clone() {
+            ASTtypevalue::Identifier(id) => id,
+            _ => {
+                println!("Start value of an `for` loop must be an identifier");
+                std::process::exit(1);
+            }
+        };
+        let start_value = self.translate_value(start);
+        // check if the start_value is an identifier and get the id
+
+
+        println!("start_value: {}", start_value);
+        // let end_value = self.translate_value(end);
+        // let update_value = self.translate_value(value);
+
+        let loop_var = *self.variables.get(&start_name).unwrap();
+
+        let header_block = self.builder.create_block();
+        let body_block = self.builder.create_block();
+        let exit_block = self.builder.create_block();
+
+        // Jump to the header block to evaluate the loop condition
+        self.builder.ins().jump(header_block, &[]);
+        self.builder.switch_to_block(header_block);
+
+        // Fetch the current value of the loop variable
+        let current_value = self.builder.use_var(loop_var);
+        let end_value = self.translate_value(end);
+        let cmp = self.builder.ins().icmp(IntCC::SignedLessThan, current_value, end_value);
+        self.builder.ins().brif(cmp, body_block, &[], exit_block, &[]);
+
+        self.builder.switch_to_block(body_block);
+        self.builder.seal_block(body_block);
+
+        // Translate the body of the loop
+        for stmt in statements {
+            self.translate_expr(stmt);
+        }
+
+        // Update the loop variable
+        let update_value = self.translate_value(value);
+        let updated_value = self.builder.ins().iadd(current_value, update_value);
+        self.builder.def_var(loop_var, updated_value);
+
+        // Jump back to the header to re-evaluate the loop condition
+        self.builder.ins().jump(header_block, &[]);
+
+        self.builder.switch_to_block(exit_block);
+        self.builder.seal_block(header_block);
+        self.builder.seal_block(exit_block);
+
+        // Just return 0 for now
+        self.builder.ins().iconst(self.int, 0)
     }
 
     fn translate_if_else(
@@ -550,9 +566,9 @@ fn declare_variables_in_stmt(
         AST::Statement(statement) => {
             match statement {
                 ASTstatement::Assignment {
-                    left,
-                    op: _,
-                    right: _,
+                left,
+                op: _,
+                right: _,
                 } => match *left.clone() {
                     AST::TypeValue(value) => match value {
                         ASTtypevalue::Identifier(id) => {
