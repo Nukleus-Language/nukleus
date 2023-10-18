@@ -1,9 +1,9 @@
-fn main() -> i64
+fn main() -> i32
 {	
-	let:i64 a = 2;
-	let:i64 b = 1;
-	let:i64 c = a+b;
-	print(2);
+	let:i32 a = 2;
+	let:i32 b = 4;
+	let:i32 c = a+b;
+	//print(2);
 
-	return c;
+	return (4+(a+b))*(5+1);
 }
