@@ -103,7 +103,7 @@ impl Interpreter {
         self.run_function(main.function_get_statements(), vec![]);
     }
     pub fn run_repl(&mut self) {
-        println!("Nukleus 0.1.0 Nightly 2023-09-B1");
+        println!("Nukleus {}",std::env::var("CARGO_PKG_VERSION").unwrap().as_str());
         loop {
             print!("> ");
             io::stdout().flush();
