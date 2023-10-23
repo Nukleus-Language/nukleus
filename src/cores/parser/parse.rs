@@ -785,7 +785,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::core::ast::AST;
+    use crate::cores::ast::AST;
 
     #[test]
     fn test_parse_function() {
