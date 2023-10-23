@@ -6,6 +6,7 @@ mod errors;
 pub mod interpreter;
 
 use std::fs::File;
+use std::env;
 use std::io::prelude::*;
 
 use astgen::{Parser, AST};
@@ -17,7 +18,7 @@ use lexer::lexer;
 
 fn cli() -> Command {
     Command::new("nukleus")
-        .version("0.1.0 Nightly 2023-04")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("Skuld Norniern. <skuldnorniern@gmail.com>")
         .about("Nukleus Language")
         .arg(Arg::new("input").default_value("repl"))
@@ -154,8 +155,12 @@ fn main() {
     let code_ptr = jit.compile(ast_new);
     let end_time_jit = std::time::Instant::now();
     let duration_jit = end_time_jit.duration_since(start_time_jit);
-    println!("JIT Time: {:?}", duration_jit);
-    println!("result {} ", run(&mut jit, code_ptr.unwrap()).unwrap());
+    println!("JIT Compile Time: {:?}", duration_jit);
+    let pre_run_time = std::time::Instant::now();
+    let result =run(&mut jit, code_ptr.unwrap()).unwrap();
+    let duration = std::time::Instant::now().duration_since(pre_run_time);
+    println!("result {} ", result);
+    println!("JIT Run TIme: {:?}",duration);
 }
 
 fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
@@ -164,10 +169,6 @@ fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
 unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
     // Pass the string to the JIT, and it returns a raw pointer to machine code.
 
-    // Cast the raw pointer to a typed function pointer. This is unsafe, because
-    // this is the critical point where you have to trust that the generated code
-    // is safe to be called.
     let code_fn = mem::transmute::<_, fn(I) -> O>(codeptr);
-    // And now we can call it!
     Ok(code_fn(input))
 }
