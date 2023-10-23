@@ -9,7 +9,7 @@ edition = "2021"
 inksac = "0.2.0"
 # lexer = { path = "../nk-lexer" }
 astgen = { path = "../nk-astgen" }
-cranelift = "0.100.0"
-cranelift-module = "0.100.0"
-cranelift-jit = "0.100.0"
-cranelift-native = "0.100.0"
+cranelift = "0.101.0"
+cranelift-module = "0.101.0"
+cranelift-jit = "0.101.0"
+cranelift-native = "0.101.0"
