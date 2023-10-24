@@ -51,7 +51,7 @@ impl Default for JIT {
 
 impl JIT {
     pub fn compile(&mut self, input: Vec<AST>) -> Result<*const u8, String> {
-        let mut ids = Vec::new();
+        let mut funcid = HashMap::new();
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
@@ -81,7 +81,7 @@ impl JIT {
                         self.module.clear_context(&mut self.ctx);
 
                         self.module.finalize_definitions().unwrap();
-                        ids.push(id);
+                        funcid.insert(name, id);
                     }
                     _ => {
                         println!("Not a Function: {:?}", statement);
@@ -94,7 +94,7 @@ impl JIT {
         }
 
         // Tell the builder we're done with this function.
-        let code = self.module.get_finalized_function(*ids.get(0).unwrap());
+        let code = self.module.get_finalized_function(*funcid.get("main").unwrap());
         println!("code: {:?}", code);
         // return Ok(());
         Ok(code)
