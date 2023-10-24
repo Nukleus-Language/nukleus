@@ -87,6 +87,7 @@ pub enum ASTtypevalue {
     Bool(bool),
     QuotedString(String),
     Identifier(String),
+    // FunctionCall(String),
 }
 impl fmt::Display for ASTtypevalue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -103,6 +104,7 @@ impl fmt::Display for ASTtypevalue {
             ASTtypevalue::Bool(val) => write!(f, "{}", val),
             ASTtypevalue::QuotedString(val) => write!(f, "{}", val),
             ASTtypevalue::Identifier(val) => write!(f, "{}", val),
+            // ASTtypevalue::FunctionCall(val) => write!(f, "CALL {}", val),
         }
     }
 }
@@ -137,7 +139,7 @@ impl fmt::Display for ASTtypecomp {
             } => write!(f, "{} {}", type_name, identifier),
             ASTtypecomp::FunctionCall { name, args } => write!(
                 f,
-                "{}({})",
+                "CALL {}({})",
                 name,
                 args.iter()
                     .map(|x| x.to_string())

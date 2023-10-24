@@ -27,8 +27,8 @@ pub enum ASTstatement {
 
     Let {
         name: String,
-        type_name: Option<String>,
-        value: Token,
+        type_name: Option<ASTtypename>,
+        value: Option<Box<AST>>,
     },
     Assignment {
         left: Box<AST>,
@@ -66,7 +66,7 @@ pub enum ASTstatement {
 impl fmt::Display for ASTstatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ASTstatement::Import { name } => write!(f, "import {}", name),
+            ASTstatement::Import { name } => write!(f, "INJECT {}", name),
             ASTstatement::Function {
                 public,
                 name,
@@ -101,7 +101,7 @@ impl fmt::Display for ASTstatement {
                     "let {} : {} = {}",
                     name,
                     type_name.clone().unwrap().to_string(),
-                    value
+                    value.clone().unwrap().to_string()
                 )
             }
             ASTstatement::Assignment { left, op, right } => {
