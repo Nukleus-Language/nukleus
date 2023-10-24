@@ -55,6 +55,9 @@ impl JIT {
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
+                    ASTstatement::Import { name } => {
+                        
+                    }
                     ASTstatement::Function {
                         public: _,
                         name,
@@ -92,7 +95,6 @@ impl JIT {
 
         // Tell the builder we're done with this function.
         let code = self.module.get_finalized_function(*ids.get(0).unwrap());
-        println!("asdfasdf");
         println!("code: {:?}", code);
         // return Ok(());
         Ok(code)
@@ -106,6 +108,10 @@ impl JIT {
         statements: Vec<AST>,
         return_type: ASTtypename,
     ) -> Result<(), String> {
+        let is_void = match return_type {
+            ASTtypename::TypeVoid => true,
+            _ => false,
+        };
         let int = self.module.target_config().pointer_type();
         println!("int: {:?}", int);
         for _p in args.clone() {
@@ -118,12 +124,28 @@ impl JIT {
 
         // Our toy language currently only supports one return value, though
         // Cranelift is designed to support more.
-        self.ctx
-            .func
-            .signature
-            .returns
-            .push(AbiParam::new(types::I64));
-
+        let type_return = match return_type {
+            ASTtypename::I8 => {
+                types::I8
+            }
+            ASTtypename::I16 => {
+                types::I16
+            }
+            ASTtypename::I32 => {
+                types::I32
+            }
+            ASTtypename::I64 => {
+                types::I64
+            }
+            ASTtypename::TypeVoid => {
+                int
+            }
+            _ => {
+                unimplemented!()
+            }
+        };
+        self.ctx.func.signature.returns.push(AbiParam::new(type_return));
+        println!("ir code: {}", self.ctx.func.clone());
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
@@ -142,7 +164,7 @@ impl JIT {
         println!("seal_block: {:?}", entry_block);
 
         let variables = declare_variables(
-            int,
+            type_return,
             &mut builder,
             &args,
             &return_type,
@@ -162,15 +184,18 @@ impl JIT {
         }
 
         // the return value is the expression in the function with the `Return` segment anywhere in the function
-        let return_variable = trans.variables.get("return").unwrap();
-        let return_value = trans.builder.use_var(*return_variable);
+        if !is_void { 
+            let return_variable = trans.variables.get("return").unwrap();
+            let return_value = trans.builder.use_var(*return_variable);
 
-        // Emit the return instruction.
-        trans.builder.ins().return_(&[return_value]);
+            // Emit the return instruction.
 
+            trans.builder.ins().return_(&[return_value]);
+        }
+        
         // Tell the builder we're done with this function.
         trans.builder.finalize();
-
+        
         Ok(())
     }
 }
@@ -183,6 +208,16 @@ struct FunctionTranslator<'a> {
 }
 
 impl<'a> FunctionTranslator<'a> {
+    fn translate_type(&mut self, typename: ASTtypename) -> Type { 
+        match typename {
+            ASTtypename::TypeVoid => self.int,
+            ASTtypename::I8 => types::I8,
+            ASTtypename::I16 => types::I16,
+            ASTtypename::I32 => types::I32,
+            ASTtypename::I64 => types::I64,
+            _ => unimplemented!(),
+        }
+    }
     fn translate_value(&mut self, value: ASTtypevalue) -> Value {
         match value {
             ASTtypevalue::I8(i) => {
@@ -206,24 +241,26 @@ impl<'a> FunctionTranslator<'a> {
                 let variable = self.variables.get(&id).unwrap();
                 self.builder.use_var(*variable)
             }
+            ASTtypevalue::TypeVoid => self.builder.ins().iconst(self.int, 0),
             _ => {
                 println!("Unsupported type: {:?}", value);
                 self.builder.ins().iconst(self.int, 0)
             }
         }
     }
-    
+
     fn translate_expr(&mut self, expr: AST) -> Value {
         match expr {
             AST::Statement(statement) => {
                 match statement {
-                    ASTstatement::Assignment { left, op: _, right } => {
+                    
+                    ASTstatement::Assignment { left, op, right } => {
                         // let lhs = self.translate_expr(*left);
                         // let rhs = self.translate_expr(*right);
 
                         match *left {
                             AST::TypeValue(value) => match value {
-                                ASTtypevalue::Identifier(id) => self.translate_assign(id, *right),
+                                ASTtypevalue::Identifier(id) => self.translate_assign(id,op, *right),
                                 _ => {
                                     println!("Unsupported statement: {:?}", value);
                                     self.builder.ins().iconst(self.int, 0)
@@ -235,6 +272,11 @@ impl<'a> FunctionTranslator<'a> {
                             }
                         }
                     }
+                    ASTstatement::Let { name, type_name: _ ,value } => {
+                       let value = self.translate_expr(*value.unwrap());
+                        self.builder.def_var(*self.variables.get(&name).unwrap(), value);
+                        value
+                    }
                     ASTstatement::Print { value } => {
                         self.translate_expr(*value)
 
@@ -242,16 +284,19 @@ impl<'a> FunctionTranslator<'a> {
                     }
                     ASTstatement::Println { value } => self.translate_expr(*value),
                     ASTstatement::For {
-                        start,
-                        end,
-                        value,
-                        statements,
+                    start,
+                    end,
+                    value,
+                    statements,
                     } => {
                         self.translate_for(start, end, value, statements)
                     }
                     ASTstatement::Return { value } => {
+                        // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
+                            // println!("return void");
+                            // return self.builder.ins().iconst(self.int, 0);
+                        // }
                         let value_val = self.translate_expr(*value.clone());
-                        println!("return value_val: {:?}", value_val);
                         self.builder.def_var(
                             *self.variables.get("return").unwrap(),
                             value_val,
@@ -555,12 +600,19 @@ fn declare_variables(
     let mut index = 0;
 
     for (i, param) in params.iter().enumerate() {
-        println!("param: {:?}", param);
-        if let ASTtypecomp::Argument { identifier, .. } = param {
+        if let ASTtypecomp::Argument { identifier, type_name } = param {
             // Assuming ASTtypevalue has a method to_string() to convert it to a String
             let name = identifier.to_string();
+            let type_val = match type_name {
+                ASTtypename::I8 => types::I8,
+                ASTtypename::I16 => types::I16,
+                ASTtypename::I32 => types::I32,
+                ASTtypename::I64 => types::I64,
+                ASTtypename::TypeVoid => int,
+                _ => unimplemented!(),
+            };
             let val = builder.block_params(entry_block)[i];
-            let var = declare_variable(int, builder, &mut variables, &mut index, &name);
+            let var = declare_variable(type_val, builder, &mut variables, &mut index, &name);
             builder.def_var(var, val);
         } else {
             // Handle other ASTtypecomp variants or skip
@@ -577,7 +629,6 @@ fn declare_variables(
     // println!("variables: {:?}", variables);
     // panic!("No return variable");
     // }
-
     for expr in stmts {
         declare_variables_in_stmt(int, builder, &mut variables, &mut index, expr);
     }
@@ -597,6 +648,24 @@ fn declare_variables_in_stmt(
     match expr {
         AST::Statement(statement) => {
             match statement {
+                ASTstatement::Let { name, type_name, value } => {
+                    let type_val = match type_name{
+                        Some(names)=> {
+                            match names {
+                                ASTtypename::I8 => types::I8,
+                                ASTtypename::I16 => types::I16,
+                                ASTtypename::I32 => types::I32, 
+                                ASTtypename::I64 => types::I64,
+                                ASTtypename::TypeVoid => int,
+                                _ => unimplemented!(),
+                            }
+                        }
+                        None=> {
+                            int
+                        }
+                    };
+                    let _ = declare_variable(type_val, builder, variables, index, name);
+                }
                 ASTstatement::Assignment {
                 left,
                 op: _,
@@ -605,7 +674,8 @@ fn declare_variables_in_stmt(
                     AST::TypeValue(value) => match value {
                         ASTtypevalue::Identifier(id) => {
                             let name = id.to_string();
-                            let _var = declare_variable(int, builder, variables, index, &name);
+
+                            // let _ = declare_variable(int, builder, variables, index, &name);
                         }
                         _ => {
                             println!("Unsupported statement: {:?}", value);
@@ -616,7 +686,7 @@ fn declare_variables_in_stmt(
                     }
                 },
                 ASTstatement::Return { value: _ } => {
-                    let _var = declare_variable(int, builder, variables, index, "return");
+                    let _ = declare_variable(int, builder, variables, index, "return");
                     // return ;
                 }
                 // ... other cases for ASTstatement variants
