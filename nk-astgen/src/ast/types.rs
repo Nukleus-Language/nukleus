@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::AST;
+use std::fmt;
 /*pub enum ASTtype{
     TypeVoid
     I8(i8),
@@ -88,6 +88,7 @@ pub enum ASTtypevalue {
     Bool(bool),
     QuotedString(String),
     Identifier(String),
+    FunctionCall { name: String, args: Vec<AST> },
     // FunctionCall(String),
 }
 impl fmt::Display for ASTtypevalue {
@@ -106,6 +107,15 @@ impl fmt::Display for ASTtypevalue {
             ASTtypevalue::QuotedString(val) => write!(f, "{}", val),
             ASTtypevalue::Identifier(val) => write!(f, "{}", val),
             // ASTtypevalue::FunctionCall(val) => write!(f, "CALL {}", val),
+            ASTtypevalue::FunctionCall { name, args } => write!(
+                f,
+                "CALL {}({})",
+                name,
+                args.iter()
+                    .map(|x| x.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            ),
         }
     }
 }
@@ -117,10 +127,6 @@ pub enum ASTtypecomp {
     Argument {
         type_name: ASTtypename,
         identifier: ASTtypevalue,
-    },
-    FunctionCall {
-        name: String,
-        args: Vec<AST>,
     },
 }
 impl fmt::Display for ASTtypecomp {
@@ -138,15 +144,6 @@ impl fmt::Display for ASTtypecomp {
                 type_name,
                 identifier,
             } => write!(f, "{} {}", type_name, identifier),
-            ASTtypecomp::FunctionCall { name, args } => write!(
-                f,
-                "CALL {}({})",
-                name,
-                args.iter()
-                    .map(|x| x.to_string())
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            ),
         }
     }
 }

@@ -3,7 +3,7 @@ use astgen::AST;
 
 use cranelift::prelude::*;
 use cranelift_jit::{JITBuilder, JITModule};
-use cranelift_module::{DataDescription, Linkage, Module};
+use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
 
 /// The basic JIT class.
@@ -19,7 +19,7 @@ pub struct JIT {
 
     /// The data description, which is to data objects what `ctx` is to functions.
     data_description: DataDescription,
-
+    functions: HashMap<String, FuncId>,
     module: JITModule,
 }
 
@@ -38,12 +38,14 @@ impl Default for JIT {
             isa,
             cranelift_module::default_libcall_names(),
         ));
+        let functions = HashMap::new();
 
         // let module = JITModule::new(builder);
         Self {
             builder_context: FunctionBuilderContext::new(),
             ctx: module.make_context(),
             data_description: DataDescription::new(),
+            functions,
             module,
         }
     }
@@ -51,13 +53,11 @@ impl Default for JIT {
 
 impl JIT {
     pub fn compile(&mut self, input: Vec<AST>) -> Result<*const u8, String> {
-        let mut funcid = HashMap::new();
+        // let mut funcid = HashMap::new();
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
-                    ASTstatement::Import { name } => {
-                        
-                    }
+                    ASTstatement::Import { name: _ } => {}
                     ASTstatement::Function {
                         public: _,
                         name,
@@ -65,7 +65,7 @@ impl JIT {
                         statements,
                         return_type,
                     } => {
-                        self.translate(args, statements, return_type)?;
+                        self.translate(args, statements, return_type, self.functions.clone())?;
                         // println!("translate");
                         let id = self
                             .module
@@ -81,7 +81,7 @@ impl JIT {
                         self.module.clear_context(&mut self.ctx);
 
                         self.module.finalize_definitions().unwrap();
-                        funcid.insert(name, id);
+                        self.functions.insert(name, id);
                     }
                     _ => {
                         println!("Not a Function: {:?}", statement);
@@ -94,7 +94,9 @@ impl JIT {
         }
 
         // Tell the builder we're done with this function.
-        let code = self.module.get_finalized_function(*funcid.get("main").unwrap());
+        let code = self
+            .module
+            .get_finalized_function(*self.functions.get("main").unwrap());
         println!("code: {:?}", code);
         // return Ok(());
         Ok(code)
@@ -107,6 +109,7 @@ impl JIT {
         args: Vec<ASTtypecomp>,
         statements: Vec<AST>,
         return_type: ASTtypename,
+        _functions: HashMap<String, FuncId>,
     ) -> Result<(), String> {
         let is_void = match return_type {
             ASTtypename::TypeVoid => true,
@@ -125,27 +128,20 @@ impl JIT {
         // Our toy language currently only supports one return value, though
         // Cranelift is designed to support more.
         let type_return = match return_type {
-            ASTtypename::I8 => {
-                types::I8
-            }
-            ASTtypename::I16 => {
-                types::I16
-            }
-            ASTtypename::I32 => {
-                types::I32
-            }
-            ASTtypename::I64 => {
-                types::I64
-            }
-            ASTtypename::TypeVoid => {
-                int
-            }
+            ASTtypename::I8 => types::I8,
+            ASTtypename::I16 => types::I16,
+            ASTtypename::I32 => types::I32,
+            ASTtypename::I64 => types::I64,
+            ASTtypename::TypeVoid => int,
             _ => {
                 unimplemented!()
             }
         };
-        self.ctx.func.signature.returns.push(AbiParam::new(type_return));
-        println!("ir code: {}", self.ctx.func.clone());
+        self.ctx
+            .func
+            .signature
+            .returns
+            .push(AbiParam::new(type_return));
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
@@ -184,7 +180,7 @@ impl JIT {
         }
 
         // the return value is the expression in the function with the `Return` segment anywhere in the function
-        if !is_void { 
+        if !is_void {
             let return_variable = trans.variables.get("return").unwrap();
             let return_value = trans.builder.use_var(*return_variable);
 
@@ -192,10 +188,10 @@ impl JIT {
 
             trans.builder.ins().return_(&[return_value]);
         }
-        
+
         // Tell the builder we're done with this function.
         trans.builder.finalize();
-        
+        println!("ircode end: {}", self.ctx.func.clone());
         Ok(())
     }
 }
@@ -204,11 +200,12 @@ struct FunctionTranslator<'a> {
     int: types::Type,
     builder: FunctionBuilder<'a>,
     variables: HashMap<String, Variable>,
+    // functions: HashMap<String, Function>,
     module: &'a mut JITModule,
 }
 
 impl<'a> FunctionTranslator<'a> {
-    fn translate_type(&mut self, typename: ASTtypename) -> Type { 
+    fn translate_type(&mut self, typename: ASTtypename) -> Type {
         match typename {
             ASTtypename::TypeVoid => self.int,
             ASTtypename::I8 => types::I8,
@@ -241,6 +238,10 @@ impl<'a> FunctionTranslator<'a> {
                 let variable = self.variables.get(&id).unwrap();
                 self.builder.use_var(*variable)
             }
+            ASTtypevalue::FunctionCall { name: _, args: _ } => {
+                todo!()
+            }
+
             ASTtypevalue::TypeVoid => self.builder.ins().iconst(self.int, 0),
             _ => {
                 println!("Unsupported type: {:?}", value);
@@ -253,14 +254,15 @@ impl<'a> FunctionTranslator<'a> {
         match expr {
             AST::Statement(statement) => {
                 match statement {
-                    
                     ASTstatement::Assignment { left, op, right } => {
                         // let lhs = self.translate_expr(*left);
                         // let rhs = self.translate_expr(*right);
 
                         match *left {
                             AST::TypeValue(value) => match value {
-                                ASTtypevalue::Identifier(id) => self.translate_assign(id,op, *right),
+                                ASTtypevalue::Identifier(id) => {
+                                    self.translate_assign(id, op, *right)
+                                }
                                 _ => {
                                     println!("Unsupported statement: {:?}", value);
                                     self.builder.ins().iconst(self.int, 0)
@@ -272,9 +274,14 @@ impl<'a> FunctionTranslator<'a> {
                             }
                         }
                     }
-                    ASTstatement::Let { name, type_name: _ ,value } => {
-                       let value = self.translate_expr(*value.unwrap());
-                        self.builder.def_var(*self.variables.get(&name).unwrap(), value);
+                    ASTstatement::Let {
+                        name,
+                        type_name: _,
+                        value,
+                    } => {
+                        let value = self.translate_expr(*value.unwrap());
+                        self.builder
+                            .def_var(*self.variables.get(&name).unwrap(), value);
                         value
                     }
                     ASTstatement::Print { value } => {
@@ -284,23 +291,19 @@ impl<'a> FunctionTranslator<'a> {
                     }
                     ASTstatement::Println { value } => self.translate_expr(*value),
                     ASTstatement::For {
-                    start,
-                    end,
-                    value,
-                    statements,
-                    } => {
-                        self.translate_for(start, end, value, statements)
-                    }
+                        start,
+                        end,
+                        value,
+                        statements,
+                    } => self.translate_for(start, end, value, statements),
                     ASTstatement::Return { value } => {
                         // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
-                            // println!("return void");
-                            // return self.builder.ins().iconst(self.int, 0);
+                        // println!("return void");
+                        // return self.builder.ins().iconst(self.int, 0);
                         // }
                         let value_val = self.translate_expr(*value.clone());
-                        self.builder.def_var(
-                            *self.variables.get("return").unwrap(),
-                            value_val,
-                        );
+                        self.builder
+                            .def_var(*self.variables.get("return").unwrap(), value_val);
                         value_val
                     }
                     _ => {
@@ -354,38 +357,20 @@ impl<'a> FunctionTranslator<'a> {
         }
     }
 
-    fn translate_assign(&mut self, name: String,op: ASTOperator ,expr: AST) -> Value {
+    fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Value {
         let new_value = self.translate_expr(expr);
         let variable = self.variables.get(&name).unwrap();
         let var_value = self.builder.use_var(*variable);
         let oped_value = match op {
-            ASTOperator::Assign => {
-                new_value
-            }
-            ASTOperator::AddAssign => {
-                self.builder.ins().iadd(var_value, new_value)
-            }
-            ASTOperator::SubAssign => {
-                self.builder.ins().isub(var_value, new_value)
-            }
-            ASTOperator::MulAssign => {
-                self.builder.ins().imul(var_value, new_value)
-            }
-            ASTOperator::DivAssign => {
-                self.builder.ins().udiv(var_value, new_value)
-            }
-            ASTOperator::RemAssign => {
-                self.builder.ins().urem(var_value, new_value)
-            }
-            ASTOperator::BitAndAssign => {
-                self.builder.ins().band(var_value, new_value)
-            }
-            ASTOperator::BitOrAssign => {
-                self.builder.ins().bor(var_value, new_value)
-            }
-            ASTOperator::BitXorAssign => {
-                self.builder.ins().bxor(var_value, new_value)
-            }
+            ASTOperator::Assign => new_value,
+            ASTOperator::AddAssign => self.builder.ins().iadd(var_value, new_value),
+            ASTOperator::SubAssign => self.builder.ins().isub(var_value, new_value),
+            ASTOperator::MulAssign => self.builder.ins().imul(var_value, new_value),
+            ASTOperator::DivAssign => self.builder.ins().udiv(var_value, new_value),
+            ASTOperator::RemAssign => self.builder.ins().urem(var_value, new_value),
+            ASTOperator::BitAndAssign => self.builder.ins().band(var_value, new_value),
+            ASTOperator::BitOrAssign => self.builder.ins().bor(var_value, new_value),
+            ASTOperator::BitXorAssign => self.builder.ins().bxor(var_value, new_value),
             _ => {
                 println!("Invalid Assign operator: {:?}", op);
                 std::process::exit(1);
@@ -407,7 +392,7 @@ impl<'a> FunctionTranslator<'a> {
         value: ASTtypevalue,
         statements: Vec<AST>,
     ) -> Value {
-        let start_name= match start.clone() {
+        let start_name = match start.clone() {
             ASTtypevalue::Identifier(id) => id,
             _ => {
                 println!("Start value of an `for` loop must be an identifier");
@@ -416,7 +401,6 @@ impl<'a> FunctionTranslator<'a> {
         };
         let start_value = self.translate_value(start);
         // check if the start_value is an identifier and get the id
-
 
         println!("start_value: {}", start_value);
         // let end_value = self.translate_value(end);
@@ -435,8 +419,13 @@ impl<'a> FunctionTranslator<'a> {
         // Fetch the current value of the loop variable
         let current_value = self.builder.use_var(loop_var);
         let end_value = self.translate_value(end);
-        let cmp = self.builder.ins().icmp(IntCC::SignedLessThan, current_value, end_value);
-        self.builder.ins().brif(cmp, body_block, &[], exit_block, &[]);
+        let cmp = self
+            .builder
+            .ins()
+            .icmp(IntCC::SignedLessThan, current_value, end_value);
+        self.builder
+            .ins()
+            .brif(cmp, body_block, &[], exit_block, &[]);
 
         self.builder.switch_to_block(body_block);
         self.builder.seal_block(body_block);
@@ -600,7 +589,11 @@ fn declare_variables(
     let mut index = 0;
 
     for (i, param) in params.iter().enumerate() {
-        if let ASTtypecomp::Argument { identifier, type_name } = param {
+        if let ASTtypecomp::Argument {
+            identifier,
+            type_name,
+        } = param
+        {
             // Assuming ASTtypevalue has a method to_string() to convert it to a String
             let name = identifier.to_string();
             let type_val = match type_name {
@@ -648,32 +641,32 @@ fn declare_variables_in_stmt(
     match expr {
         AST::Statement(statement) => {
             match statement {
-                ASTstatement::Let { name, type_name, value } => {
-                    let type_val = match type_name{
-                        Some(names)=> {
-                            match names {
-                                ASTtypename::I8 => types::I8,
-                                ASTtypename::I16 => types::I16,
-                                ASTtypename::I32 => types::I32, 
-                                ASTtypename::I64 => types::I64,
-                                ASTtypename::TypeVoid => int,
-                                _ => unimplemented!(),
-                            }
-                        }
-                        None=> {
-                            int
-                        }
+                ASTstatement::Let {
+                    name,
+                    type_name,
+                    value: _,
+                } => {
+                    let type_val = match type_name {
+                        Some(names) => match names {
+                            ASTtypename::I8 => types::I8,
+                            ASTtypename::I16 => types::I16,
+                            ASTtypename::I32 => types::I32,
+                            ASTtypename::I64 => types::I64,
+                            ASTtypename::TypeVoid => int,
+                            _ => unimplemented!(),
+                        },
+                        None => int,
                     };
                     let _ = declare_variable(type_val, builder, variables, index, name);
                 }
                 ASTstatement::Assignment {
-                left,
-                op: _,
-                right: _,
+                    left,
+                    op: _,
+                    right: _,
                 } => match *left.clone() {
                     AST::TypeValue(value) => match value {
                         ASTtypevalue::Identifier(id) => {
-                            let name = id.to_string();
+                            let _name = id.to_string();
 
                             // let _ = declare_variable(int, builder, variables, index, &name);
                         }

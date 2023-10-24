@@ -5,8 +5,8 @@ pub mod cores;
 mod errors;
 pub mod interpreter;
 
-use std::fs::File;
 use std::env;
+use std::fs::File;
 use std::io::prelude::*;
 
 use astgen::{Parser, AST};
@@ -93,7 +93,6 @@ fn main() {
     // println!("{:?}", ast);
     // Pass contents to the lexer here
     let start_time_parser_old = std::time::Instant::now();
-    let ast = cores::parser::parse::Parser::new(&tokens).parse();
     let end_time_parser_old = std::time::Instant::now();
     let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     println!("Old Parser Time: {:?}", duration_parser_old);
@@ -157,10 +156,10 @@ fn main() {
     let duration_jit = end_time_jit.duration_since(start_time_jit);
     println!("JIT Compile Time: {:?}", duration_jit);
     let pre_run_time = std::time::Instant::now();
-    let result =run(&mut jit, code_ptr.unwrap()).unwrap();
+    let result = run(&mut jit, code_ptr.unwrap()).unwrap();
     let duration = std::time::Instant::now().duration_since(pre_run_time);
     println!("result {} ", result);
-    println!("JIT Run TIme: {:?}",duration);
+    println!("JIT Run TIme: {:?}", duration);
 }
 
 fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
