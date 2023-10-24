@@ -48,7 +48,7 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     fn next_token(&mut self) -> Token {
         let token = self.tokens.next();
-        println!("{} Next Token: {:?}{}", "\x1b[37m", token, "\x1b[0m");
+        // println!("{} Next Token: {:?}{}", "\x1b[36m", token, "\x1b[0m");
         match token {
             Some(t) => t,
             None => Token::EOF,
@@ -455,7 +455,7 @@ impl<'a> Parser<'a> {
     fn parse_primary(&mut self) -> AST {
         // let cur_token = self.next_token();
         let next_token = self.peek_token();
-        println!("WAI {} {} {} ", "\x1b[31m", next_token, "\x1b[0m");
+        // println!("WAI {} {} {} ", "\x1b[31m", next_token, "\x1b[0m");
         
         if let Token::Symbol(Symbol::OpenParen) = next_token {
              // Consume the opening parenthesis
@@ -468,7 +468,7 @@ impl<'a> Parser<'a> {
                 Token::Operator(_) => self.parse_expression(),
                 Token::Symbol(Symbol::CloseParen) => {
                     self.next_token();
-                    // println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
+                    println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
                     return node;
                 }
                 _ => {
@@ -494,6 +494,37 @@ impl<'a> Parser<'a> {
                 Token::Logical(_) => self.parse_expression(),
                 _ => {
                     self.next_token();
+                    let mut status = 1;
+                    if self.peek_token() == Token::Symbol(Symbol::OpenParen) { //FuncCall
+                        self.next_token(); // Consume the opening parenthesis
+                        let mut arguments =  Vec::new();
+                        // println!("FuncCall");
+                        while let token = self.peek_token() {
+                            println!("Token FC: {:?}", token);
+
+                            match token {
+                                Token::Symbol(Symbol::CloseParen) => {
+                                    self.next_token();
+                                    // println!("Close Paren");
+                                    break;
+                                }
+                                Token::Symbol(Symbol::Comma) => {
+                                    self.next_token();
+                                    // println!("Comma");
+                                }
+                                _ => {
+                                    // println!("Argument {:?}",token);
+                                    arguments.push(self.parse_expression());
+                                    // self.next_token();
+                                }
+                            }
+                        }
+                        println!("Arguments: {:?}", arguments);
+                        return AST::TypeComp(ASTtypecomp::FunctionCall {
+                            name: ident.to_string(),
+                            args: arguments
+                        })
+                    }
                     AST::TypeValue(ASTtypevalue::Identifier(ident.to_string()))
                 }
             },
@@ -505,19 +536,6 @@ impl<'a> Parser<'a> {
                 }
             },
             Token::Logical(_) | Token::Operator(_) => self.parse_expression(),
-            // Token::Symbol(Symbol::Semicolon) => {
-            //     return match cur_token {
-            //         Token::TypeValue(TypeValue::Number(num)) => AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap())),
-            //         Token::TypeValue(TypeValue::Identifier(ident)) => AST::TypeValue(ASTtypevalue::Identifier(ident)),
-            //         _ => {
-            //             println!("WRYYY {}",cur_token);
-            //             self.report_error(AstGenError {
-            //                 message: AstError::ExpectedExpression(),
-            //             });
-            //             AST::TypeValue(ASTtypevalue::TypeVoid)
-            //         }
-            //     }
-            // }
             _ => {
                 // println!(
                 // "{} Current Token: {:?}{}",

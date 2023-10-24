@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::AST;
 /*pub enum ASTtype{
     TypeVoid
     I8(i8),
@@ -119,7 +120,7 @@ pub enum ASTtypecomp {
     },
     FunctionCall {
         name: String,
-        args: Vec<ASTtypevalue>,
+        args: Vec<AST>,
     },
 }
 impl fmt::Display for ASTtypecomp {
