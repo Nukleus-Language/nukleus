@@ -309,13 +309,46 @@ impl<'a> FunctionTranslator<'a> {
         }
     }
 
-    fn translate_assign(&mut self, name: String, expr: AST) -> Value {
+    fn translate_assign(&mut self, name: String,op: ASTOperator ,expr: AST) -> Value {
         let new_value = self.translate_expr(expr);
         let variable = self.variables.get(&name).unwrap();
-        self.builder.def_var(*variable, new_value);
-        new_value
+        let var_value = self.builder.use_var(*variable);
+        let oped_value = match op {
+            ASTOperator::Assign => {
+                new_value
+            }
+            ASTOperator::AddAssign => {
+                self.builder.ins().iadd(var_value, new_value)
+            }
+            ASTOperator::SubAssign => {
+                self.builder.ins().isub(var_value, new_value)
+            }
+            ASTOperator::MulAssign => {
+                self.builder.ins().imul(var_value, new_value)
+            }
+            ASTOperator::DivAssign => {
+                self.builder.ins().udiv(var_value, new_value)
+            }
+            ASTOperator::RemAssign => {
+                self.builder.ins().urem(var_value, new_value)
+            }
+            ASTOperator::BitAndAssign => {
+                self.builder.ins().band(var_value, new_value)
+            }
+            ASTOperator::BitOrAssign => {
+                self.builder.ins().bor(var_value, new_value)
+            }
+            ASTOperator::BitXorAssign => {
+                self.builder.ins().bxor(var_value, new_value)
+            }
+            _ => {
+                println!("Invalid Assign operator: {:?}", op);
+                std::process::exit(1);
+            }
+        };
+        self.builder.def_var(*variable, oped_value);
+        oped_value
     }
-
     fn translate_icmp(&mut self, cmp: IntCC, lhs: AST, rhs: AST) -> Value {
         let lhs = self.translate_expr(lhs);
         let rhs = self.translate_expr(rhs);
@@ -484,7 +517,6 @@ impl<'a> FunctionTranslator<'a> {
         // For simplicity for now, just make all calls return a single I64.
         sig.returns.push(AbiParam::new(self.int));
 
-        // TODO: Streamline the API here?
         let callee = self
             .module
             .declare_function(&name, Linkage::Import, &sig)
