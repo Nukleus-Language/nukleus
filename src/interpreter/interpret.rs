@@ -103,7 +103,7 @@ impl Interpreter {
         self.run_function(main.function_get_statements(), vec![]);
     }
     pub fn run_repl(&mut self) {
-        println!("Nukleus {}",std::env::var("CARGO_PKG_VERSION").unwrap().as_str());
+        println!("Nukleus {}",std::env::var("CARGO_PKG_VERSION").unwrap_or("UNKNOWN".to_string()).as_str());
         loop {
             print!("> ");
             io::stdout().flush();
