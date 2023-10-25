@@ -3,8 +3,19 @@ use astgen::AST;
 
 use cranelift::prelude::*;
 use cranelift_jit::{JITBuilder, JITModule};
-use cranelift_module::{DataDescription, FuncId, Linkage, Module};
+use cranelift_module::{DataDescription, Linkage, FuncId, Module};
+use cranelift_codegen::ir::entities::FuncRef;
+use cranelift_codegen::ir::Signature;
+use cranelift_codegen::isa::CallConv;
 use std::collections::HashMap;
+
+#[derive(Debug,Clone)]
+struct FuncInfo {
+    pub id: FuncId,
+    pub fnref: FuncRef,
+    pub signature: Signature,
+}
+
 
 /// The basic JIT class.
 pub struct JIT {
@@ -19,7 +30,7 @@ pub struct JIT {
 
     /// The data description, which is to data objects what `ctx` is to functions.
     data_description: DataDescription,
-    functions: HashMap<String, FuncId>,
+    functions: HashMap<String, FuncInfo>,
     module: JITModule,
 }
 
@@ -53,20 +64,56 @@ impl Default for JIT {
 
 impl JIT {
     pub fn compile(&mut self, input: Vec<AST>) -> Result<*const u8, String> {
-        // let mut funcid = HashMap::new();
+        let mut funcid = HashMap::new();
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
                     ASTstatement::Import { name: _ } => {}
                     ASTstatement::Function {
-                        public: _,
-                        name,
-                        args,
-                        statements,
-                        return_type,
+                    public: _,
+                    name,
+                    args,
+                    statements,
+                    return_type,
                     } => {
-                        self.translate(args, statements, return_type, self.functions.clone())?;
-                        // println!("translate");
+                        println!("Translating Function: {:?}", name);
+                        //                         // println!("translate");
+                        // let signature = declare_signature(self.,args.clone().as_slice(),&return_type.clone());
+                        let int = self.module.target_config().pointer_type();
+                        println!("Address: {:?}", int);
+
+                        for p in args.clone() {
+                            match p {
+                                ASTtypecomp::Argument { type_name, identifier:_ } => {
+                                    self.ctx
+                                        .func
+                                        .signature
+                                        .params
+                                        .push(AbiParam::new(translate_type(int, type_name)));
+                                }
+                                _ => {
+                                    println!("Invalid Type for Argument");
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                        println!("args: {:?}", self.ctx.func.signature.params);
+
+
+
+                        // Our toy language currently only supports one return value, though
+                        // Cranelift is designed to support more.
+                        let type_return = translate_type(int,return_type);
+
+                        self.ctx
+                            .func
+                            .signature
+                            .returns
+                            .push(AbiParam::new(type_return));
+                        println!("return: {:?}", self.ctx.func.signature.returns);
+
+                        self.translate(args.clone(), statements, return_type, self.functions.clone())?;
+
                         let id = self
                             .module
                             .declare_function(&name, Linkage::Local, &self.ctx.func.signature)
@@ -78,10 +125,22 @@ impl JIT {
                             .map_err(|e| e.to_string())
                             .expect("Compile Error");
                         // println!("afsdfasdfasdfasd");
+                        
+                        
+                        funcid.insert(name.clone(), id);
+                        match name.as_str(){
+                            "main" => {
+                                continue;
+                            }
+                            _ => {
+                                let mut function = self.ctx.func.clone();
+                                self.functions.insert(name.clone(), FuncInfo{id,fnref: self.module.declare_func_in_func(id,&mut function),signature:self.ctx.func.signature.clone()});
+                            }
+                        }
                         self.module.clear_context(&mut self.ctx);
-
                         self.module.finalize_definitions().unwrap();
-                        self.functions.insert(name, id);
+
+
                     }
                     _ => {
                         println!("Not a Function: {:?}", statement);
@@ -96,7 +155,9 @@ impl JIT {
         // Tell the builder we're done with this function.
         let code = self
             .module
-            .get_finalized_function(*self.functions.get("main").unwrap());
+            .get_finalized_function(*funcid.get("main").unwrap());
+
+        // println!("functions: {:?}", self.functions);
         println!("code: {:?}", code);
         // return Ok(());
         Ok(code)
@@ -109,39 +170,14 @@ impl JIT {
         args: Vec<ASTtypecomp>,
         statements: Vec<AST>,
         return_type: ASTtypename,
-        _functions: HashMap<String, FuncId>,
+        functions: HashMap<String, FuncInfo>,
     ) -> Result<(), String> {
         let is_void = match return_type {
             ASTtypename::TypeVoid => true,
             _ => false,
         };
         let int = self.module.target_config().pointer_type();
-        println!("int: {:?}", int);
-        for _p in args.clone() {
-            self.ctx
-                .func
-                .signature
-                .params
-                .push(AbiParam::new(types::I64));
-        }
-
-        // Our toy language currently only supports one return value, though
-        // Cranelift is designed to support more.
-        let type_return = match return_type {
-            ASTtypename::I8 => types::I8,
-            ASTtypename::I16 => types::I16,
-            ASTtypename::I32 => types::I32,
-            ASTtypename::I64 => types::I64,
-            ASTtypename::TypeVoid => int,
-            _ => {
-                unimplemented!()
-            }
-        };
-        self.ctx
-            .func
-            .signature
-            .returns
-            .push(AbiParam::new(type_return));
+        let type_return = translate_type(int,return_type);
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
@@ -173,6 +209,7 @@ impl JIT {
             int,
             builder,
             variables,
+            functions: functions.clone(),
             module: &mut self.module,
         };
         for expr in statements {
@@ -200,21 +237,12 @@ struct FunctionTranslator<'a> {
     int: types::Type,
     builder: FunctionBuilder<'a>,
     variables: HashMap<String, Variable>,
-    // functions: HashMap<String, Function>,
+    functions: HashMap<String, FuncInfo>,
     module: &'a mut JITModule,
 }
 
 impl<'a> FunctionTranslator<'a> {
-    fn translate_type(&mut self, typename: ASTtypename) -> Type {
-        match typename {
-            ASTtypename::TypeVoid => self.int,
-            ASTtypename::I8 => types::I8,
-            ASTtypename::I16 => types::I16,
-            ASTtypename::I32 => types::I32,
-            ASTtypename::I64 => types::I64,
-            _ => unimplemented!(),
-        }
-    }
+
     fn translate_value(&mut self, value: ASTtypevalue) -> Value {
         match value {
             ASTtypevalue::I8(i) => {
@@ -238,8 +266,32 @@ impl<'a> FunctionTranslator<'a> {
                 let variable = self.variables.get(&id).unwrap();
                 self.builder.use_var(*variable)
             }
-            ASTtypevalue::FunctionCall { name: _, args: _ } => {
-                todo!()
+            ASTtypevalue::FunctionCall { name, args } => {
+                println!("name: {:?}", name);
+                println!("args: {:?}", args);
+                println!("functions: {:?}", self.functions);
+                // self.ctx.func.name = ExternalName::user(0,name);
+                // Clone the function reference before entering the loop
+                let functioninfo = self.functions.get(&name).cloned().expect("function not found");
+                let ref_function = functioninfo.fnref;
+                println!("ref_function: {:?}", functioninfo.signature);
+
+                let mut arguments = Vec::new();
+                println!("Alive");
+                for arg in args {
+                    arguments.push(self.translate_expr(arg.clone()));
+                };      
+                println!("Alive");
+
+                // Deref ref_function here as call expects a reference
+                println!("arguments: {:?}", arguments);
+                let call = self.builder.ins().call(ref_function, &arguments.as_slice());
+                println!("Alive");
+                let results = self.builder.inst_results(call);
+                // assert_eq!(results.len(), 1); 
+                println!("results: {:?}", results);
+                // results[0].clone()
+                self.builder.ins().iconst(self.int, 0)
             }
 
             ASTtypevalue::TypeVoid => self.builder.ins().iconst(self.int, 0),
@@ -275,9 +327,9 @@ impl<'a> FunctionTranslator<'a> {
                         }
                     }
                     ASTstatement::Let {
-                        name,
-                        type_name: _,
-                        value,
+                    name,
+                    type_name: _,
+                    value,
                     } => {
                         let value = self.translate_expr(*value.unwrap());
                         self.builder
@@ -291,10 +343,10 @@ impl<'a> FunctionTranslator<'a> {
                     }
                     ASTstatement::Println { value } => self.translate_expr(*value),
                     ASTstatement::For {
-                        start,
-                        end,
-                        value,
-                        statements,
+                    start,
+                    end,
+                    value,
+                    statements,
                     } => self.translate_for(start, end, value, statements),
                     ASTstatement::Return { value } => {
                         // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
@@ -576,7 +628,40 @@ impl<'a> FunctionTranslator<'a> {
         self.builder.ins().symbol_value(pointer, local_id)
     }
 }
+fn translate_type(base_int: types::Type,typename: ASTtypename) -> Type {
+    match typename {
+        ASTtypename::TypeVoid => base_int,
+        ASTtypename::I8 => types::I8,
+        ASTtypename::I16 => types::I16,
+        ASTtypename::I32 => types::I32,
+        ASTtypename::I64 => types::I64,
+        _ => unimplemented!(),
+    }
+}
+fn declare_signature(int: types::Type, args: &[ASTtypecomp], return_type: &ASTtypename) -> Signature {
+    let mut sig = Signature::new(CallConv::SystemV);
+    let mut params = Vec::new();
+    for arg in args {
+        match arg {
+            ASTtypecomp::Argument {
+            type_name,
+            identifier,
+            } => {
+                let type_val = translate_type(int, *type_name);
+                params.push(AbiParam::new(translate_type(int, *type_name)));
+            }
+            _ => {
+                println!("Invalid Type for Arguments");
+                std::process::exit(1);
+            }
+        }
+    }
+    sig.params.append(&mut params);
+    let type_val = translate_type(int, *return_type);
+    sig.returns.push(AbiParam::new(type_val));
 
+    sig
+}
 fn declare_variables(
     int: types::Type,
     builder: &mut FunctionBuilder,
@@ -590,20 +675,14 @@ fn declare_variables(
 
     for (i, param) in params.iter().enumerate() {
         if let ASTtypecomp::Argument {
-            identifier,
-            type_name,
+        identifier,
+        type_name,
         } = param
         {
             // Assuming ASTtypevalue has a method to_string() to convert it to a String
             let name = identifier.to_string();
-            let type_val = match type_name {
-                ASTtypename::I8 => types::I8,
-                ASTtypename::I16 => types::I16,
-                ASTtypename::I32 => types::I32,
-                ASTtypename::I64 => types::I64,
-                ASTtypename::TypeVoid => int,
-                _ => unimplemented!(),
-            };
+            let type_val = translate_type(int, *type_name);   
+
             let val = builder.block_params(entry_block)[i];
             let var = declare_variable(type_val, builder, &mut variables, &mut index, &name);
             builder.def_var(var, val);
@@ -642,27 +721,20 @@ fn declare_variables_in_stmt(
         AST::Statement(statement) => {
             match statement {
                 ASTstatement::Let {
-                    name,
-                    type_name,
-                    value: _,
+                name,
+                type_name,
+                value: _,
                 } => {
                     let type_val = match type_name {
-                        Some(names) => match names {
-                            ASTtypename::I8 => types::I8,
-                            ASTtypename::I16 => types::I16,
-                            ASTtypename::I32 => types::I32,
-                            ASTtypename::I64 => types::I64,
-                            ASTtypename::TypeVoid => int,
-                            _ => unimplemented!(),
-                        },
+                        Some(names) => translate_type(int,*names),
                         None => int,
                     };
                     let _ = declare_variable(type_val, builder, variables, index, name);
                 }
                 ASTstatement::Assignment {
-                    left,
-                    op: _,
-                    right: _,
+                left,
+                op: _,
+                right: _,
                 } => match *left.clone() {
                     AST::TypeValue(value) => match value {
                         ASTtypevalue::Identifier(id) => {
