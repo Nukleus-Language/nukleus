@@ -12,6 +12,7 @@ use std::io::prelude::*;
 use astgen::{Parser, AST};
 use clap::{Arg, Command};
 use codegen::JIT;
+use codegen::cranelift_JIT;
 use core::mem;
 use lexer::lexer;
 // use inksac::types::*;
@@ -150,7 +151,7 @@ fn main() {
     // println!("{}", generate_ir(ast_new));
     // generate_ir(ast_new);
     let start_time_jit = std::time::Instant::now();
-    let mut jit = JIT::default();
+    let mut jit = cranelift_JIT::JIT::default();
     let code_ptr = jit.compile(ast_new);
     let end_time_jit = std::time::Instant::now();
     let duration_jit = end_time_jit.duration_since(start_time_jit);
@@ -162,7 +163,7 @@ fn main() {
     println!("JIT Run TIme: {:?}", duration);
 }
 
-fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
+fn run(jit: &mut cranelift_JIT::JIT, codeptr: *const u8) -> Result<isize, String> {
     unsafe { run_code(codeptr, ()) }
 }
 unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
