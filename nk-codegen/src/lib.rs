@@ -1,3 +1,6 @@
+pub mod cranelift_JIT;
+
+
 use astgen::ast::*;
 use astgen::AST;
 
@@ -130,6 +133,8 @@ impl JIT {
                         funcid.insert(name.clone(), id);
                         match name.as_str(){
                             "main" => {
+                                self.module.clear_context(&mut self.ctx);
+                                self.module.finalize_definitions().unwrap();
                                 continue;
                             }
                             _ => {
