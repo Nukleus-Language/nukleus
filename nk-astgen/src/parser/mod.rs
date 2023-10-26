@@ -56,7 +56,7 @@ impl<'a> Parser<'a> {
     }
     #[allow(dead_code)]
     fn peek_token(&mut self) -> Token {
-        let peek = self.tokens.peek().clone();
+        let peek = self.tokens.peek();
         // println!("{} Peek Token: {:?}{}", "\x1b[38m", peek, "\x1b[0m");
         match peek {
             Some(t) => t.clone(),
@@ -64,10 +64,10 @@ impl<'a> Parser<'a> {
         }
     }
     #[allow(dead_code)]
-    fn expect(&mut self, current: Token, expected: Token) -> Result<(), AstGenError> {
+    fn expect(&mut self, _current: Token, expected: Token) -> Result<(), AstGenError> {
         // println!("{} Current Token: {:?}{}", "\x1b[37m", current, "\x1b[0m");
         match expected {
-            cur_token => Ok(()),
+            _cur_token => Ok(()),
             Token::EOF => Err(AstGenError {
                 message: AstError::UnexpectedEOF(),
             }),
@@ -468,7 +468,7 @@ impl<'a> Parser<'a> {
                 Token::Operator(_) => self.parse_expression(),
                 Token::Symbol(Symbol::CloseParen) => {
                     self.next_token();
-                    println!("harvested {} {} {}", "\x1b[31m", peek_token, "\x1b[0m");
+                    println!("harvested \x1b[31m {} \x1b[0m", peek_token);
                     return node;
                 }
                 _ => {
@@ -494,7 +494,7 @@ impl<'a> Parser<'a> {
                 Token::Logical(_) => self.parse_expression(),
                 _ => {
                     self.next_token();
-                    let mut status = 1;
+                    let _status = 1;
                     if self.peek_token() == Token::Symbol(Symbol::OpenParen) {
                         //FuncCall
                         self.next_token(); // Consume the opening parenthesis
@@ -671,13 +671,12 @@ impl<'a> Parser<'a> {
 
         while let token = self.peek_token() {
             println!(
-                "{} Token: {:?}, Status:{} {}",
-                "\x1b[34m", token, status, "\x1b[0m"
+                "\x1b[34m Token: {:?}, Status:{} \x1b[0m", token, status
             );
             match (token.clone(), &status) {
                 (Token::TypeName(typename), 2) => {
                     if let Some(ast_type) = type_map.get(&typename) {
-                        type_name = Some(ast_type.clone());
+                        type_name = Some(*ast_type);
                         self.next_token();
                         status = 3;
                         continue;
@@ -780,7 +779,7 @@ impl<'a> Parser<'a> {
             start: start_val,
             end: end_val,
             value: val,
-            statements: statements,
+            statements,
         })
     }
     /*fn parse_if(&mut self) {
@@ -825,13 +824,13 @@ impl<'a> Parser<'a> {
         .cloned()
         .collect();
         while let token = self.next_token() {
-            let peeked = self.peek_token();
+            let _peeked = self.peek_token();
             //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
                 (
                     Token::Symbol(Symbol::CloseParen),
-                    (ArgumentParseState::WaitForCommaOrCloseParen),
+                    ArgumentParseState::WaitForCommaOrCloseParen,
                 ) => {
                     break;
                 }

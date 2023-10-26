@@ -301,7 +301,7 @@ impl<'a> FunctionTranslator<'a> {
 
                 // Deref ref_function here as call expects a reference
                 println!("arguments: {:?}", arguments);
-                let call = self.builder.ins().call(ref_function, &arguments.as_slice());
+                let call = self.builder.ins().call(ref_function, arguments.as_slice());
                 println!("Alive");
                 let results = self.builder.inst_results(call);
                 // assert_eq!(results.len(), 1);
@@ -665,9 +665,9 @@ fn declare_signature(
         match arg {
             ASTtypecomp::Argument {
                 type_name,
-                identifier,
+                identifier: _,
             } => {
-                let type_val = translate_type(int, *type_name);
+                let _type_val = translate_type(int, *type_name);
                 params.push(AbiParam::new(translate_type(int, *type_name)));
             }
             _ => {

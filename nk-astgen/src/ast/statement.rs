@@ -1,7 +1,7 @@
 use std::fmt;
 
 use crate::ast::*;
-use lexer::tokens_new::Token;
+
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
@@ -100,17 +100,17 @@ impl fmt::Display for ASTstatement {
                     f,
                     "let {} : {} = {}",
                     name,
-                    type_name.clone().unwrap().to_string(),
-                    value.clone().unwrap().to_string()
+                    (*type_name).unwrap(),
+                    value.clone().unwrap()
                 )
             }
             ASTstatement::Assignment { left, op, right } => {
                 write!(
                     f,
                     "{} {} {}",
-                    left.to_string(),
-                    op.to_string(),
-                    right.to_string()
+                    left,
+                    op,
+                    right
                 )
             }
             ASTstatement::If {
@@ -171,9 +171,9 @@ impl fmt::Display for ASTstatement {
                 write!(
                     f,
                     "for {} {} {} {{\n{}\n}}",
-                    start.to_string(),
-                    end.to_string(),
-                    value.to_string(),
+                    start,
+                    end,
+                    value,
                     statements
                         .iter()
                         .map(|x| x.to_string())

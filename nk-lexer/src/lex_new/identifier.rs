@@ -67,18 +67,12 @@ pub fn type_name_to_token(
 
 #[allow(dead_code)]
 pub fn is_quote(c: char) -> bool {
-    match c {
-        '"' => true,
-        _ => false,
-    }
+    matches!(c, '"')
 }
 
 #[allow(dead_code)]
 pub fn is_quoted_string(c: char) -> bool {
-    match c {
-        '"' => true,
-        _ => false,
-    }
+    matches!(c, '"')
 }
 
 #[allow(dead_code)]

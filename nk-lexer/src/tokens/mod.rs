@@ -41,10 +41,7 @@ pub enum Token {
 }
 impl Token {
     pub fn is_identifier(&self) -> bool {
-        match self {
-            Token::TypeValue(TypeValue::Identifier(_)) => true,
-            _ => false,
-        }
+        matches!(self, Token::TypeValue(TypeValue::Identifier(_)))
     }
 }
 impl fmt::Display for Token {

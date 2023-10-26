@@ -202,25 +202,19 @@ impl<'a> Lexer<'a> {
                 //let identifier = identifier_to_token(self.buffer.clone(), self.line, self.column);
                 let statement =
                     identifier::statement_to_token(self.buffer.clone(), self.line, self.column);
-                match statement {
-                    Ok(statement) => {
-                        self.insert_token(statement);
-                        self.buffer.clear();
-                        self.state = State::EmptyState;
-                        continue;
-                    }
-                    Err(_) => {}
+                if let Ok(statement) = statement {
+                    self.insert_token(statement);
+                    self.buffer.clear();
+                    self.state = State::EmptyState;
+                    continue;
                 }
                 let type_name =
                     identifier::type_name_to_token(self.buffer.clone(), self.line, self.column);
-                match type_name {
-                    Ok(type_name) => {
-                        self.insert_token(type_name);
-                        self.buffer.clear();
-                        self.state = State::EmptyState;
-                        continue;
-                    }
-                    Err(_) => {}
+                if let Ok(type_name) = type_name {
+                    self.insert_token(type_name);
+                    self.buffer.clear();
+                    self.state = State::EmptyState;
+                    continue;
                 }
                 let identifier = Token::TypeValue(TypeValue::Identifier(self.buffer.clone()));
                 self.insert_token(identifier);
