@@ -36,7 +36,7 @@ pub enum ASTstatement {
         right: Box<AST>,
     },
     If {
-        condition: Vec<AST>,
+        condition: Box<AST>,
         statements: Vec<AST>,
     },
     ElseIf {
@@ -120,11 +120,7 @@ impl fmt::Display for ASTstatement {
                 write!(
                     f,
                     "if {} {{\n{}\n}}",
-                    condition
-                        .iter()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<String>>()
-                        .join("\n"),
+                    condition,
                     statements
                         .iter()
                         .map(|x| x.to_string())

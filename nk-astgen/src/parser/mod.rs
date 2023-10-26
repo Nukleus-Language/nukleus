@@ -113,7 +113,6 @@ impl<'a> Parser<'a> {
                             | Assign::BitXorAssign => {
                                 statements.push(self.parse_assignment(ident));
                             }
-                            _ => unreachable!(),
                         }
                     }
                 }
@@ -251,8 +250,8 @@ impl<'a> Parser<'a> {
                 }
                 _ => {
                     panic!(
-                        "{} Require type to construct function! {}",
-                        "\x1b[31m", "\x1b[0m"
+                        "{} Require type to construct function! {:?}{}",
+                        "\x1b[31m", cur_token,"\x1b[0m"
                     );
                 }
             }
@@ -288,6 +287,7 @@ impl<'a> Parser<'a> {
         })
     }
     fn parse_assignment(&mut self, ident: String) -> AST {
+    
         let op = match self.next_token() {
             Token::Assign(op) => match op {
                 Assign::Assign => ASTOperator::Assign,
@@ -299,13 +299,20 @@ impl<'a> Parser<'a> {
                 Assign::BitAndAssign => ASTOperator::BitAndAssign,
                 Assign::BitOrAssign => ASTOperator::BitOrAssign,
                 Assign::BitXorAssign => ASTOperator::BitXorAssign,
-                _ => unreachable!(),
             },
             _ => unreachable!(),
         };
-
+        // println!("{} Op: {:?} {}", "\x1b[34m", op, "\x1b[0m");
         let right_expr = self.parse_expression();
-
+        // println!("{} Right expr: {:?} {}", "\x1b[34m", right_expr, "\x1b[0m");
+        // println!("{} peek: {:?} {}", "\x1b[34m", self.peek_token(), "\x1b[0m");
+        if self.peek_token() == Token::Symbol(Symbol::Semicolon) {
+            self.next_token();
+        }else{
+            self.report_error(AstGenError {
+                message: AstError::ExpectedToken(Token::Symbol(Symbol::Semicolon)),
+            })
+        }
         AST::Statement(ASTstatement::Assignment {
             left: Box::new(AST::TypeValue(ASTtypevalue::Identifier(ident))),
             op,
@@ -456,33 +463,30 @@ impl<'a> Parser<'a> {
         // let cur_token = self.next_token();
         let next_token = self.peek_token();
         // println!("WAI {} {} {} ", "\x1b[31m", next_token, "\x1b[0m");
-
-        if let Token::Symbol(Symbol::OpenParen) = next_token {
+        if Token::Symbol(Symbol::OpenParen) == next_token {
             // Consume the opening parenthesis
             // println!("WAI {} {} {} ", "\x1b[31m", cur_token, "\x1b[0m");
+            self.next_token();
             let node = self.parse_expression();
             let peek_token = self.peek_token();
-
             let test = match peek_token {
-                Token::Logical(_) => self.parse_expression(),
-                Token::Operator(_) => self.parse_expression(),
+                // Token::Logical(_)| Token::Operator(_) => self.parse_expression(),
                 Token::Symbol(Symbol::CloseParen) => {
                     self.next_token();
-                    println!("harvested \x1b[31m {} \x1b[0m", peek_token);
                     return node;
                 }
                 _ => {
-                    // println!("WRYYY {} {} {} ", "\x1b[31m", peek_token, "\x1b[0m");
-                    return AST::TypeValue(ASTtypevalue::TypeVoid);
+                    self.next_token();
+                    self.parse_expression()
                 }
             };
             // println!("YES IS ME ");
 
             return test;
         }
-
         // Handle literals and identifiers
         match next_token {
+            // Token::Symbol(Symbol::OpenParen) => panic!("Open Parenthesis"),
             Token::TypeValue(TypeValue::Number(num)) => match self.peek_token() {
                 Token::Logical(_) => self.parse_expression(),
                 _ => {
@@ -501,7 +505,7 @@ impl<'a> Parser<'a> {
                         let mut arguments = Vec::new();
                         // println!("FuncCall");
                         while let token = self.peek_token() {
-                            println!("Token FC: {:?}", token);
+                            // println!("Token FC: {:?}", token);
 
                             match token {
                                 Token::Symbol(Symbol::CloseParen) => {
@@ -520,7 +524,7 @@ impl<'a> Parser<'a> {
                                 }
                             }
                         }
-                        println!("Arguments: {:?}", arguments);
+                        // println!("Arguments: {:?}", arguments);
                         return AST::TypeValue(ASTtypevalue::FunctionCall {
                             name: ident.to_string(),
                             args: arguments,
@@ -596,15 +600,15 @@ impl<'a> Parser<'a> {
         })
     }
     fn parse_if(&mut self) -> AST {
+        self.next_token();
         // Parse the condition
         let condition = self.parse_expression();
-
         // Parse the statements
         let statements = self.parse_statement();
 
         // Create the If AST node
         let if_node = AST::Statement(ASTstatement::If {
-            condition: vec![condition],
+            condition: Box::new(condition),
             statements,
         });
 
@@ -670,9 +674,9 @@ impl<'a> Parser<'a> {
         }
 
         while let token = self.peek_token() {
-            println!(
-                "\x1b[34m Token: {:?}, Status:{} \x1b[0m", token, status
-            );
+            // println!(
+                // "\x1b[34m Token: {:?}, Status:{} \x1b[0m", token, status
+            // );
             match (token.clone(), &status) {
                 (Token::TypeName(typename), 2) => {
                     if let Some(ast_type) = type_map.get(&typename) {
@@ -696,7 +700,7 @@ impl<'a> Parser<'a> {
                 }
                 (_, 5) => {
                     value = Some(Box::new(self.parse_expression()));
-                    println!("Value: {:?}", value);
+                    // println!("Value: {:?}", value);
                     status = 6;
                     break;
                 }
@@ -829,8 +833,8 @@ impl<'a> Parser<'a> {
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone(), &state) {
                 (
-                    Token::Symbol(Symbol::CloseParen),
-                    ArgumentParseState::WaitForCommaOrCloseParen,
+                Token::Symbol(Symbol::CloseParen),
+                ArgumentParseState::WaitForCommaOrCloseParen,
                 ) => {
                     break;
                 }
@@ -850,8 +854,8 @@ impl<'a> Parser<'a> {
                     state = ArgumentParseState::WaitForIdentifier;
                 }
                 (
-                    Token::TypeValue(TypeValue::Identifier(ident)),
-                    ArgumentParseState::WaitForIdentifier,
+                Token::TypeValue(TypeValue::Identifier(ident)),
+                ArgumentParseState::WaitForIdentifier,
                 ) => {
                     let ident_name = ASTtypevalue::Identifier(ident.to_string());
                     args.push(ASTtypecomp::Argument {
