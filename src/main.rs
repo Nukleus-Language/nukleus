@@ -118,7 +118,7 @@ fn main() {
     //let new_tokens_mb_per_second = new_tokens_per_second / 1024.0 / 1024.0;
     //println!("Old Tokens MB/s: {}", old_tokens_mb_per_second);
     //println!("New Tokens MB/s: {}", new_tokens_mb_per_second);
-    //println!("{:?}", ast);
+    // println!("{:?}", ast);
     /*match ast.clone() {
         Ok(ast) => {
             println!("AST Tree: {:?}", ast;
@@ -139,13 +139,13 @@ fn main() {
     // let duration_interpreter = end_time_interpreter.duration_since(start_time_interpreter);
     // println!("Interpreter Time: {:?}", duration_interpreter);
 
-    println!("NEW AST");
+    println!("Mid IR code: ");
     for ast in ast_new.clone() {
         println!("{}", ast);
     }
     println!();
 
-    //println!("{:?}",ast);
+    // println!("{:?}",ast_new);
     //
 
     // println!("{}", generate_ir(ast_new));
