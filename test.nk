@@ -6,7 +6,8 @@ fn main() -> void{
 	for(i -> 60000 :: 1){
 		ans += i;
 	}
-	println(ans);
+	//println(ans);
+	return ;
 }
 fn test6() -> void
 {

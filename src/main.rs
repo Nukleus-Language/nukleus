@@ -11,8 +11,8 @@ use std::io::prelude::*;
 
 use astgen::{Parser, AST};
 use clap::{Arg, Command};
-use codegen::JIT;
 use codegen::cranelift_JIT;
+use codegen::JIT;
 use core::mem;
 use lexer::lexer;
 // use inksac::types::*;

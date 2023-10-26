@@ -2,22 +2,19 @@ use astgen::ast::*;
 use astgen::AST;
 
 use cranelift::prelude::*;
-use cranelift_jit::{JITBuilder, JITModule};
-use cranelift_module::{DataDescription, Linkage, FuncId, Module};
 use cranelift_codegen::ir::entities::FuncRef;
 use cranelift_codegen::ir::Signature;
 use cranelift_codegen::isa::CallConv;
+use cranelift_jit::{JITBuilder, JITModule};
+use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
 
-
-
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct FuncInfo {
     pub id: FuncId,
     pub fnref: FuncRef,
     pub signature: Signature,
 }
-
 
 /// The basic JIT class.
 pub struct JIT {
@@ -72,11 +69,11 @@ impl JIT {
                 AST::Statement(statement) => match statement {
                     ASTstatement::Import { name: _ } => {}
                     ASTstatement::Function {
-                    public: _,
-                    name,
-                    args,
-                    statements,
-                    return_type,
+                        public: _,
+                        name,
+                        args,
+                        statements,
+                        return_type,
                     } => {
                         println!("Translating Function: {:?}", name);
                         //                         // println!("translate");
@@ -86,7 +83,10 @@ impl JIT {
 
                         for p in args.clone() {
                             match p {
-                                ASTtypecomp::Argument { type_name, identifier:_ } => {
+                                ASTtypecomp::Argument {
+                                    type_name,
+                                    identifier: _,
+                                } => {
                                     self.ctx
                                         .func
                                         .signature
@@ -101,11 +101,9 @@ impl JIT {
                         }
                         println!("args: {:?}", self.ctx.func.signature.params);
 
-
-
                         // Our toy language currently only supports one return value, though
                         // Cranelift is designed to support more.
-                        let type_return = translate_type(int,return_type);
+                        let type_return = translate_type(int, return_type);
 
                         self.ctx
                             .func
@@ -114,7 +112,12 @@ impl JIT {
                             .push(AbiParam::new(type_return));
                         println!("return: {:?}", self.ctx.func.signature.returns);
 
-                        self.translate(args.clone(), statements, return_type, self.functions.clone())?;
+                        self.translate(
+                            args.clone(),
+                            statements,
+                            return_type,
+                            self.functions.clone(),
+                        )?;
 
                         let id = self
                             .module
@@ -127,10 +130,9 @@ impl JIT {
                             .map_err(|e| e.to_string())
                             .expect("Compile Error");
                         // println!("afsdfasdfasdfasd");
-                        
-                        
+
                         funcid.insert(name.clone(), id);
-                        match name.as_str(){
+                        match name.as_str() {
                             "main" => {
                                 self.module.clear_context(&mut self.ctx);
                                 self.module.finalize_definitions().unwrap();
@@ -138,17 +140,22 @@ impl JIT {
                             }
                             _ => {
                                 let mut function = self.ctx.func.clone();
-                                self.functions.insert(name.clone(), FuncInfo{id,fnref: self.module.declare_func_in_func(id,&mut function),signature:self.ctx.func.signature.clone()});
+                                self.functions.insert(
+                                    name.clone(),
+                                    FuncInfo {
+                                        id,
+                                        fnref: self.module.declare_func_in_func(id, &mut function),
+                                        signature: self.ctx.func.signature.clone(),
+                                    },
+                                );
                             }
                         }
                         self.module.clear_context(&mut self.ctx);
                         self.module.finalize_definitions().unwrap();
-                        
+
                         // else {
-                            // self.
+                        // self.
                         // }
-
-
                     }
                     _ => {
                         println!("Not a Function: {:?}", statement);
@@ -186,7 +193,7 @@ impl JIT {
             _ => false,
         };
         let int = self.module.target_config().pointer_type();
-        let type_return = translate_type(int,return_type);
+        let type_return = translate_type(int, return_type);
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
@@ -252,7 +259,6 @@ struct FunctionTranslator<'a> {
 }
 
 impl<'a> FunctionTranslator<'a> {
-
     fn translate_value(&mut self, value: ASTtypevalue) -> Value {
         match value {
             ASTtypevalue::I8(i) => {
@@ -282,22 +288,27 @@ impl<'a> FunctionTranslator<'a> {
                 println!("functions: {:?}", self.functions);
                 // self.ctx.func.name = ExternalName::user(0,name);
                 // Clone the function reference before entering the loop
-                let functioninfo = self.functions.get(&name).cloned().expect("function not found");
+                let functioninfo = self
+                    .functions
+                    .get(&name)
+                    .cloned()
+                    .expect("function not found");
                 // let ref_function = functioninfo.fnref;
                 println!("ref_function: {:?}", functioninfo.signature);
                 // let entry_block = self.builder.create_block();
                 // self.builder.switch_to_block(entry_block);
-                
-                
 
-                let func = self.module.declare_function(&name, Linkage::Import, &functioninfo.signature).expect("Function Link Error");
+                let func = self
+                    .module
+                    .declare_function(&name, Linkage::Import, &functioninfo.signature)
+                    .expect("Function Link Error");
                 let func = self.module.declare_func_in_func(func, self.builder.func);
 
                 let mut arguments = Vec::new();
                 println!("Alive");
                 for arg in args {
                     arguments.push(self.translate_expr(arg.clone()));
-                };      
+                }
                 println!("Alive");
                 println!("name: {:?}", name);
                 println!("id: {:?}", functioninfo.id);
@@ -310,7 +321,7 @@ impl<'a> FunctionTranslator<'a> {
                 let call = self.builder.ins().call(func, &arguments.as_slice());
                 println!("Alive");
                 let results = self.builder.inst_results(call);
-                assert_eq!(results.len(), 1); 
+                assert_eq!(results.len(), 1);
                 let result_val = results[0].clone();
                 // self.builder.seal_all_blocks();
                 // self.builder.finalize();
@@ -356,9 +367,9 @@ impl<'a> FunctionTranslator<'a> {
                         }
                     }
                     ASTstatement::Let {
-                    name,
-                    type_name: _,
-                    value,
+                        name,
+                        type_name: _,
+                        value,
                     } => {
                         let value = self.translate_expr(*value.unwrap());
                         self.builder
@@ -372,10 +383,10 @@ impl<'a> FunctionTranslator<'a> {
                     }
                     ASTstatement::Println { value } => self.translate_expr(*value),
                     ASTstatement::For {
-                    start,
-                    end,
-                    value,
-                    statements,
+                        start,
+                        end,
+                        value,
+                        statements,
                     } => self.translate_for(start, end, value, statements),
                     ASTstatement::Return { value } => {
                         // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
@@ -657,7 +668,7 @@ impl<'a> FunctionTranslator<'a> {
         self.builder.ins().symbol_value(pointer, local_id)
     }
 }
-fn translate_type(base_int: types::Type,typename: ASTtypename) -> Type {
+fn translate_type(base_int: types::Type, typename: ASTtypename) -> Type {
     match typename {
         ASTtypename::TypeVoid => base_int,
         ASTtypename::I8 => types::I8,
@@ -667,14 +678,18 @@ fn translate_type(base_int: types::Type,typename: ASTtypename) -> Type {
         _ => unimplemented!(),
     }
 }
-fn declare_signature(int: types::Type, args: &[ASTtypecomp], return_type: &ASTtypename) -> Signature {
+fn declare_signature(
+    int: types::Type,
+    args: &[ASTtypecomp],
+    return_type: &ASTtypename,
+) -> Signature {
     let mut sig = Signature::new(CallConv::SystemV);
     let mut params = Vec::new();
     for arg in args {
         match arg {
             ASTtypecomp::Argument {
-            type_name,
-            identifier,
+                type_name,
+                identifier,
             } => {
                 let type_val = translate_type(int, *type_name);
                 params.push(AbiParam::new(translate_type(int, *type_name)));
@@ -704,13 +719,13 @@ fn declare_variables(
 
     for (i, param) in params.iter().enumerate() {
         if let ASTtypecomp::Argument {
-        identifier,
-        type_name,
+            identifier,
+            type_name,
         } = param
         {
             // Assuming ASTtypevalue has a method to_string() to convert it to a String
             let name = identifier.to_string();
-            let type_val = translate_type(int, *type_name);   
+            let type_val = translate_type(int, *type_name);
 
             let val = builder.block_params(entry_block)[i];
             let var = declare_variable(type_val, builder, &mut variables, &mut index, &name);
@@ -750,20 +765,20 @@ fn declare_variables_in_stmt(
         AST::Statement(statement) => {
             match statement {
                 ASTstatement::Let {
-                name,
-                type_name,
-                value: _,
+                    name,
+                    type_name,
+                    value: _,
                 } => {
                     let type_val = match type_name {
-                        Some(names) => translate_type(int,*names),
+                        Some(names) => translate_type(int, *names),
                         None => int,
                     };
                     let _ = declare_variable(type_val, builder, variables, index, name);
                 }
                 ASTstatement::Assignment {
-                left,
-                op: _,
-                right: _,
+                    left,
+                    op: _,
+                    right: _,
                 } => match *left.clone() {
                     AST::TypeValue(value) => match value {
                         ASTtypevalue::Identifier(id) => {
