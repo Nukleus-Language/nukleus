@@ -46,9 +46,9 @@ pub fn type_name_to_token(
     column: usize,
 ) -> Result<Token, LexcialError> {
     match typename.as_str() {
-        "void" => Ok(Token::TypeName(TypeName::Void)),
-        "bool" => Ok(Token::TypeName(TypeName::Bool)),
-        "string" => Ok(Token::TypeName(TypeName::QuotedString)),
+        "Void" => Ok(Token::TypeName(TypeName::Void)),
+        "Bool" => Ok(Token::TypeName(TypeName::Bool)),
+        "String" => Ok(Token::TypeName(TypeName::QuotedString)),
         "i8" => Ok(Token::TypeName(TypeName::I8)),
         "i16" => Ok(Token::TypeName(TypeName::I16)),
         "i32" => Ok(Token::TypeName(TypeName::I32)),
