@@ -605,13 +605,9 @@ impl<'a> Parser<'a> {
         let condition = self.parse_expression();
         // Parse the statements
         let statements = self.parse_statement();
-
+        let mut elif = Option::None; 
+        let mut else_statements = Option::None;
         // Create the If AST node
-        let if_node = AST::Statement(ASTstatement::If {
-            condition: Box::new(condition),
-            statements,
-        });
-
         // Check for else or else if
         match self.peek_token() {
             Token::Statement(Statement::Else) => {
@@ -620,21 +616,22 @@ impl<'a> Parser<'a> {
                     Token::Statement(Statement::If) => {
                         self.next_token(); // consume the if token
                         let else_if_node = self.parse_if();
-                        AST::Statement(ASTstatement::ElseIf {
-                            condition: vec![else_if_node],
-                            statements: vec![],
-                        })
+                        
+                        elif = Option::Some(Box::new(else_if_node));
                     }
                     _ => {
-                        let else_statements = self.parse_statement();
-                        AST::Statement(ASTstatement::Else {
-                            statements: else_statements,
-                        })
+                        else_statements = Option::Some(self.parse_statement());
                     }
                 }
             }
-            _ => if_node,
+            _ => {}
         }
+        AST::Statement(ASTstatement::If {
+            condition: Box::new(condition),
+            statements,
+            elif,
+            else_statements,
+        })
     }
     fn parse_let(&mut self) -> AST {
         // Let Statement Example

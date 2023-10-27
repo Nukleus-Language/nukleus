@@ -38,6 +38,8 @@ pub enum ASTstatement {
     If {
         condition: Box<AST>,
         statements: Vec<AST>,
+        elif: Option<Box<AST>>,
+        else_statements: Option<Vec<AST>>,
     },
     ElseIf {
         condition: Vec<AST>,
@@ -116,16 +118,20 @@ impl fmt::Display for ASTstatement {
             ASTstatement::If {
                 condition,
                 statements,
+                elif,
+                else_statements
             } => {
                 write!(
                     f,
-                    "if {} {{\n{}\n}}",
+                    "if {} {{\n{}\n}}else{}\n else {{\n{:?}\n}}",
                     condition,
                     statements
                         .iter()
                         .map(|x| x.to_string())
                         .collect::<Vec<String>>()
-                        .join("\n")
+                        .join("\n"),
+                    elif.clone().unwrap_or_else(|| Box::new(AST::TypeValue(ASTtypevalue::TypeVoid))),
+                    else_statements.clone().unwrap_or_else(|| vec![]).iter()
                 )
             }
             ASTstatement::ElseIf {

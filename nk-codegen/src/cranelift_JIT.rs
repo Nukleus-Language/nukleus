@@ -97,12 +97,13 @@ impl JIT {
                             .signature
                             .returns
                             .push(AbiParam::new(type_return));
-                        let mut function = self.ctx.func.clone();
+                        
                         self.functions.insert(
                             name.clone(),
                             self.ctx.func.signature.clone(),
                         );
                         self.module.clear_context(&mut self.ctx);
+                        // self.module.finalize_definitions().expect("Compile Error");
                     }
                     _ => {
                         
@@ -112,6 +113,7 @@ impl JIT {
                 }
             }
         }
+        println!("Functions: {:?}", self.functions);
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
@@ -126,7 +128,7 @@ impl JIT {
                         // println!("Translating Function: {:?}", name);
                         //                         // println!("translate");
                         // let signature = declare_signature(self.,args.clone().as_slice(),&return_type.clone());
-                        let int = self.module.target_config().pointer_type();
+                        // let int = self.module.target_config().pointer_type();
                         // println!("Address: {:?}", int);
                         //
                         // for p in args.clone() {
@@ -278,14 +280,14 @@ impl JIT {
         }
 
         // the return value is the expression in the function with the `Return` segment anywhere in the function
-        if !is_void {
-            let return_variable = trans.variables.get("return").unwrap();
-            let return_value = trans.builder.use_var(*return_variable);
+        // if !is_void {
+            // let return_variable = trans.variables.get("return").unwrap();
+            // let return_value = trans.builder.use_var(*return_variable);
 
             // Emit the return instruction.
 
-            trans.builder.ins().return_(&[return_value]);
-        }
+            // trans.builder.ins().return_(
+        // }
 
         // Tell the builder we're done with this function.
         trans.builder.finalize();
@@ -335,6 +337,8 @@ impl<'a> FunctionTranslator<'a> {
                     .get(&name)
                     .cloned()
                     .expect("function not found");
+
+                
                 // let ref_function = functioninfo.fnref;
                 // let entry_block = self.builder.create_block();
                 // self.builder.switch_to_block(entry_block);
@@ -363,6 +367,7 @@ impl<'a> FunctionTranslator<'a> {
                 // self.builder.finalize();
                 // self.module.clear_context(&mut self.codegen_context);
                 // self.module.finalize_definitions()?;
+                println!("functionisdfadfasdffanfo: {:?}", functioninfo);
                 result_val
 
                 // self.builder.ins().iconst(self.int, 0)
@@ -425,15 +430,19 @@ impl<'a> FunctionTranslator<'a> {
                     ASTstatement::If {
                     condition,
                     statements,
-                    } => self.translate_if_else(*condition, statements),
+                    elif,
+                    else_statements,
+                    } => self.translate_if_else(*condition, statements,elif, else_statements),
                     ASTstatement::Return { value } => {
                         // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
                         // println!("return void");
                         // return self.builder.ins().iconst(self.int, 0);
                         // }
                         let value_val = self.translate_expr(*value.clone());
-                        self.builder
-                            .def_var(*self.variables.get("return").unwrap(), value_val);
+                        self.builder.ins().return_(&[value_val]); 
+                        // self.builder.seal_all_blocks();
+                        // self.builder
+                        //     .def_var(*self.variables.get("return").unwrap(), value_val);
                         value_val
                     }
                     _ => {
@@ -587,6 +596,8 @@ impl<'a> FunctionTranslator<'a> {
         // statements: Vec<AST>,
         then_body: Vec<AST>,
         // else_body: Vec<AST>,
+        elif: Option<Box<AST>>,
+        else_body: Option<Vec<AST>>,
     ) -> Value {
         let condition_value = self.translate_expr(condition);
 
@@ -619,6 +630,13 @@ impl<'a> FunctionTranslator<'a> {
         self.builder.switch_to_block(else_block);
         self.builder.seal_block(else_block);
         let mut else_return = self.builder.ins().iconst(self.int, 0);
+        if else_body.is_some(){
+            for expr in else_body.unwrap(){
+                else_return = self.translate_expr(expr);
+            }
+            println!("else_return: {}", else_return);
+        }
+        // let else_return = self.translate_expr(elif.unwrap());
         // for expr in else_body {
         // else_return = self.translate_expr(expr);
         // }
@@ -833,10 +851,10 @@ fn declare_variables_in_stmt(
                         println!("Unsupported statement");
                     }
                 },
-                ASTstatement::Return { value: _ } => {
-                    let _ = declare_variable(int, builder, variables, index, "return");
-                    // return ;
-                }
+                // ASTstatement::Return { value: _ } => {
+                // let _ = declare_variable(int, builder, variables, index, "return");
+                // return ;
+                // }
                 // ... other cases for ASTstatement variants
                 _ => {
                     // except of  the ones above, it doesn't allow to declare the variables
