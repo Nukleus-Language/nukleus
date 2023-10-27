@@ -1,32 +1,28 @@
-fn main() -> void
+fn fibonacci(i64:n) -> i64
 {
-	let:i32 x = 10;
-	let:i32 i = 0;
-
-	for(i -> x :: 1 )
+	let:i64 return_val = 0;
+	if(n < 2)
 	{
-		let:i32 c = fibonacci(i);
-		println(c);
+		return_val = n;
 	}
-	return;
+	else {
+		return_val = fibonacci( n-1 ) + fibonacci( n-2 );
+
+	}
+	return  return_val;
 }
 
-fn fibonacci(i32:n) -> i32
+fn main() -> i64
 {
-	if( n == 0 )
-	{
-		return n;
-	}
-	if( n == 1 )
-	{
-		return n;
-	}
-	let:i32 arg_1 = n;
-	arg_1 -= 1;
-	let:i32 arg_2 = n;
-	arg_2 -= 2;
-	let:i32 a = fibonacci( arg_1 );
-	let:i32 b = fibonacci( arg_2 );
-	a += b;
-	return a;
+	let:i64 x = 47;
+	//let:i64 i = 0;
+	//let:i64 c = 0;
+	//for(i -> x :: 1 )
+	//{
+		//c = ;
+		//println(c);
+	//}
+	return fibonacci(x);
 }
+
+
