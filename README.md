@@ -16,6 +16,43 @@ While Nukleus is still in its early stages, our team is devoted to bringing an a
 - [ ] Under Development
 - [x] Live Now
 
+
+## Current Compiler Capabilities
+
+Nukleus' current compiler is a basic yet robust tool designed for early-stage development. Here’s what it supports as of now:
+
+- **Recursive Function Calls**: Enables functions to call themselves, facilitating complex computations like the Fibonacci sequence.
+- **Operator Precedence**: Ensures mathematical expressions are evaluated in the correct order, respecting standard mathematical rules.
+- **Control Structures**: Includes `if` and `else` for conditional execution, and `for` loops for iterative operations.
+
+### Limitations
+
+- **No 'Print' Support**: Currently, the compiler lacks the ability to output results directly to the console or any other output stream.
+- **Sample Code Execution**: The compiler is optimized to run specific sample codes like `Fibonacci.nk`.
+
+```rust
+fn fibonacci(i64:n) -> i64 {
+    let:i64 return_val = 0;
+    if(n < 2) {
+        return_val = n;
+    } else {
+        return_val = fibonacci( n-1 ) + fibonacci( n-2 );
+    }
+    return return_val;
+}
+
+fn main() -> i64 {
+    let:i64 x = 47;
+    return fibonacci(x);
+}
+```
+
+This limitation is a temporary measure as we continue to refine and expand the compiler’s capabilities.
+
+### Interpreter Versatility
+
+In contrast, the experimental interpreter can run a wider range of Nukleus code, showcasing the language's potential and flexibility.
+
 ## Features on the Horizon
 
 - [x] Intuitive syntax influenced by the elegance of modern programming languages
@@ -31,9 +68,14 @@ While Nukleus is still in its early stages, our team is devoted to bringing an a
 
 ## Your First Steps with Nukleus
 
-Embark on your journey with Nukleus by following these simple steps:
+Welcome to Nukleus! Here's how to get started:
 
-1. Set up your workspace by installing the Nukleus compiler (currently a WIP: experimental interpreter for testing purposes).
-2. Dive into our detailed Nukleus documentation (currently under development) to get well-acquainted with our unique language syntax and features.
-3. Test your knowledge and understanding with the example programs available in our repository.
-4. Make your mark! Write your own Nukleus programs and be part of our dynamic community!
+### 1. Set Up Your Workspace
+- **Download the Nukleus Compiler/Interpreter**: You need to build the project locally for the moment.
+
+### 2. Try Out Sample Programs
+- **Access the Example Repository**: Our [GitHub repository](#) has a variety of sample programs for you to try.
+- **Run and Modify**: Start by running these examples and then experiment by making changes.
+
+### 3. Write Your First Program
+- **Create Your Code**: Use your new knowledge to write your own Nukleus program.namic community!
