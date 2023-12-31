@@ -5,7 +5,7 @@ trigger:
   - main
 steps:
 - name: build
-  image: rust:1.71
+  image: rust:1.75
   commands:
   - cargo build --verbose --all
 
@@ -17,7 +17,7 @@ trigger:
   - main
 steps:
 - name: test
-  image: rust:1.71
+  image: rust:1.75
   commands:
   - cargo test --verbose --all
 
