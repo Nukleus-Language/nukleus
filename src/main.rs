@@ -8,6 +8,7 @@ pub mod interpreter;
 
 use std::env;
 use std::fs::File;
+use std::path::Path;
 use std::io::prelude::*;
 
 use astgen::{Parser, AST};
@@ -65,6 +66,15 @@ fn main() {
     let end_time_new = std::time::Instant::now();
     let duration_new = end_time_new.duration_since(start_time_new);
     let new_tokens = new_lexer.get_tokens();
+
+    let mut new_new_lexer = lexer::lex_new_new::Lexer::new(Path::new(input).to_path_buf(),&contents);
+    let start_time_new_new = std::time::Instant::now();
+    new_new_lexer.run();
+    let end_time_new_new = std::time::Instant::now();
+    let duration_new_new = end_time_new_new.duration_since(start_time_new_new);
+    let new_new_tokens = new_new_lexer.get_tokens();
+    println!("New New Lexer Time: {:?}", duration_new_new);
+
     //println!("New Tokens: {:?}", new_tokens);
     // let start_time_old = std::time::Instant::now();
     // let tokens = lexer(&contents);
@@ -82,13 +92,16 @@ fn main() {
     // println!("Old Chars Per Second: {}", old_chars_per_second);
     // calculate how much characters the new lexer can lex per second
     let new_chars_per_second = contents.len() as f64 / duration_new.as_secs_f64();
-    println!("New Chars Per Second: {}", new_chars_per_second);
-    // measure speed in mb/s
-    // let old_chars_mb_per_second = old_chars_per_second * 4.0 / 1024.0 / 1024.0;
     let new_chars_mb_per_second = new_chars_per_second * 4.0 / 1024.0 / 1024.0;
-
-    // println!("Old Chars MB/s: {}", old_chars_mb_per_second);
+    let new_new_chars_per_second = contents.len() as f64 / duration_new_new.as_secs_f64();
+    let new_new_chars_mb_per_second = new_new_chars_per_second * 4.0 / 1024.0 / 1024.0;
+    println!("New Chars Per Second: {}", new_chars_per_second);
     println!("New Chars MB/s: {}", new_chars_mb_per_second);
+    println!("New New Chars Per Second: {}", new_new_chars_per_second);
+    println!("New New Chars MB/s: {}", new_new_chars_mb_per_second);
+
+    // println!("New New Lexer Contents: {:?}", new_new_tokens);
+    // println!("New Lexer Contents: {:?}", new_tokens);
 
     // println!("Tokens: {:?}", tokens);
     // let ast = core::parser_new::parse::Parser::new(tokens).parse();
@@ -98,7 +111,7 @@ fn main() {
     // let end_time_parser_old = std::time::Instant::now();
     // let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     // println!("Old Parser Time: {:?}", duration_parser_old);
-    let mut mid_ir = Parser::new(&new_tokens);
+    let mut mid_ir = Parser::new(&new_new_tokens, Path::new(input).to_path_buf(), &contents);
 
     let start_time_parser_new = std::time::Instant::now();
     mid_ir.run();
@@ -142,7 +155,7 @@ fn main() {
 
     println!("Mid IR code: ");
     for ast in ast_new.clone() {
-        println!("{}", ast);
+        // println!("{}", ast);
     }
     println!();
 
