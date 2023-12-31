@@ -372,7 +372,7 @@ mod test {
     }
     #[test]
     fn lexing_strings() {
-        let code = "let:string x = \"hello world\";";
+        let code = "let:String x = \"hello world\";";
         let expected = vec![
             Token::Statement(Statement::Let),
             Token::Symbol(Symbol::Colon),

@@ -1,6 +1,6 @@
 
 
-fn main() -> void{
+fn main() -> Void{
 	let:i64 i = 0;
 	let:i64 ans = 0;
 	for(i -> 60000 :: 1){
@@ -9,7 +9,7 @@ fn main() -> void{
 	//println(ans);
 	return ;
 }
-fn test6() -> void
+fn test6() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -18,7 +18,7 @@ fn test6() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -63,7 +63,7 @@ fn test6() -> void
 }
 
 
-fn teat5() -> void
+fn teat5() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -72,7 +72,7 @@ fn teat5() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -117,7 +117,7 @@ fn teat5() -> void
 }
 
 
-fn test4() -> void
+fn test4() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -126,7 +126,7 @@ fn test4() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -171,7 +171,7 @@ fn test4() -> void
 }
 
 
-fn test3() -> void
+fn test3() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -180,7 +180,7 @@ fn test3() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -225,7 +225,7 @@ fn test3() -> void
 }
 
 
-fn test2() -> void
+fn test2() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -234,7 +234,7 @@ fn test2() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -279,7 +279,7 @@ fn test2() -> void
 }
 
 
-fn test1() -> void
+fn test1() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -288,7 +288,7 @@ fn test1() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -331,7 +331,7 @@ fn test1() -> void
 
 	return;
 }
-fn main9() -> void
+fn main9() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -340,61 +340,7 @@ fn main9() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
-		for(j -> i ::1){
-			print("*");
-		}
-		println(" ");
-	}
-	 
-	let:i32 a = 10;
-	print("a = ");
-	println(a);
-	print("i = ");
-	println(i);
-	a += i;
-	if ( a != 19  ) {
-		println("LOL");
-	}
-	
-	print("a + i =");
-	print(a);
-	println("");
-
-	a *= 10;
-	print("a * 10 = ");
-	println(a);
-
-	print("a % 3 = ");
-	a %= 3;
-	println(a);
-
-	println("Hello World!?");
-	print("LOLOLOL");
-	println(i);
-
-	let:i32 yay =print_hello(3);
-	println(yay);
-	
-	
-
-	let:i32 ans = adder(3,4);
-	println(ans);
-
-	return;
-}
-
-
-fn main8() -> void
-{
-	let:String a = "Hello World";
-	let:i32 test = 5324;
-	let:i32 i = 0;
-	print(a);
-	println(test);
-
-	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -439,7 +385,7 @@ fn main8() -> void
 }
 
 
-fn main7() -> void
+fn main8() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -448,7 +394,7 @@ fn main7() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -493,7 +439,7 @@ fn main7() -> void
 }
 
 
-fn main5() -> void
+fn main7() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -502,7 +448,7 @@ fn main5() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -547,7 +493,7 @@ fn main5() -> void
 }
 
 
-fn main6() -> void
+fn main5() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -556,7 +502,7 @@ fn main6() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -601,7 +547,7 @@ fn main6() -> void
 }
 
 
-fn main3() -> void
+fn main6() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -610,7 +556,7 @@ fn main3() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -655,7 +601,7 @@ fn main3() -> void
 }
 
 
-fn main4() -> void
+fn main3() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -664,7 +610,7 @@ fn main4() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -709,7 +655,7 @@ fn main4() -> void
 }
 
 
-fn main2() -> void
+fn main4() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -718,7 +664,7 @@ fn main2() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -763,7 +709,7 @@ fn main2() -> void
 }
 
 
-fn main1() -> void
+fn main2() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -772,7 +718,61 @@ fn main1() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
+		for(j -> i ::1){
+			print("*");
+		}
+		println(" ");
+	}
+	 
+	let:i32 a = 10;
+	print("a = ");
+	println(a);
+	print("i = ");
+	println(i);
+	a += i;
+	if ( a != 19  ) {
+		println("LOL");
+	}
+	
+	print("a + i =");
+	print(a);
+	println("");
+
+	a *= 10;
+	print("a * 10 = ");
+	println(a);
+
+	print("a % 3 = ");
+	a %= 3;
+	println(a);
+
+	println("Hello World!?");
+	print("LOLOLOL");
+	println(i);
+
+	let:i32 yay =print_hello(3);
+	println(yay);
+	
+	
+
+	let:i32 ans = adder(3,4);
+	println(ans);
+
+	return;
+}
+
+
+fn main1() -> Void
+{
+	let:String a = "Hello World";
+	let:i32 test = 5324;
+	let:i32 i = 0;
+	print(a);
+	println(test);
+
+	for(i -> 10 :: 1) {
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}

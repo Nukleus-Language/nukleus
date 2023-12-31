@@ -1,4 +1,4 @@
-public fn main() -> void
+fn main() -> Void
 {
 	let:String a = "Hello World";
 	let:i32 test = 5324;
@@ -7,7 +7,7 @@ public fn main() -> void
 	println(test);
 
 	for(i -> 10 :: 1) {
-		let:int j = 0;
+		let:i32 j = 0;
 		for(j -> i ::1){
 			print("*");
 		}
@@ -68,7 +68,7 @@ fn adder(i32:a,i32:b) -> i32
 	return a;
 }
 
-fn testt() -> void
+fn testt() -> Void
 {
 	println("This is a test function!");
 	return;
