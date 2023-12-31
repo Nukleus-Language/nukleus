@@ -111,7 +111,7 @@ fn main() {
     // let end_time_parser_old = std::time::Instant::now();
     // let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     // println!("Old Parser Time: {:?}", duration_parser_old);
-    let mut mid_ir = Parser::new(&new_new_tokens, Path::new(input).to_path_buf(), &contents);
+    let mut mid_ir = astgen::parser_new::Parser::new(&new_new_tokens, Path::new(input).to_path_buf(), &contents);
 
     let start_time_parser_new = std::time::Instant::now();
     mid_ir.run();
