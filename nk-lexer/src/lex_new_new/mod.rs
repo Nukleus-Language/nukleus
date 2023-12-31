@@ -7,11 +7,14 @@ mod value;
 use errors::{LexError, LexcialError};
 
 use std::iter::Peekable;
+use std::path::PathBuf;
 use std::str::Chars;
 
-use inksac::{Color, Style, Stylish};
-
-use crate::tokens_new::*;
+use crate::tokens_new::{
+    Symbol, Token, TokenMetadata, TokenType,
+    TypeValue, Statement, TypeName, Assign, Operator
+};
+use inksac::{Color, Style};
 
 const ERRORTXTSTYLE: Style = Style {
     foreground: Color::Red,
@@ -54,17 +57,15 @@ impl<'a> Lexer<'a> {
             buffer_st: 0,
             buffer_ed: 0,
             line: 1,
-            column: 1,
+            column: 0,
+            file_path,
             source: code,
         }
     }
     #[allow(dead_code)]
     pub fn run(&mut self) {
         while let Some(c) = self.next_char() {
-            let peeked_char = match self.peek_char() {
-                Ok(ch) => ch,
-                Err(_) => '\0',  // Default value in case of error
-            };
+            let peeked_char = self.peek_char().unwrap_or('\0');
 
             // println!("---------------------------------");
             // println!("Current Char: {}", c);
@@ -232,8 +233,11 @@ impl<'a> Lexer<'a> {
     fn peek_char(&mut self) -> Result<char, ()> {
         self.code.peek().copied().ok_or(())
     }
-    fn insert_token(&mut self, token: Token) {
-        self.tokens.push(token);
+    fn insert_token(&mut self, token: TokenType) {
+        self.tokens.push(Token::new(
+            token,
+            TokenMetadata::new(self.line, self.column),
+        ));
     }
 
     fn report_error(&self, error: LexcialError) {
@@ -243,19 +247,21 @@ impl<'a> Lexer<'a> {
         let end = std::cmp::min(self.buffer_ed + context_window, self.source.len());
 
         let context_snippet = &self.source[start..end];
-        let error_location_marker = " ".repeat(self.column.saturating_sub(start) - 1) + "^";
+
+        // Count the number of characters (not bytes) from the start of the snippet to the error position
+        let error_pos_in_context = self.source[start..self.column].chars().count();
+        let error_location_marker = " ".repeat(error_pos_in_context.saturating_sub(1)) + "^";
 
         // Context and Error Information
         let errortxt = format!(
-            "Context:\n{}\n{}\n--> Error at Line: {}, Column: {}: {}",
+            "Context:\n{}\n{}\n--> Error at {} Position Line: {}, Column: {}: {}",
             context_snippet,
             error_location_marker,
             self.line,
             self.column,
-            error.to_string().styled(ERRORTXTSTYLE)
-        );
-
-        // Suggestion for resolution (customize based on your error types)
+            self.file_path.display(),
+            error // Assuming .to_string() returns the formatted error message
+        ); // Suggestion for resolution (customize based on your error types)
         let suggestion = match error.message {
             LexError::InvalidCharacter(ch) => {
                 format!(
@@ -285,7 +291,7 @@ impl<'a> Lexer<'a> {
                 format!("Suggestion: Invalid double symbol '{}'.", s)
             }
             LexError::ExpectedQuote() => {
-                format!("Suggestion: Expected quote.")
+                "Suggestion: Check the syntax around the error line, and add a double quote.".to_string()
             }
             _ => String::from("Suggestion: Check the syntax and correct the error."),
         };

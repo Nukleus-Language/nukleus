@@ -9,13 +9,16 @@ use errors::LexcialError;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use inksac::types::*;
+use inksac::{Color, Style, Stylish};
 
-use crate::tokens_new::*;
+use crate::tokens_new::{
+    Symbol, Token, TokenMetadata, TokenType,
+    TypeValue, TypeName, Statement, Assign, Operator,
+};
 
 const ERRORTXTSTYLE: Style = Style {
-    foreground: Some(Color::Red),
-    background: None,
+    foreground: Color::Red,
+    background: Color::Empty,
     bold: true,
     dim: false,
     italic: true,
@@ -247,12 +250,15 @@ impl<'a> Lexer<'a> {
             None => ' ',
         }
     }
-    fn insert_token(&mut self, token: Token) {
-        self.tokens.push(token);
+    fn insert_token(&mut self, token: TokenType) {
+        self.tokens.push(Token::new(
+            token,
+            TokenMetadata::new(self.line, self.column),
+        ));
     }
 
     fn report_error(&self, error: LexcialError) {
-        let errortxt = ColoredString::new(&error.to_string(), ERRORTXTSTYLE);
+        let errortxt = error.to_string().styled(ERRORTXTSTYLE);
         println!(
             "{} \n-------------> Line: {}, Column: {}",
             errortxt, self.line, self.column
