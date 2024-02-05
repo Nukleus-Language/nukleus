@@ -8,10 +8,19 @@ pub struct AstGenError {
     //pub line: usize,
     //pub column: usize,
     pub message: AstError,
+    pub pretty_display: String,
+}
+impl AstGenError {
+    pub fn new(message: AstError) -> Self {
+        AstGenError {
+            message,
+            pretty_display: "".to_string(),
+        }
+    }
 }
 impl fmt::Display for AstGenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "AST Gen Error: {}", self.message)
+        write!(f, "Error: {}", self.message)
     }
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -29,8 +38,8 @@ impl fmt::Display for AstError {
         match self {
             AstError::ExpectedToken(t) => write!(
                 f,
-                "Expected token: {} on line: {} column: {}",
-                t.token_type, t.metadata.line, t.metadata.column
+                "Expected token: {} ",
+                t.token_type
             ),
             AstError::ExpectedStatement() => write!(f, "Expected statement"),
             AstError::ExpectedExpression() => write!(f, "Expected expression"),
