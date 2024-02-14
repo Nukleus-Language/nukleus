@@ -1,0 +1,19 @@
+fn adder(i64:a, i64:b) -> i64
+{
+	return a + b;
+}
+
+fn fibonacci(i64:n) -> i64
+{
+	let:i64 return_val = 0;
+	if(n < 2)
+	{
+		return_val = n;
+	}
+	else {
+		return_val = adder(fibonacci( n-1 ), fibonacci( n-2 ));
+
+	}
+	return  return_val;
+}
+
