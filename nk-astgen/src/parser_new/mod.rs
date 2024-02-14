@@ -1,15 +1,14 @@
-use lexer::tokens_new::*;
 use inksac::{Color, Style, Stylish};
+use lexer::tokens_new::*;
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::iter::{Cloned, Peekable};
+use std::path::PathBuf;
 
 mod error;
 use error::{AstError, AstGenError};
 
 use crate::ast::*;
-
 
 const ERRORTXTSTYLE: Style = Style {
     foreground: Color::Red,
@@ -49,7 +48,7 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     #[allow(dead_code)]
-    pub fn new(tokens: &'a [Token],file_path: PathBuf, code: &'a str) -> Self {
+    pub fn new(tokens: &'a [Token], file_path: PathBuf, code: &'a str) -> Self {
         let peeked = tokens.iter().cloned().peekable();
         // println!("{:?}", tokens);
         Parser {
@@ -145,9 +144,9 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
     fn report_error(&self, error: AstGenError, token: &Token) -> AstGenError {
-        let context_lines: usize= 3; // Number of lines to show around the error
+        let context_lines: usize = 3; // Number of lines to show around the error
         let lines: Vec<&str> = self.source.split('\n').collect();
-        let start_line = std::cmp::max(token.metadata.line- context_lines, 0) as usize;
+        let start_line = std::cmp::max(token.metadata.line - context_lines, 0) as usize;
         let end_line = std::cmp::min(token.metadata.line + context_lines, lines.len());
 
         let context_snippet: String = lines[start_line..end_line]
@@ -163,32 +162,40 @@ impl<'a> Parser<'a> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        let error_text = format!("--> Error at Line: {}, Column: {}: {}",token.metadata.line,
-                  token.metadata.column,
-                  error);
+        let error_text = format!(
+            "--> Error at Line: {}, Column: {}: {}",
+            token.metadata.line, token.metadata.column, error
+        );
 
-        let report_text = format!("Context around Line {}:\n{}\n{}\nSuggestion: {}",
-                  token.metadata.line,
-                  context_snippet,
-                  error_text.styled(ERRORTXTSTYLE),
-                  self.suggest_fix(&error));
-        
+        let report_text = format!(
+            "Context around Line {}:\n{}\n{}\nSuggestion: {}",
+            token.metadata.line,
+            context_snippet,
+            error_text.styled(ERRORTXTSTYLE),
+            self.suggest_fix(&error)
+        );
+
         let error_fin = AstGenError {
             message: error.message,
             pretty_display: report_text.clone(),
         };
 
-        eprintln!("{}", report_text); 
+        eprintln!("{}", report_text);
         error_fin
     }
 
     fn suggest_fix(&self, error: &AstGenError) -> String {
         match error.message {
-            AstError::ExpectedToken(ref t) => format!("Add {} on line:{}, col{}", t.token_type, t.metadata.line, t.metadata.column),
+            AstError::ExpectedToken(ref t) => format!(
+                "Add {} on line:{}, col{}",
+                t.token_type, t.metadata.line, t.metadata.column
+            ),
             AstError::ExpectedExpression() => "Expected an expression. Check syntax.".to_string(),
             AstError::ExpectedStatement() => "Expected a statement. Check syntax.".to_string(),
             AstError::UnexpectedToken() => format!("Unexpected token. Check syntax."),
-            AstError::UnexpectedEOF() => "Unexpected end of file. Check for missing tokens.".to_string(),
+            AstError::UnexpectedEOF() => {
+                "Unexpected end of file. Check for missing tokens.".to_string()
+            }
         }
     }
     pub fn run(&mut self) -> Result<(), AstGenError> {
@@ -218,22 +225,26 @@ impl<'a> Parser<'a> {
                         break;
                     }
                     _ => {
-                        return Err(self.report_error(
-                            AstGenError::new(AstError::ExpectedStatement()),
-                            &token
-                        ))
-                    } }
+                        return Err(self
+                            .report_error(AstGenError::new(AstError::ExpectedStatement()), &token))
+                    }
+                }
             }
             match self.state {
                 State::Inject => {
-                    //self.buffer.push(token);
-                    if peeked.token_type == TokenType::Symbol(Symbol::Semicolon) {
-                        self.state = State::EmptyState;
-                        //self.buffer.push(peeked);
-                        //parse_import
-                        //println!("{} Inject: {:?} {}","\x1b[32m" , self.buffer,"\x1b[0m");
-                        //self.buffer.clear();
-                        self.next_token();
+                    if let TokenType::TypeValue(TypeValue::QuotedString(package)) =
+                        peeked.token_type
+                    {
+                        self.next_token(); // Consume the package name
+                        self.asts
+                            .push(AST::Statement(ASTstatement::Import { name: package }));
+                        if self.peek_token().token_type == TokenType::Symbol(Symbol::Semicolon) {
+                            self.state = State::EmptyState;
+                            self.next_token();
+                        }
+                    } else {
+                        return Err(self
+                            .report_error(AstGenError::new(AstError::UnexpectedToken()), &peeked));
                     }
                 }
                 State::GlobalLet => {
@@ -304,7 +315,9 @@ impl<'a> Parser<'a> {
                     }
                 }
                 _ => {
-                    return Err(self.report_error(AstGenError::new(AstError::UnexpectedToken()), &next));
+                    return Err(
+                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &next)
+                    );
                     panic!(
                         "{} Require type to construct function! {:?}{}",
                         "\x1b[31m", cur_token, "\x1b[0m"
@@ -333,8 +346,8 @@ impl<'a> Parser<'a> {
                 let value = self.parse_expression()?;
                 let next = self.next_token();
                 if next.token_type != TokenType::Symbol(Symbol::Semicolon) {
-                    return Err(self.report_error(AstGenError::new(
-                        AstError::ExpectedToken(Token::new(
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::ExpectedToken(Token::new(
                             TokenType::Symbol(Symbol::Semicolon),
                             next.metadata,
                         ))),
@@ -372,12 +385,12 @@ impl<'a> Parser<'a> {
         if peeked.token_type == TokenType::Symbol(Symbol::Semicolon) {
             self.next_token();
         } else {
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::Semicolon),
                     peeked.metadata,
                 ))),
-                &peeked
+                &peeked,
             ));
         }
         Ok(AST::Statement(ASTstatement::Assignment {
@@ -558,7 +571,9 @@ impl<'a> Parser<'a> {
                 TokenType::Logical(_) => self.parse_expression(),
                 _ => {
                     self.next_token();
-                    Ok(AST::TypeValue(ASTtypevalue::I64(num.parse::<i64>().unwrap())))
+                    Ok(AST::TypeValue(ASTtypevalue::I64(
+                        num.parse::<i64>().unwrap(),
+                    )))
                 }
             },
             TokenType::TypeValue(TypeValue::Identifier(ident)) => {
@@ -619,9 +634,9 @@ impl<'a> Parser<'a> {
                 // "{} Current Token: {:?}{}",
                 // "\x1b[36m", next_token, "\x1b[0m"
                 // );
-                return Err(self.report_error(AstGenError::new(
-                    AstError::ExpectedExpression()),
-                    &next_token
+                return Err(self.report_error(
+                    AstGenError::new(AstError::ExpectedExpression()),
+                    &next_token,
                 ));
                 // AST::TypeValue(ASTtypevalue::TypeVoid) // Placeholder
             }
@@ -632,8 +647,8 @@ impl<'a> Parser<'a> {
         // Consume the opening parenthesis
         let next = self.next_token();
         if next.token_type != TokenType::Symbol(Symbol::OpenParen) {
-            self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::OpenParen),
                     next.metadata,
                 ))),
@@ -648,38 +663,41 @@ impl<'a> Parser<'a> {
             // println!("Consume the closing parenthesis");
             // println!("cur token: {:?}", cur_token);
             // println!("next token: {:?}", self.peek_token());
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::CloseParen),
                     cur_token.metadata,
                 ))),
-            &cur_token));
+                &cur_token,
+            ));
         }
         // cunsume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::Semicolon),
                     cur_token.metadata,
                 ))),
-            &cur_token));
+                &cur_token,
+            ));
         }
 
         Ok(AST::Statement(ASTstatement::Print {
             value: Box::new(value),
         }))
     }
-    fn parse_println(&mut self) -> Result<AST, AstGenError> {  
+    fn parse_println(&mut self) -> Result<AST, AstGenError> {
         // Consume the opening parenthesis
         let next = self.next_token();
         if next.token_type != TokenType::Symbol(Symbol::OpenParen) {
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::OpenParen),
                     next.metadata,
                 ))),
-            &next));
+                &next,
+            ));
         }
 
         let value = self.parse_expression()?;
@@ -687,22 +705,24 @@ impl<'a> Parser<'a> {
         // Consume the closing parenthesis
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::CloseParen) {
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::CloseParen),
                     cur_token.metadata,
                 ))),
-            &cur_token));
+                &cur_token,
+            ));
         }
         // cunsume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
-            return Err(self.report_error(AstGenError::new(
-                AstError::ExpectedToken(Token::new(
+            return Err(self.report_error(
+                AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::Semicolon),
                     cur_token.metadata,
                 ))),
-            &cur_token));
+                &cur_token,
+            ));
         }
 
         Ok(AST::Statement(ASTstatement::Println {
@@ -773,9 +793,9 @@ impl<'a> Parser<'a> {
                 status = 4;
             }
             _ => {
-                return Err(self.report_error(AstGenError::new(
-                    AstError::UnexpectedToken()),
-                &token));
+                return Err(
+                    self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
+                );
 
                 // println!("Invalid `let` statement Contruction Detected");
 
@@ -795,9 +815,9 @@ impl<'a> Parser<'a> {
                         status = 3;
                         continue;
                     }
-                    return Err(self.report_error(AstGenError::new(
-                        AstError::UnexpectedToken()),
-                        &token));
+                    return Err(
+                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
+                    );
                     // println!("Missing Type Announcement for `let` statement After `:`");
                 }
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 3) => {
@@ -823,9 +843,9 @@ impl<'a> Parser<'a> {
                     break;
                 }
                 _ => {
-                    return Err(self.report_error(AstGenError::new(
-                        AstError::UnexpectedToken()),
-                        &token));
+                    return Err(
+                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
+                    );
                     // panic!("Unexpected token in `let` : {:?}", token);
                 }
             }
@@ -888,9 +908,9 @@ impl<'a> Parser<'a> {
                 _ => {
                     //println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
                     //println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
-                    return Err(self.report_error(AstGenError::new(
-                        AstError::UnexpectedToken()),
-                        &token));
+                    return Err(
+                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
+                    );
                     panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");
                 }
             }
@@ -952,8 +972,8 @@ impl<'a> Parser<'a> {
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone().token_type, &state) {
                 (
-                TokenType::Symbol(Symbol::CloseParen),
-                ArgumentParseState::WaitForCommaOrCloseParen,
+                    TokenType::Symbol(Symbol::CloseParen),
+                    ArgumentParseState::WaitForCommaOrCloseParen,
                 ) => {
                     break;
                 }
@@ -973,8 +993,8 @@ impl<'a> Parser<'a> {
                     state = ArgumentParseState::WaitForIdentifier;
                 }
                 (
-                TokenType::TypeValue(TypeValue::Identifier(ident)),
-                ArgumentParseState::WaitForIdentifier,
+                    TokenType::TypeValue(TypeValue::Identifier(ident)),
+                    ArgumentParseState::WaitForIdentifier,
                 ) => {
                     let ident_name = ASTtypevalue::Identifier(ident.to_string());
                     args.push(ASTtypecomp::Argument {
@@ -985,8 +1005,8 @@ impl<'a> Parser<'a> {
                     cur_type = ASTtypename::TypeVoid;
                 }
                 (
-                TokenType::Symbol(Symbol::Comma),
-                ArgumentParseState::WaitForCommaOrCloseParen,
+                    TokenType::Symbol(Symbol::Comma),
+                    ArgumentParseState::WaitForCommaOrCloseParen,
                 ) => {
                     state = ArgumentParseState::WaitForType;
                 }

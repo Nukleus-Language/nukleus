@@ -8,13 +8,13 @@ pub mod interpreter;
 
 use std::env;
 use std::fs::File;
-use std::path::Path;
 use std::io::prelude::*;
+use std::path::Path;
 
 use astgen::{Parser, AST};
 use clap::{Arg, Command};
-use codegen::cranelift_JIT;
-use codegen::JIT;
+use codegen::cranelift_JIT::JIT;
+// use codegen::JIT;
 use core::mem;
 use lexer::lexer;
 // use inksac::types::*;
@@ -67,9 +67,14 @@ fn main() {
     let duration_new = end_time_new.duration_since(start_time_new);
     let new_tokens = new_lexer.get_tokens();
 
-    let mut new_new_lexer = lexer::lex_new_new::Lexer::new(Path::new(input).to_path_buf(),&contents);
+    let mut new_new_lexer =
+        lexer::lex_new_new::Lexer::new(Path::new(input).to_path_buf(), &contents);
     let start_time_new_new = std::time::Instant::now();
-    new_new_lexer.run();
+    let lex_result = new_new_lexer.run();
+    if lex_result.is_err() {
+        println!("Error: {}", lex_result.err().unwrap());
+        return;
+    }
     let end_time_new_new = std::time::Instant::now();
     let duration_new_new = end_time_new_new.duration_since(start_time_new_new);
     let new_new_tokens = new_new_lexer.get_tokens();
@@ -111,12 +116,18 @@ fn main() {
     // let end_time_parser_old = std::time::Instant::now();
     // let duration_parser_old = end_time_parser_old.duration_since(start_time_parser_old);
     // println!("Old Parser Time: {:?}", duration_parser_old);
-    let mut mid_ir = astgen::parser_new::Parser::new(&new_new_tokens, Path::new(input).to_path_buf(), &contents);
+    let mut mid_ir =
+        astgen::parser_new::Parser::new(&new_new_tokens, Path::new(input).to_path_buf(), &contents);
 
     let start_time_parser_new = std::time::Instant::now();
-    mid_ir.run();
+    let ast_result = mid_ir.run();
+    if ast_result.is_err() {
+        println!("Error: {}", ast_result.err().unwrap());
+    }
     let end_time_parser_new = std::time::Instant::now();
     let ast_new = mid_ir.get_asts();
+
+    println!("AST: {:?}", ast_new);
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     println!("New Parser Time: {:?}", duration_parser_new);
 
@@ -165,8 +176,10 @@ fn main() {
     // println!("{}", generate_ir(ast_new));
     // generate_ir(ast_new);
     let start_time_jit = std::time::Instant::now();
-    let mut jit = cranelift_JIT::JIT::default();
-    let code_ptr = jit.compile(ast_new);
+    let mut jit = JIT::default();
+    println!("JIT: ");
+    let code_ptr = jit.compile(ast_new, false);
+    println!("JIT Compiled");
     let end_time_jit = std::time::Instant::now();
     let duration_jit = end_time_jit.duration_since(start_time_jit);
     println!("JIT Compile Time: {:?}", duration_jit);
@@ -177,7 +190,7 @@ fn main() {
     println!("JIT Run TIme: {:?}", duration);
 }
 
-fn run(jit: &mut cranelift_JIT::JIT, codeptr: *const u8) -> Result<isize, String> {
+fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
     unsafe { run_code(codeptr, ()) }
 }
 unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {

@@ -1,5 +1,7 @@
 use astgen::ast::*;
+use astgen::parser_new::Parser;
 use astgen::AST;
+use lexer::lex_new_new::Lexer;
 
 use cranelift::prelude::*;
 use cranelift_codegen::ir::entities::FuncRef;
@@ -8,6 +10,8 @@ use cranelift_codegen::isa::CallConv;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
+use std::fs::read_to_string;
+use std::path::Path;
 
 /// The basic JIT class.
 pub struct JIT {
@@ -55,7 +59,7 @@ impl Default for JIT {
 }
 
 impl JIT {
-    pub fn compile(&mut self, input: Vec<AST>) -> Result<*const u8, String> {
+    pub fn compile(&mut self, input: Vec<AST>, is_lib: bool) -> Result<*const u8, String> {
         let mut funcid = HashMap::new();
 
         // Function Signature Declaration
@@ -111,7 +115,38 @@ impl JIT {
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
-                    ASTstatement::Import { name: _ } => {}
+                    ASTstatement::Import { name } => {
+                        let contents = std::fs::read_to_string(&name)
+                            .map_err(|e| format!("Failed to read file '{}': {}", name, e))?;
+                        let mut new_lexer = lexer::lex_new::Lexer::new(&contents);
+                        new_lexer.run();
+                        let new_tokens = new_lexer.get_tokens();
+
+                        let mut new_new_lexer = lexer::lex_new_new::Lexer::new(
+                            Path::new(&name).to_path_buf(),
+                            &contents,
+                        );
+                        let lex_result = new_new_lexer.run();
+                        if lex_result.is_err() {
+                            println!("Error: {}", lex_result.err().unwrap());
+                        }
+                        let new_new_tokens = new_new_lexer.get_tokens();
+
+                        let mut mid_ir = astgen::parser_new::Parser::new(
+                            &new_new_tokens,
+                            Path::new(&name).to_path_buf(),
+                            &contents,
+                        );
+                        let ast_result = mid_ir.run();
+                        if ast_result.is_err() {
+                            println!("Error: {}", ast_result.err().unwrap());
+                        }
+                        let ast_new = mid_ir.get_asts();
+                        let _ = self.compile(ast_new, true);
+                        for (name, signature) in self.functions.iter() {
+                            println!("Function Name: {}, Signature: {:?}", name, signature);
+                        }
+                    }
                     ASTstatement::Function {
                         public: _,
                         name,
@@ -119,42 +154,6 @@ impl JIT {
                         statements,
                         return_type,
                     } => {
-                        // println!("Translating Function: {:?}", name);
-                        //                         // println!("translate");
-                        // let signature = declare_signature(self.,args.clone().as_slice(),&return_type.clone());
-                        // let int = self.module.target_config().pointer_type();
-                        // println!("Address: {:?}", int);
-                        //
-                        // for p in args.clone() {
-                        //     match p {
-                        //         ASTtypecomp::Argument {
-                        //         type_name,
-                        //         identifier: _,
-                        //         } => {
-                        //             self.ctx
-                        //                 .func
-                        //                 .signature
-                        //                 .params
-                        //                 .push(AbiParam::new(translate_type(int, type_name)));
-                        //         }
-                        //         _ => {
-                        //             println!("Invalid Type for Argument");
-                        //             std::process::exit(1);
-                        //         }
-                        //     }
-                        // }
-                        // // println!("args: {:?}", self.ctx.func.signature.params);
-                        //
-                        // // Our toy language currently only supports one return value, though
-                        // // Cranelift is designed to support more.
-                        // let type_return = translate_type(int, return_type);
-                        //
-                        // self.ctx
-                        //     .func
-                        //     .signature
-                        //     .returns
-                        //     .push(AbiParam::new(type_return));
-                        //
                         self.ctx.func.signature =
                             self.functions.get(name.as_str()).unwrap().clone();
 
@@ -169,35 +168,14 @@ impl JIT {
                             .module
                             .declare_function(&name, Linkage::Local, &self.ctx.func.signature)
                             .map_err(|e| e.to_string())?;
-                        // println!("adfdfad");
-                        // println!("asdfasdf {}", self.ctx.func.signature);
                         self.module
                             .define_function(id, &mut self.ctx)
                             .map_err(|e| e.to_string())
                             .expect("Compile Error");
-                        // println!("afsdfasdfasdfasd");
 
                         funcid.insert(name.clone(), id);
-                        // match name.as_str() {
-                        //     "main" => {
-                        //         self.module.clear_context(&mut self.ctx);
-                        //         self.module.finalize_definitions().unwrap();
-                        //         continue;
-                        //     }
-                        //     _ => {
-                        //         let mut function = self.ctx.func.clone();
-                        //         self.functions.insert(
-                        //             name.clone(),
-                        //             self.ctx.func.signature.clone(),
-                        //         );
-                        //     }
-                        // }
                         self.module.clear_context(&mut self.ctx);
                         self.module.finalize_definitions().unwrap();
-
-                        // else {
-                        // self.
-                        // }
                     }
                     _ => {
                         println!("Not a Function: {:?}", statement);
@@ -208,19 +186,18 @@ impl JIT {
                 }
             }
         }
-
-        // Tell the builder we're done with this function.
+        if !is_lib {
         println!("Finalize");
         let code = self
             .module
             .get_finalized_function(*funcid.get("main").unwrap());
 
-        // println!("functions: {:?}", self.functions);
         println!("code: {:?}", code);
-        // return Ok(());
         Ok(code)
-
-        // Ok(())
+        }
+        else {
+            Ok(std::ptr::null::<u8>() as *const u8)
+        }
     }
 
     fn translate(
@@ -239,11 +216,8 @@ impl JIT {
         // Create the builder to build a function.
         let mut builder = FunctionBuilder::new(&mut self.ctx.func, &mut self.builder_context);
         let entry_block = builder.create_block();
-        // println!("entry_block: {:?}", entry_block);
 
         builder.append_block_params_for_function_params(entry_block);
-        // println!("append_block_params_for_function_params: {:?}", entry_block);
-
         // Tell the builder to emit code in this block.
         builder.switch_to_block(entry_block);
 
@@ -251,7 +225,6 @@ impl JIT {
         // predecessors. Since it's the entry block, it won't have any
         // predecessors.
         builder.seal_block(entry_block);
-        // println!("seal_block: {:?}", entry_block);
 
         let variables = declare_variables(
             type_return,
@@ -261,7 +234,6 @@ impl JIT {
             &statements,
             entry_block,
         );
-        // println!("variables: {:?}", variables);
         // Now translate the statements of the function body.
         let mut trans = FunctionTranslator {
             int,
@@ -274,19 +246,8 @@ impl JIT {
             trans.translate_expr(expr);
         }
 
-        // the return value is the expression in the function with the `Return` segment anywhere in the function
-        // if !is_void {
-        // let return_variable = trans.variables.get("return").unwrap();
-        // let return_value = trans.builder.use_var(*return_variable);
-
-        // Emit the return instruction.
-
-        // trans.builder.ins().return_(
-        // }
-
         // Tell the builder we're done with this function.
         trans.builder.finalize();
-        // println!("is this NOT Enough?");
         println!("ircode:\n{}", self.ctx.func.clone());
         Ok(())
     }
@@ -317,9 +278,6 @@ impl<'a> FunctionTranslator<'a> {
             }
             ASTtypevalue::I64(i) => self.builder.ins().iconst(types::I64, i),
 
-            // ASTtypevalue::QuotedString(s) => {
-            // self.builder.ins().iconst(types::I32, s.len() as i64)
-            // }
             ASTtypevalue::Identifier(id) => {
                 let variable = self.variables.get(&id).unwrap();
                 self.builder.use_var(*variable)
