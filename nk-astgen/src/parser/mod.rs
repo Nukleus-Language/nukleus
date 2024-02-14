@@ -5,8 +5,8 @@ use crate::ast::*;
 use error::{AstError, AstGenError};
 
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::iter::{Cloned, Peekable};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -37,7 +37,7 @@ pub struct Parser<'a> {
 
 impl<'a> Parser<'a> {
     #[allow(dead_code)]
-    pub fn new(tokens: &'a [Token],file_path: PathBuf, code: &'a str) -> Self {
+    pub fn new(tokens: &'a [Token], file_path: PathBuf, code: &'a str) -> Self {
         let peeked = tokens.iter().cloned().peekable();
         // println!("{:?}", tokens);
         Parser {

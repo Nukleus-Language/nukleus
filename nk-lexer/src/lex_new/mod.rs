@@ -12,8 +12,7 @@ use std::str::Chars;
 use inksac::{Color, Style, Stylish};
 
 use crate::tokens_new::{
-    Symbol, Token, TokenMetadata, TokenType,
-    TypeValue, TypeName, Statement, Assign, Operator,
+    Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
 };
 
 const ERRORTXTSTYLE: Style = Style {

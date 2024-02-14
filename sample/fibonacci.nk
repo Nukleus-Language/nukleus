@@ -15,13 +15,6 @@ fn fibonacci(i64:n) -> i64
 fn main() -> i64
 {
 	let:i64 x = 47;
-	//let:i64 i = 0;
-	//let:i64 c = 0;
-	//for(i -> x :: 1 )
-	//{
-		//c = ;
-		//println(c);
-	//}
 	return fibonacci(x);
 }
 

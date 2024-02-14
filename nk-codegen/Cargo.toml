@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 inksac = "0.2.0"
-# lexer = { path = "../nk-lexer" }
+lexer = { path = "../nk-lexer" }
 astgen = { path = "../nk-astgen" }
 cranelift = "0.101.1"
 cranelift-module = "0.101.1"

@@ -11,8 +11,7 @@ use std::path::PathBuf;
 use std::str::Chars;
 
 use crate::tokens_new::{
-    Symbol, Token, TokenMetadata, TokenType,
-    TypeValue, Statement, TypeName, Assign, Operator
+    Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
 };
 use inksac::{Color, Style};
 
@@ -213,7 +212,7 @@ impl<'a> Lexer<'a> {
                 line: self.line,
                 column: self.column,
                 message: LexError::ExpectedQuote(),
-            })
+            });
         }
         Ok(())
     }
@@ -301,7 +300,8 @@ impl<'a> Lexer<'a> {
                 format!("Suggestion: Invalid double symbol '{}'.", s)
             }
             LexError::ExpectedQuote() => {
-                "Suggestion: Check the syntax around the error line, and add a double quote.".to_string()
+                "Suggestion: Check the syntax around the error line, and add a double quote."
+                    .to_string()
             }
         };
 
@@ -345,7 +345,7 @@ mod test {
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Symbol(Symbol::CloseBrace),
         ];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run().unwrap();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
@@ -356,7 +356,7 @@ mod test {
         let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
             "Hello, world!".to_string(),
         ))];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
@@ -377,7 +377,7 @@ mod test {
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Symbol(Symbol::CloseBrace),
         ];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run().unwrap();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
@@ -411,7 +411,7 @@ mod test {
             TokenType::TypeValue(TypeValue::Number(5.to_string())),
             TokenType::Symbol(Symbol::Semicolon),
         ];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run().unwrap();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
@@ -497,7 +497,7 @@ mod test {
                 TokenMetadata::new(1, 27),
             ),
         ];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run().unwrap();
         for token in lexer.tokens.clone() {
             eprintln!("{:?}", token);
@@ -538,7 +538,7 @@ mod test {
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Symbol(Symbol::CloseBrace),
         ];
-        let mut lexer = Lexer::new(PathBuf::from("test"),code);
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run().unwrap();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);

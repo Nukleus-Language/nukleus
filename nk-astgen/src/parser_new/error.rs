@@ -36,16 +36,11 @@ pub enum AstError {
 impl fmt::Display for AstError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            AstError::ExpectedToken(t) => write!(
-                f,
-                "Expected token: {} ",
-                t.token_type
-            ),
+            AstError::ExpectedToken(t) => write!(f, "Expected token: {} ", t.token_type),
             AstError::ExpectedStatement() => write!(f, "Expected statement"),
             AstError::ExpectedExpression() => write!(f, "Expected expression"),
             AstError::UnexpectedToken() => write!(f, "Unexpected token"),
             AstError::UnexpectedEOF() => write!(f, "Unexpected EOF"),
-            
         }
     }
 }
