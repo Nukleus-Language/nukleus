@@ -186,7 +186,7 @@ fn main() {
     let pre_run_time = std::time::Instant::now();
     let result = run(&mut jit, code_ptr.unwrap()).unwrap();
     let duration = std::time::Instant::now().duration_since(pre_run_time);
-    println!("result {} ", result);
+    println!("exit with status {} ", result);
     println!("JIT Run TIme: {:?}", duration);
 }
 

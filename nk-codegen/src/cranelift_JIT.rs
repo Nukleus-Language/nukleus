@@ -13,7 +13,13 @@ use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
-/// The basic JIT class.
+// This is a host function that you need to define and make accessible to the JIT.
+extern "C" fn print_function(arg: i64){
+    print!("{}", arg);
+}
+extern "C" fn println_function(arg: i64){
+    println!("{}", arg);
+}
 pub struct JIT {
     /// The function builder context, which is reused across multiple
     /// FunctionBuilder instances.
@@ -41,10 +47,13 @@ impl Default for JIT {
         let isa = isa_builder
             .finish(settings::Flags::new(flag_builder))
             .unwrap();
-        let module = JITModule::new(JITBuilder::with_isa(
+        let mut jb = JITBuilder::with_isa(
             isa,
             cranelift_module::default_libcall_names(),
-        ));
+        );
+        jb.symbol("print_function", print_function as *const u8);
+        jb.symbol("println_function", println_function as *const u8);
+        let module = JITModule::new(jb);
         let functions = HashMap::new();
 
         // let module = JITModule::new(builder);
@@ -61,7 +70,8 @@ impl Default for JIT {
 impl JIT {
     pub fn compile(&mut self, input: Vec<AST>, file_location: &str, is_lib: bool) -> Result<*const u8, String> {
         let mut funcid = HashMap::new();
-
+        self.define_print_function();
+        self.define_println_function();
         // Function Signature Declaration
         for ast in input.clone() {
             match ast {
@@ -253,6 +263,54 @@ impl JIT {
         println!("\nircode:\n{}\n", self.ctx.func.clone());
         Ok(())
     }
+pub fn define_print_function(&mut self) {
+    let int = self.module.target_config().pointer_type();
+    self.ctx
+        .func
+        .signature
+        .params
+        .push(AbiParam::new(int)); 
+    // The print function accepts an i64 as a parameter
+
+    // Ensure the function is declared with no return values
+    // sig.returns.push(AbiParam::new(int)); // Remove or comment out this line
+
+    // Define the function in the JIT environment.     
+    // let print_func_id = self.module
+        // .declare_function(
+            // "print_function", // The name of the print function
+            // Linkage::Export,
+            // &sig,
+        // )
+        // .expect("Problem defining the print function");
+    self.functions.insert("print_function".to_string(), self.ctx.func.signature.clone());
+    self.module.clear_context(&mut self.ctx); 
+
+}
+pub fn define_println_function(&mut self) {
+    let int = self.module.target_config().pointer_type();
+    self.ctx
+        .func
+        .signature
+        .params
+        .push(AbiParam::new(int)); 
+    // The print function accepts an i64 as a parameter
+
+    // Ensure the function is declared with no return values
+    // sig.returns.push(AbiParam::new(int)); // Remove or comment out this line
+
+    // Define the function in the JIT environment.     
+    // let print_func_id = self.module
+        // .declare_function(
+            // "print_function", // The name of the print function
+            // Linkage::Export,
+            // &sig,
+        // )
+        // .expect("Problem defining the print function");
+    self.functions.insert("println_function".to_string(), self.ctx.func.signature.clone());
+    self.module.clear_context(&mut self.ctx); 
+
+}
 }
 
 struct FunctionTranslator<'a> {
@@ -368,11 +426,15 @@ impl<'a> FunctionTranslator<'a> {
                         value
                     }
                     ASTstatement::Print { value } => {
-                        self.translate_expr(*value)
-
-                        // todo!()
+                        self.translate_print(*value);
+                        // Return a dummy value since print does not return anything
+                        self.builder.ins().iconst(self.int, 0)
                     }
-                    ASTstatement::Println { value } => self.translate_expr(*value),
+            ASTstatement::Println { value } => {
+               self.translate_println(*value);
+                        // Return a dummy value since print does not return anything
+                self.builder.ins().iconst(self.int, 0) 
+            }
                     ASTstatement::For {
                         start,
                         end,
@@ -447,7 +509,42 @@ impl<'a> FunctionTranslator<'a> {
             }
         }
     }
+    fn translate_print(&mut self, value: AST){
+        let val = self.translate_expr(value);
+        let functioninfo = self
+                    .functions
+                    .get("print_function")
+                    .cloned()
+                    .expect("function not found");
+        // Retrieve the function signature for the print function.
+       let func = self
+                    .module
+                    .declare_function("print_function", Linkage::Export, &functioninfo)
+                    .expect("Function Link Error"); 
+        let local_print_func = self.module.declare_func_in_func(func, self.builder.func);
 
+        // Emit a call to the print function with the translated value as an argument.
+        let call = self.builder.ins().call(local_print_func, &[val]);
+        let _ = self.builder.inst_results(call);
+    }
+    fn translate_println(&mut self, value: AST){
+        let val = self.translate_expr(value);
+        let functioninfo = self
+                    .functions
+                    .get("println_function")
+                    .cloned()
+                    .expect("function not found");
+        // Retrieve the function signature for the print function.
+       let func = self
+                    .module
+                    .declare_function("println_function", Linkage::Export, &functioninfo)
+                    .expect("Function Link Error"); 
+        let local_print_func = self.module.declare_func_in_func(func, self.builder.func);
+
+        // Emit a call to the print function with the translated value as an argument.
+        let call = self.builder.ins().call(local_print_func, &[val]);
+        let _ = self.builder.inst_results(call);
+    }
     fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Value {
         let new_value = self.translate_expr(expr);
         let variable = self.variables.get(&name).unwrap();
@@ -676,6 +773,7 @@ impl<'a> FunctionTranslator<'a> {
         let pointer = self.module.target_config().pointer_type();
         self.builder.ins().symbol_value(pointer, local_id)
     }
+    
 }
 fn translate_type(base_int: types::Type, typename: ASTtypename) -> Type {
     match typename {
@@ -837,6 +935,9 @@ fn declare_variable(
     }
     var
 }
+
+
+
 // Function to resolve the file path based on the operating system
 fn resolve_file_path(name: &str, main_file_location: &str) -> Result<PathBuf, String> {
     let mut resolved_path = PathBuf::new();
