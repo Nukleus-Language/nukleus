@@ -11,7 +11,7 @@ use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// The basic JIT class.
 pub struct JIT {
@@ -59,7 +59,7 @@ impl Default for JIT {
 }
 
 impl JIT {
-    pub fn compile(&mut self, input: Vec<AST>, is_lib: bool) -> Result<*const u8, String> {
+    pub fn compile(&mut self, input: Vec<AST>, file_location: &str, is_lib: bool) -> Result<*const u8, String> {
         let mut funcid = HashMap::new();
 
         // Function Signature Declaration
@@ -111,13 +111,14 @@ impl JIT {
                 _ => {}
             }
         }
-        println!("Functions: {:?}", self.functions);
         for ast in input {
             match ast {
                 AST::Statement(statement) => match statement {
                     ASTstatement::Import { name } => {
-                        let contents = std::fs::read_to_string(&name)
-                            .map_err(|e| format!("Failed to read file '{}': {}", name, e))?;
+                        // Resolve file path based on the operating system
+                        let resolved_path = resolve_file_path(&name, file_location)?;
+                        let contents = std::fs::read_to_string(&resolved_path)
+                            .map_err(|e| format!("Failed to read file '{}': {}", resolved_path.display(), e))?;
                         let mut new_lexer = lexer::lex_new::Lexer::new(&contents);
                         new_lexer.run();
                         let new_tokens = new_lexer.get_tokens();
@@ -142,9 +143,10 @@ impl JIT {
                             println!("Error: {}", ast_result.err().unwrap());
                         }
                         let ast_new = mid_ir.get_asts();
-                        let _ = self.compile(ast_new, true);
+                        let _ = self.compile(ast_new, resolved_path.to_str().unwrap(), true);
                         for (name, signature) in self.functions.iter() {
                             println!("Function Name: {}, Signature: {:?}", name, signature);
+                            println!("");
                         }
                     }
                     ASTstatement::Function {
@@ -248,7 +250,7 @@ impl JIT {
 
         // Tell the builder we're done with this function.
         trans.builder.finalize();
-        println!("ircode:\n{}", self.ctx.func.clone());
+        println!("\nircode:\n{}\n", self.ctx.func.clone());
         Ok(())
     }
 }
@@ -318,7 +320,6 @@ impl<'a> FunctionTranslator<'a> {
                 // self.builder.finalize();
                 // self.module.clear_context(&mut self.codegen_context);
                 // self.module.finalize_definitions()?;
-                println!("functionisdfadfasdffanfo: {:?}", functioninfo);
                 result_val
 
                 // self.builder.ins().iconst(self.int, 0)
@@ -836,3 +837,50 @@ fn declare_variable(
     }
     var
 }
+// Function to resolve the file path based on the operating system
+fn resolve_file_path(name: &str, main_file_location: &str) -> Result<PathBuf, String> {
+    let mut resolved_path = PathBuf::new();
+
+    // Check the target OS and set the appropriate path
+    // Fallback for other POSIX systems
+    #[cfg(target_family = "unix")]
+    {
+        resolved_path.push("/usr/lib/nukleus");
+    }
+    #[cfg(target_os = "linux")]
+    {
+        resolved_path.push("/usr/lib/nukleus");
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        resolved_path.push("C:\\Program Files\\nukleus");
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        resolved_path.push("/Library/nukleus");
+    }
+
+    #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+    {
+        resolved_path.push("/usr/local/lib/nukleus");
+    }  
+
+    // Append the .nk extension to the file name
+    let file_name_with_ext = format!("{}.nk", name);
+
+    // Check if the name is a path
+    if Path::new(&file_name_with_ext).is_absolute() {
+        resolved_path = PathBuf::from(&file_name_with_ext);
+    } else {
+        // If the file is not found in the global packages directory, check the upper directory of the main file
+        let main_file_dir = PathBuf::from(main_file_location);
+        let main_file_parent_dir = main_file_dir.parent().unwrap();
+        let new_resolved_path = main_file_parent_dir.join(&file_name_with_ext);
+        return Ok(new_resolved_path);
+    }
+
+    Ok(resolved_path)
+}
+

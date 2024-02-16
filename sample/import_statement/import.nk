@@ -1,4 +1,4 @@
-inject "./sample/import_statement/fibonacci.nk";
+inject "fibonacci";
 
 fn main() -> i64
 {

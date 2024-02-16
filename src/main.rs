@@ -178,7 +178,7 @@ fn main() {
     let start_time_jit = std::time::Instant::now();
     let mut jit = JIT::default();
     println!("JIT: ");
-    let code_ptr = jit.compile(ast_new, false);
+    let code_ptr = jit.compile(ast_new, input, false);
     println!("JIT Compiled");
     let end_time_jit = std::time::Instant::now();
     let duration_jit = end_time_jit.duration_since(start_time_jit);
@@ -199,3 +199,4 @@ unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
     let code_fn = mem::transmute::<_, fn(I) -> O>(codeptr);
     Ok(code_fn(input))
 }
+
