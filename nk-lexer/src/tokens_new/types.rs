@@ -14,6 +14,7 @@ pub enum TypeName {
     U32,
     U64,
     QuotedString,
+    Char,
     Bool,
     Float,
     Number,
@@ -33,6 +34,7 @@ impl TypeName {
             TypeName::U32 => "u32",
             TypeName::U64 => "u64",
             TypeName::QuotedString => "string",
+            TypeName::Char => "char",
             TypeName::Bool => "bool",
             TypeName::Float => "float",
             TypeName::Number => "number",
@@ -53,6 +55,7 @@ pub enum TypeValue {
     Number(String),
     QuotedString(String),
     Bool(bool),
+    Char(char),
     //Float(f64),
     Identifier(String),
 }
@@ -65,6 +68,7 @@ impl TypeValue {
             TypeValue::QuotedString(_) => TypeName::QuotedString,
             TypeValue::Bool(_) => TypeName::Bool,
             TypeValue::Number(_) => TypeName::Number,
+            TypeValue::Char(_) => TypeName::Char,
             _ => panic!("Type is not a valid type"),
         }
     }
@@ -78,6 +82,7 @@ impl fmt::Display for TypeValue {
             //TypeValue::Float(n) => write!(f, "Float({})", n),
             TypeValue::Identifier(ref s) => write!(f, "{}", s),
             TypeValue::Bool(b) => write!(f, "{}", b),
+            TypeValue::Char(c) => write!(f, "{}", c),
             TypeValue::Number(ref s) => write!(f, "{}", s),
         }
     }

@@ -57,6 +57,7 @@ pub fn type_name_to_token(
         "u16" => Ok(TokenType::TypeName(TypeName::U16)),
         "u32" => Ok(TokenType::TypeName(TypeName::U32)),
         "u64" => Ok(TokenType::TypeName(TypeName::U64)),
+        "Char" => Ok(TokenType::TypeName(TypeName::Char)),
         _ => Err(LexcialError {
             line,
             column,
