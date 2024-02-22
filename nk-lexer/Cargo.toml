@@ -1,5 +1,5 @@
 [package]
-name = "lexer"
+name = "nk-lexer"
 authors = ["Skuld Norniern <skuldnorniern@gmail.com>"]
 version = "0.1.0"
 edition = "2021"

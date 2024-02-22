@@ -7,10 +7,14 @@ edition = "2021"
 
 [dependencies]
 inksac = "0.4.0"
-lexer = { path = "../nk-lexer" }
+lexer = { path = "../nk-lexer", package="nk-lexer"}
 astgen = { path = "../nk-astgen" }
-cranelift = "0.104.1"
-cranelift-module = "0.104.1"
-cranelift-jit = "0.104.1"
-cranelift-native = "0.104.1"
-cranelift-codegen = "0.104.1"
+cranelift = "0.105.1"
+cranelift-module = "0.105.1"
+cranelift-jit = "0.105.1"
+cranelift-native = "0.105.1"
+cranelift-codegen = "0.105.1"
+
+[profile.release]
+lto = true
+pgo = true
