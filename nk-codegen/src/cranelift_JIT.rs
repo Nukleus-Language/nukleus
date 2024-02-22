@@ -40,16 +40,21 @@ impl Default for JIT {
     fn default() -> Self {
         let mut flag_builder = settings::builder();
         flag_builder.set("use_colocated_libcalls", "false").unwrap();
-        flag_builder.set("is_pic", "false").unwrap();
+        flag_builder.set("is_pic", "true").unwrap();
+        flag_builder.set("opt_level", "speed_and_size").unwrap();
+        flag_builder.set("enable_alias_analysis", "true").unwrap();
+        
         let isa_builder = cranelift_native::builder().unwrap_or_else(|msg| {
             panic!("host machine is not supported: {}", msg);
         });
         let isa = isa_builder
             .finish(settings::Flags::new(flag_builder))
             .unwrap();
+
         let mut jb = JITBuilder::with_isa(isa, cranelift_module::default_libcall_names());
         jb.symbol("print_function", print_function as *const u8);
         jb.symbol("println_function", println_function as *const u8);
+
         let module = JITModule::new(jb);
         let functions = HashMap::new();
 
