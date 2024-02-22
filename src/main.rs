@@ -127,7 +127,6 @@ fn main() {
     let end_time_parser_new = std::time::Instant::now();
     let ast_new = mid_ir.get_asts();
 
-    println!("AST: {:?}", ast_new);
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     println!("New Parser Time: {:?}", duration_parser_new);
 
@@ -164,11 +163,11 @@ fn main() {
     // let duration_interpreter = end_time_interpreter.duration_since(start_time_interpreter);
     // println!("Interpreter Time: {:?}", duration_interpreter);
 
-    println!("Mid IR code: ");
-    for ast in ast_new.clone() {
-        // println!("{}", ast);
-    }
-    println!();
+    // println!("Mid IR code: ");
+    // for ast in ast_new.clone() {
+    // println!("{}", ast);
+    // }
+    // println!();
 
     // println!("{:?}",ast_new);
     //
@@ -178,19 +177,29 @@ fn main() {
     let start_time_jit = std::time::Instant::now();
     let mut jit = JIT::default();
     println!("JIT: ");
-    let code_ptr = jit.compile(ast_new, input, false);
+    let code_ptr = jit.compile(ast_new.clone(), input, false);
     println!("JIT Compiled");
     let end_time_jit = std::time::Instant::now();
     let duration_jit = end_time_jit.duration_since(start_time_jit);
     println!("JIT Compile Time: {:?}", duration_jit);
+    println!();
     let pre_run_time = std::time::Instant::now();
-    let result = run(&mut jit, code_ptr.unwrap()).unwrap();
+    let result = run(code_ptr.unwrap()).unwrap();
     let duration = std::time::Instant::now().duration_since(pre_run_time);
-    println!("exit with status {} ", result);
-    println!("JIT Run TIme: {:?}", duration);
+    println!(
+        "exit with code {} in {:?}",
+        result,
+        duration + duration_jit + duration_new_new + duration_parser_new
+    );
+    let _ = drop(jit);
+    let _ = drop(new_new_lexer);
+    let _ = drop(new_lexer);
+    let _ = drop(contents);
+
+    // println!("Run TIme: {:?}", duration);
 }
 
-fn run(jit: &mut JIT, codeptr: *const u8) -> Result<isize, String> {
+fn run(codeptr: *const u8) -> Result<isize, String> {
     unsafe { run_code(codeptr, ()) }
 }
 unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
@@ -199,4 +208,3 @@ unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
     let code_fn = mem::transmute::<_, fn(I) -> O>(codeptr);
     Ok(code_fn(input))
 }
-

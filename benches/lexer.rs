@@ -23,8 +23,9 @@ fn lexer() {
 ],threads = [0, 1, 4, 8, 16])]
 fn new_new_lexer() {
     fn compute(code: &str) {
-        let mut lexer = lexer::lex_new_new::Lexer::new(std::path::Path::new("bench.nk").to_path_buf(),code);
-        lexer.run();
+        let mut lexer =
+            lexer::lex_new_new::Lexer::new(std::path::Path::new("bench.nk").to_path_buf(), code);
+        let _ = lexer.run();
     }
     compute(divan::black_box(TEST_CODE))
 }
