@@ -1,5 +1,5 @@
-use std::fmt;
 use std::borrow::Cow;
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]

@@ -416,19 +416,15 @@ impl<'a> FunctionTranslator<'a> {
                             let rhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, rhs, 0);
                             let and_result = self.builder.ins().band(lhs_bool, rhs_bool);
                             self.builder.ins().icmp_imm(IntCC::NotEqual, and_result, 0)
-                        },
+                        }
                         ASTOperator::Or => {
                             let lhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, lhs, 0);
                             let rhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, rhs, 0);
                             let or_result = self.builder.ins().bor(lhs_bool, rhs_bool);
                             self.builder.ins().icmp_imm(IntCC::NotEqual, or_result, 0)
-                        },
-                        ASTOperator::BitAnd => {
-                            self.builder.ins().band(lhs, rhs)
                         }
-                        ASTOperator::BitOr => {
-                            self.builder.ins().bor(lhs, rhs)
-                        }
+                        ASTOperator::BitAnd => self.builder.ins().band(lhs, rhs),
+                        ASTOperator::BitOr => self.builder.ins().bor(lhs, rhs),
                         _ => {
                             println!("Unsupported operator: {}", op);
                             self.builder.ins().iconst(self.int, 0)

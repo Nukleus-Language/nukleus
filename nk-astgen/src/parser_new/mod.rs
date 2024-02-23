@@ -1,10 +1,10 @@
 use inksac::{Color, Style, Stylish};
 use lexer::neo_tokens::*;
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::iter::{Cloned, Peekable};
 use std::path::PathBuf;
-use std::borrow::Cow;
 
 mod error;
 use error::{AstError, AstGenError};
@@ -92,7 +92,8 @@ impl<'a> Parser<'a> {
     fn parse_statement(&mut self) -> Result<Vec<AST>, AstGenError> {
         let mut statements: Vec<AST> = Vec::new();
         // parse statements
-        while let token = self.next_token() {
+        loop {
+            let token = self.next_token();
             match token.token_type {
                 TokenType::Statement(Statement::Let) => {
                     statements.push(self.parse_let()?);
@@ -194,8 +195,10 @@ impl<'a> Parser<'a> {
             AstError::ExpectedExpression() => "Expected an expression. Check syntax.".to_string(),
             AstError::ExpectedStatement() => "Expected a statement. Check syntax.".to_string(),
             AstError::UnexpectedToken() => format!("Unexpected token. Check syntax."),
-            AstError::InvalidNumberFormat(num) => 
-            format!("Ensure the number is correctly formatted. Invalid input: '{}'", num),
+            AstError::InvalidNumberFormat(num) => format!(
+                "Ensure the number is correctly formatted. Invalid input: '{}'",
+                num
+            ),
             AstError::UnexpectedEOF() => {
                 "Unexpected end of file. Check for missing tokens.".to_string()
             }
@@ -203,7 +206,8 @@ impl<'a> Parser<'a> {
     }
     pub fn run(&mut self) -> Result<(), AstGenError> {
         //println!("{:?}", self.tokens.peek());
-        while let token = self.next_token() {
+        loop {
+            let token = self.next_token();
             //println!("{:?}", token);
             let peeked = self.peek_token();
             if self.state == State::EmptyState {
@@ -239,8 +243,9 @@ impl<'a> Parser<'a> {
                         peeked.token_type
                     {
                         self.next_token(); // Consume the package name
-                        self.asts
-                            .push(AST::Statement(ASTstatement::Import { name: package.to_string() }));
+                        self.asts.push(AST::Statement(ASTstatement::Import {
+                            name: package.to_string(),
+                        }));
                         if self.peek_token().token_type == TokenType::Symbol(Symbol::Semicolon) {
                             self.state = State::EmptyState;
                             self.next_token();
@@ -578,7 +583,9 @@ impl<'a> Parser<'a> {
                         match num.parse::<i64>() {
                             Ok(parsed_num) => parsed_num,
                             Err(_) => {
-                                return Err(AstGenError::new(AstError::InvalidNumberFormat(num.to_string())))
+                                return Err(AstGenError::new(AstError::InvalidNumberFormat(
+                                    num.to_string(),
+                                )))
                             }
                         },
                     )))
@@ -595,7 +602,8 @@ impl<'a> Parser<'a> {
                             self.next_token(); // Consume the opening parenthesis
                             let mut arguments = Vec::new();
                             // println!("FuncCall");
-                            while let token = self.peek_token() {
+                            loop {
+                                let token = self.peek_token();
                                 // println!("Token FC: {:?}", token);
 
                                 match token.token_type {
@@ -773,8 +781,8 @@ impl<'a> Parser<'a> {
         // let:i32 a = 5;
 
         let mut status = 1;
-        let mut name: String = String::new();  
-        
+        let mut name: String = String::new();
+
         let mut type_name: Option<ASTtypename> = None;
         let mut value: Option<Box<AST>> = None;
         let type_map: HashMap<TypeName, ASTtypename> = [
@@ -812,7 +820,8 @@ impl<'a> Parser<'a> {
             }
         }
 
-        while let token = self.peek_token() {
+        loop {
+            let token = self.peek_token();
             // println!(
             // "\x1b[34m Token: {:?}, Status:{} \x1b[0m", token, status
             // );
@@ -878,7 +887,8 @@ impl<'a> Parser<'a> {
         let mut end_val: ASTtypevalue = ASTtypevalue::TypeVoid;
         let mut val: ASTtypevalue = ASTtypevalue::TypeVoid;
 
-        while let token = self.next_token() {
+        loop {
+            let token = self.next_token();
             match (&token.token_type, &status) {
                 // Us
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 2) => {
@@ -977,8 +987,9 @@ impl<'a> Parser<'a> {
         .iter()
         .cloned()
         .collect();
-        while let token = self.next_token() {
-            let _peeked = self.peek_token();
+        loop {
+            let token = self.next_token();
+            // let _peeked = self.peek_token();
             //println!("{}cur arg: {:?}{}", "\x1b[38m", token, "\x1b[0m");
             //println!("{}cur State: {:?}{}", "\x1b[38m", state, "\x1b[0m");
             match (token.clone().token_type, &state) {

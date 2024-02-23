@@ -6,10 +6,10 @@ mod value;
 
 use errors::{LexError, LexcialError};
 
+use std::borrow::Cow;
 use std::iter::Peekable;
 use std::path::PathBuf;
 use std::str::Chars;
-use std::borrow::Cow;
 
 // use crate::tokens_new::{
 //     Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
@@ -177,9 +177,9 @@ impl<'a> Lexer<'a> {
                 // self.insert_token(TokenType::TypeValue(TypeValue::QuotedString(
                 // string.to_string(),
                 // )));
-                self.insert_token(TokenType::TypeValue(TypeValue::QuotedString(
-                    Cow::Owned(string.to_owned()),
-                )));
+                self.insert_token(TokenType::TypeValue(TypeValue::QuotedString(Cow::Owned(
+                    string.to_owned(),
+                ))));
                 self.buffer_st = self.buffer_ed;
                 self.state = State::EmptyState;
                 continue;
@@ -364,7 +364,7 @@ mod test {
     fn lexing_strings() {
         let code = " \"Hello, world!\" ";
         let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
-           Cow::Borrowed("Hello, world!"),
+            Cow::Borrowed("Hello, world!"),
         ))];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run();

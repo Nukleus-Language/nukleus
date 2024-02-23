@@ -16,7 +16,9 @@ pub fn number_to_token(
     let test_parse = trimed_number.trim_matches('-').parse::<u64>();
 
     match test_parse {
-        Ok(_) => Ok(TokenType::TypeValue(TypeValue::Number(Cow::Owned(number.to_owned())))),
+        Ok(_) => Ok(TokenType::TypeValue(TypeValue::Number(Cow::Owned(
+            number.to_owned(),
+        )))),
         Err(_) => Err(LexcialError {
             line,
             column,

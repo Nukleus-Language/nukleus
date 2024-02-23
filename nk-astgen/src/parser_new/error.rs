@@ -34,7 +34,7 @@ pub enum AstError {
     InvalidNumberFormat(String),
     UnexpectedEOF(),
 }
-impl fmt::Display for AstError{
+impl fmt::Display for AstError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AstError::ExpectedToken(t) => write!(f, "Expected token: {} ", t.token_type),
