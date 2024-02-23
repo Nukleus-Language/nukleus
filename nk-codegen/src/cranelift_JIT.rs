@@ -529,6 +529,24 @@ impl<'a> FunctionTranslator<'a> {
                                 .ins()
                                 .icmp(IntCC::SignedGreaterThanOrEqual, lhs, rhs)
                         }
+                        ASTOperator::And => {
+                            let lhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, lhs, 0);
+                            let rhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, rhs, 0);
+                            self.builder.ins().band(lhs_bool, rhs_bool)
+                            // self.builder.ins().icmp_imm(IntCC::NotEqual, and_result, 0)
+                        },
+                        ASTOperator::Or => {
+                            let lhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, lhs, 0);
+                            let rhs_bool = self.builder.ins().icmp_imm(IntCC::NotEqual, rhs, 0);
+                            self.builder.ins().bor(lhs_bool, rhs_bool)
+                            // self.builder.ins().icmp_imm(IntCC::NotEqual, or_result, 0)
+                        },
+                        ASTOperator::BitAnd => {
+                            self.builder.ins().band(lhs, rhs)
+                        }
+                        ASTOperator::BitOr => {
+                            self.builder.ins().bor(lhs, rhs)
+                        }
                         _ => {
                             println!("Unsupported operator: {:?}", op);
                             self.builder.ins().iconst(self.int, 0)
@@ -977,26 +995,26 @@ fn resolve_file_path(name: &str, main_file_location: &str) -> Result<PathBuf, St
     // Fallback for other POSIX systems
     #[cfg(target_family = "unix")]
     {
-        resolved_path.push("/usr/lib/nukleus");
+        resolved_path = PathBuf::from("/usr/lib/nukleus");
     }
     #[cfg(target_os = "linux")]
     {
-        resolved_path.push("/usr/lib/nukleus");
+        resolved_path = PathBuf::from("/usr/lib/nukleus");
     }
 
     #[cfg(target_os = "windows")]
     {
-        resolved_path.push("C:\\Program Files\\nukleus");
+        resolved_path = PathBuf::from("C:\\Program Files\\nukleus");
     }
 
     #[cfg(target_os = "macos")]
     {
-        resolved_path.push("/Library/nukleus");
+        resolved_path = PathBuf::from("/Library/nukleus");
     }
 
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
     {
-        resolved_path.push("/usr/local/lib/nukleus");
+        resolved_path = PathBuf::from("/usr/local/lib/nukleus");
     }
 
     // Append the .nk extension to the file name

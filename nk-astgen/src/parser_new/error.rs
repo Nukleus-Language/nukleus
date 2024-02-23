@@ -1,4 +1,4 @@
-use lexer::tokens_new::Token;
+use lexer::neo_tokens::Token;
 
 use std::fmt;
 
@@ -31,15 +31,17 @@ pub enum AstError {
     ExpectedStatement(),
     ExpectedExpression(),
     UnexpectedToken(),
+    InvalidNumberFormat(String),
     UnexpectedEOF(),
 }
-impl fmt::Display for AstError {
+impl fmt::Display for AstError{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             AstError::ExpectedToken(t) => write!(f, "Expected token: {} ", t.token_type),
             AstError::ExpectedStatement() => write!(f, "Expected statement"),
             AstError::ExpectedExpression() => write!(f, "Expected expression"),
             AstError::UnexpectedToken() => write!(f, "Unexpected token"),
+            AstError::InvalidNumberFormat(num) => write!(f, "Invalid number format: {}", num),
             AstError::UnexpectedEOF() => write!(f, "Unexpected EOF"),
         }
     }

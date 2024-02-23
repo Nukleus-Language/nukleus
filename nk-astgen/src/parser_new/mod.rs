@@ -1,9 +1,10 @@
 use inksac::{Color, Style, Stylish};
-use lexer::tokens_new::*;
+use lexer::neo_tokens::*;
 
 use std::collections::HashMap;
 use std::iter::{Cloned, Peekable};
 use std::path::PathBuf;
+use std::borrow::Cow;
 
 mod error;
 use error::{AstError, AstGenError};
@@ -75,7 +76,7 @@ impl<'a> Parser<'a> {
         let peek = self.tokens.peek();
         // println!("{} Peek Token: {:?}{}", "\x1b[38m", peek, "\x1b[0m");
         match peek {
-            Some(t) => t.clone(),
+            Some(t) => (*t).clone(),
             None => Token::new(TokenType::EOF, TokenMetadata::default()),
         }
     }
@@ -185,7 +186,7 @@ impl<'a> Parser<'a> {
     }
 
     fn suggest_fix(&self, error: &AstGenError) -> String {
-        match error.message {
+        match &error.message {
             AstError::ExpectedToken(ref t) => format!(
                 "Add {} on line:{}, col{}",
                 t.token_type, t.metadata.line, t.metadata.column
@@ -193,6 +194,8 @@ impl<'a> Parser<'a> {
             AstError::ExpectedExpression() => "Expected an expression. Check syntax.".to_string(),
             AstError::ExpectedStatement() => "Expected a statement. Check syntax.".to_string(),
             AstError::UnexpectedToken() => format!("Unexpected token. Check syntax."),
+            AstError::InvalidNumberFormat(num) => 
+            format!("Ensure the number is correctly formatted. Invalid input: '{}'", num),
             AstError::UnexpectedEOF() => {
                 "Unexpected end of file. Check for missing tokens.".to_string()
             }
@@ -237,7 +240,7 @@ impl<'a> Parser<'a> {
                     {
                         self.next_token(); // Consume the package name
                         self.asts
-                            .push(AST::Statement(ASTstatement::Import { name: package }));
+                            .push(AST::Statement(ASTstatement::Import { name: package.to_string() }));
                         if self.peek_token().token_type == TokenType::Symbol(Symbol::Semicolon) {
                             self.state = State::EmptyState;
                             self.next_token();
@@ -572,7 +575,12 @@ impl<'a> Parser<'a> {
                 _ => {
                     self.next_token();
                     Ok(AST::TypeValue(ASTtypevalue::I64(
-                        num.parse::<i64>().unwrap(),
+                        match num.parse::<i64>() {
+                            Ok(parsed_num) => parsed_num,
+                            Err(_) => {
+                                return Err(AstGenError::new(AstError::InvalidNumberFormat(num.to_string())))
+                            }
+                        },
                     )))
                 }
             },
@@ -613,7 +621,7 @@ impl<'a> Parser<'a> {
                                 args: arguments,
                             }));
                         }
-                        Ok(AST::TypeValue(ASTtypevalue::Identifier(ident.to_string())))
+                        Ok(AST::TypeValue(ASTtypevalue::Identifier(ident)))
                     }
                 }
             }
@@ -765,7 +773,8 @@ impl<'a> Parser<'a> {
         // let:i32 a = 5;
 
         let mut status = 1;
-        let mut name: String = String::new();
+        let mut name: String = String::new();  
+        
         let mut type_name: Option<ASTtypename> = None;
         let mut value: Option<Box<AST>> = None;
         let type_map: HashMap<TypeName, ASTtypename> = [
@@ -807,7 +816,8 @@ impl<'a> Parser<'a> {
             // println!(
             // "\x1b[34m Token: {:?}, Status:{} \x1b[0m", token, status
             // );
-            match (token.clone().token_type, &status) {
+            match (&token.token_type, &status) {
+                // Us
                 (TokenType::TypeName(typename), 2) => {
                     if let Some(ast_type) = type_map.get(&typename) {
                         type_name = Some(*ast_type);
@@ -869,9 +879,10 @@ impl<'a> Parser<'a> {
         let mut val: ASTtypevalue = ASTtypevalue::TypeVoid;
 
         while let token = self.next_token() {
-            match (token.clone().token_type, &status) {
+            match (&token.token_type, &status) {
+                // Us
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 2) => {
-                    start_val = ASTtypevalue::Identifier(ident);
+                    start_val = ASTtypevalue::Identifier(ident.clone());
                     status = 3;
                     continue;
                 }
@@ -880,7 +891,7 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 4) => {
-                    end_val = ASTtypevalue::Identifier(ident);
+                    end_val = ASTtypevalue::Identifier(ident.clone());
                     status = 5;
                     continue;
                 }
@@ -1038,7 +1049,7 @@ impl<'a> Parser<'a> {
         args
     }
     #[allow(dead_code)]
-    pub fn get_asts(&self) -> Vec<AST> {
-        self.asts.clone()
+    pub fn get_asts(&self) -> &Vec<AST> {
+        &self.asts
     }
 }

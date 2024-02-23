@@ -91,6 +91,7 @@ pub enum ASTtypevalue {
     QuotedString(String),
     Char(char),
     Identifier(String),
+    Array(Vec<ASTtypevalue>),
     FunctionCall { name: String, args: Vec<AST> },
     // FunctionCall(String),
 }
@@ -108,9 +109,14 @@ impl fmt::Display for ASTtypevalue {
             ASTtypevalue::U64(val) => write!(f, "{}", val),
             ASTtypevalue::Bool(val) => write!(f, "{}", val),
             ASTtypevalue::QuotedString(val) => write!(f, "{}", val),
-            ASTtypevalue::Char(val) => write!(f, "{}", val), 
+            ASTtypevalue::Char(val) => write!(f, "{}", val),
             ASTtypevalue::Identifier(val) => write!(f, "{}", val),
-            // ASTtypevalue::FunctionCall(val) => write!(f, "CALL {}", val),
+            ASTtypevalue::Array(val) => {
+                for v in val {
+                    write!(f, "{}", v)?;
+                }
+                Ok(())
+            }
             ASTtypevalue::FunctionCall { name, args } => write!(
                 f,
                 "CALL {}({})",
