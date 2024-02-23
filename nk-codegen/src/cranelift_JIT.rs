@@ -1,24 +1,42 @@
 use astgen::ast::*;
-use astgen::parser_new::Parser;
+// use astgen::parser_new::Parser;
 use astgen::AST;
-use lexer::lex_new_new::Lexer;
+// use lexer::lex_new_new::Lexer;
 
 use cranelift::prelude::*;
-use cranelift_codegen::ir::entities::FuncRef;
+// use cranelift_codegen::ir::entities::FuncRef;
 use cranelift_codegen::ir::Signature;
 use cranelift_codegen::isa::CallConv;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
-use std::fs::read_to_string;
+// use std::fs::read_to_string;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 // This is a host function that you need to define and make accessible to the JIT.
-extern "C" fn print_function(arg: i64) {
-    print!("{}", arg);
+extern "C" fn print_function(arg: *const i8) {
+    use std::ffi::CStr;
+    unsafe {
+        let c_str = CStr::from_ptr(arg);
+        if let Ok(s) = c_str.to_str() {
+            print!("{}", s);
+        } else {
+            println!("Invalid string");
+        }
+    }
 }
-extern "C" fn println_function(arg: i64) {
-    println!("{}", arg);
+
+extern "C" fn println_function(arg: *const i8) {
+    use std::ffi::CStr;
+    unsafe {
+        let c_str = CStr::from_ptr(arg);
+        if let Ok(s) = c_str.to_str() {
+            println!("{}", s);
+        } else {
+            println!("Invalid string");
+        }
+    }
 }
 pub struct JIT {
     /// The function builder context, which is reused across multiple
@@ -272,43 +290,26 @@ impl JIT {
         Ok(())
     }
     pub fn define_print_function(&mut self) {
-        let int = self.module.target_config().pointer_type();
-        self.ctx.func.signature.params.push(AbiParam::new(int));
-        // The print function accepts an i64 as a parameter
-
-        // Ensure the function is declared with no return values
-        // sig.returns.push(AbiParam::new(int)); // Remove or comment out this line
-
-        // Define the function in the JIT environment.
-        // let print_func_id = self.module
-        // .declare_function(
-        // "print_function", // The name of the print function
-        // Linkage::Export,
-        // &sig,
-        // )
-        // .expect("Problem defining the print function");
+        let string_ptr = self.module.target_config().pointer_type();
+        self.ctx
+            .func
+            .signature
+            .params
+            .push(AbiParam::new(string_ptr));
         self.functions.insert(
             "print_function".to_string(),
             self.ctx.func.signature.clone(),
         );
         self.module.clear_context(&mut self.ctx);
     }
+
     pub fn define_println_function(&mut self) {
-        let int = self.module.target_config().pointer_type();
-        self.ctx.func.signature.params.push(AbiParam::new(int));
-        // The print function accepts an i64 as a parameter
-
-        // Ensure the function is declared with no return values
-        // sig.returns.push(AbiParam::new(int)); // Remove or comment out this line
-
-        // Define the function in the JIT environment.
-        // let print_func_id = self.module
-        // .declare_function(
-        // "print_function", // The name of the print function
-        // Linkage::Export,
-        // &sig,
-        // )
-        // .expect("Problem defining the print function");
+        let string_ptr = self.module.target_config().pointer_type();
+        self.ctx
+            .func
+            .signature
+            .params
+            .push(AbiParam::new(string_ptr));
         self.functions.insert(
             "println_function".to_string(),
             self.ctx.func.signature.clone(),
@@ -331,6 +332,36 @@ impl<'a> FunctionTranslator<'a> {
             ASTtypevalue::Char(c) => {
                 let imm: i8 = c as i8;
                 self.builder.ins().iconst(types::I8, i64::from(imm))
+            }
+            ASTtypevalue::QuotedString(str) => {
+                // Calculate the length of the string (including the null terminator)
+                let len = str.len() as i32 + 1; // +1 for null terminator
+
+                // Create a stack slot to hold the string
+                let string_slot = self.builder.create_sized_stack_slot(StackSlotData::new(
+                    StackSlotKind::ExplicitSlot,
+                    len as u32,
+                ));
+
+                // Get a pointer to the stack slot
+                let string_ptr = self.builder.ins().stack_addr(types::I64, string_slot, 0);
+
+                // Copy the string into the stack slot
+                for (i, byte) in str.bytes().enumerate() {
+                    let byte_val = self.builder.ins().iconst(types::I8, i64::from(byte));
+                    self.builder
+                        .ins()
+                        .store(MemFlags::new(), byte_val, string_ptr, i as i32);
+                }
+
+                // Add null terminator
+                let null_val = self.builder.ins().iconst(types::I8, 0);
+                self.builder
+                    .ins()
+                    .store(MemFlags::new(), null_val, string_ptr, len - 1);
+
+                // Return the pointer to the string as a Value
+                string_ptr
             }
             ASTtypevalue::I8(i) => {
                 let imm: i8 = i;
@@ -1028,4 +1059,31 @@ fn resolve_file_path(name: &str, main_file_location: &str) -> Result<PathBuf, St
     }
 
     Ok(resolved_path)
+}
+pub fn save_executable(code: *const u8, file_name: &str) -> Result<(), std::io::Error> {
+    let mut file_path = match std::env::current_exe() {
+        Ok(mut path) => {
+            path.pop();
+            path.push(file_name);
+            path
+        }
+        Err(_) => {
+            let mut path = std::env::current_dir()?;
+            path.push(file_name);
+            path
+        }
+    };
+
+    if cfg!(target_os = "windows") {
+        file_path.set_extension("exe");
+    }
+
+    let mut file = std::fs::File::create(&file_path)?;
+    let mut size = 0;
+    while unsafe { *code.add(size) } != 0 {
+        size += 1;
+    }
+    let slice = unsafe { std::slice::from_raw_parts(code, size) };
+    file.write_all(slice)?;
+    Ok(())
 }
