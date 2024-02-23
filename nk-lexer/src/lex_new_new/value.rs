@@ -1,6 +1,10 @@
+use std::borrow::Cow;
+
 use crate::lex_new_new::errors::LexError;
 use crate::lex_new_new::errors::LexcialError;
-use crate::tokens_new::{TokenType, TypeValue};
+// use crate::tokens_new::{TokenType, TypeValue};
+use crate::neo_tokens::{TokenType, TypeValue};
+
 #[allow(dead_code)]
 pub fn number_to_token(
     number: &str,
@@ -12,7 +16,7 @@ pub fn number_to_token(
     let test_parse = trimed_number.trim_matches('-').parse::<u64>();
 
     match test_parse {
-        Ok(_) => Ok(TokenType::TypeValue(TypeValue::Number(number.to_string()))),
+        Ok(_) => Ok(TokenType::TypeValue(TypeValue::Number(Cow::Owned(number.to_owned())))),
         Err(_) => Err(LexcialError {
             line,
             column,

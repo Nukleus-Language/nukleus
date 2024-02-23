@@ -9,10 +9,15 @@ use errors::{LexError, LexcialError};
 use std::iter::Peekable;
 use std::path::PathBuf;
 use std::str::Chars;
+use std::borrow::Cow;
 
-use crate::tokens_new::{
+// use crate::tokens_new::{
+//     Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
+// };
+use crate::neo_tokens::{
     Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
 };
+
 use inksac::{Color, Style};
 
 const ERRORTXTSTYLE: Style = Style {
@@ -73,6 +78,7 @@ impl<'a> Lexer<'a> {
             // println!("Current Buffer: {}", self.source[self.buffer_st..self.buffer_ed].to_string());
             // println!("Current Buffer start: {}", self.buffer_st);
             // println!("Current Buffer end: {}", self.buffer_ed);
+            // self.handle_double_state();
             if self.state == State::DoubleState {
                 self.buffer_st = self.buffer_ed;
                 self.state = State::EmptyState;
@@ -172,7 +178,7 @@ impl<'a> Lexer<'a> {
                 // string.to_string(),
                 // )));
                 self.insert_token(TokenType::TypeValue(TypeValue::QuotedString(
-                    string.to_string(),
+                    Cow::Owned(string.to_owned()),
                 )));
                 self.buffer_st = self.buffer_ed;
                 self.state = State::EmptyState;
@@ -196,14 +202,12 @@ impl<'a> Lexer<'a> {
                 let type_name = identifier::type_name_to_token(string, self.line, self.column);
                 if let Ok(type_name) = type_name {
                     self.insert_token(type_name);
-                    self.buffer_st = self.buffer_ed;
-                    self.state = State::EmptyState;
+                    self.reset_state();
                     continue;
                 }
                 let identifier = TokenType::TypeValue(TypeValue::Identifier(string.to_string()));
                 self.insert_token(identifier);
-                self.buffer_st = self.buffer_ed;
-                self.state = State::EmptyState;
+                self.reset_state();
                 continue;
             }
         }
@@ -217,28 +221,29 @@ impl<'a> Lexer<'a> {
         Ok(())
     }
 
-    fn next_char(&mut self) -> Option<char> {
-        match self.code.next() {
-            Some('\n') => {
-                self.line += 1;
-                self.column = 0;
-                self.buffer_ed += '\n'.len_utf8(); // Advance buffer_end for the newline character
-                Some('\n')
-            }
-            Some('\t') => {
-                self.column += 4;
-                self.buffer_ed += '\t'.len_utf8(); // Advance buffer_end for the tab character
-                Some('\t')
-            }
-            Some(ch) => {
-                self.column += 1; // Update column considering UTF-8 character length
-                self.buffer_ed += ch.len_utf8(); // Advance buffer_end for the character
-                Some(ch)
-            }
-            None => None,
-        }
+    #[inline]
+    fn handle_double_state(&mut self) {
+        self.buffer_st = self.buffer_ed;
+        self.state = State::EmptyState;
     }
-
+    fn next_char(&mut self) -> Option<char> {
+        self.code.next().map(|ch| {
+            self.update_position(ch);
+            ch
+        })
+    }
+    #[inline]
+    fn update_position(&mut self, ch: char) {
+        self.column += match ch {
+            '\n' => {
+                self.line += 1;
+                0
+            } // Reset column to 0 for new line
+            '\t' => 4, // Assume tab is 4 spaces
+            _ => 1,
+        };
+        self.buffer_ed += ch.len_utf8();
+    }
     fn peek_char(&mut self) -> Result<char, ()> {
         self.code.peek().copied().ok_or(())
     }
@@ -310,8 +315,13 @@ impl<'a> Lexer<'a> {
         // std::process::exit(1);
     }
 
-    pub fn get_tokens(&self) -> Vec<Token> {
-        self.tokens.clone()
+    pub fn get_tokens(&self) -> &Vec<Token> {
+        &self.tokens
+    }
+    #[inline]
+    fn reset_state(&mut self) {
+        self.state = State::EmptyState;
+        self.buffer_st = self.buffer_ed;
     }
 }
 
@@ -334,14 +344,14 @@ mod test {
             TokenType::TypeName(TypeName::I32),
             TokenType::TypeValue(TypeValue::Identifier("a".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::Number(5.to_string())),
+            TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("5"))),
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Statement(Statement::Let),
             TokenType::Symbol(Symbol::Colon),
             TokenType::TypeName(TypeName::I32),
             TokenType::TypeValue(TypeValue::Identifier("b".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::Number(0.to_string())),
+            TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("0"))),
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Symbol(Symbol::CloseBrace),
         ];
@@ -354,7 +364,7 @@ mod test {
     fn lexing_strings() {
         let code = " \"Hello, world!\" ";
         let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
-            "Hello, world!".to_string(),
+           Cow::Borrowed("Hello, world!"),
         ))];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         lexer.run();
@@ -391,7 +401,7 @@ mod test {
             TokenType::TypeName(TypeName::QuotedString),
             TokenType::TypeValue(TypeValue::Identifier("a".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::QuotedString("Hello, world!".to_string())),
+            TokenType::TypeValue(TypeValue::QuotedString(Cow::Borrowed("Hello, world!"))),
             TokenType::Symbol(Symbol::Semicolon),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
@@ -408,7 +418,7 @@ mod test {
             TokenType::TypeName(TypeName::I32),
             TokenType::TypeValue(TypeValue::Identifier("_a".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::Number(5.to_string())),
+            TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("5"))),
             TokenType::Symbol(Symbol::Semicolon),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
@@ -457,7 +467,7 @@ mod test {
                 TokenMetadata::new(1, 14),
             ),
             Token::new(
-                TokenType::TypeValue(TypeValue::Number(5.to_string())),
+                TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("5"))),
                 TokenMetadata::new(1, 15),
             ),
             Token::new(
@@ -477,7 +487,7 @@ mod test {
                 TokenMetadata::new(1, 22),
             ),
             Token::new(
-                TokenType::TypeValue(TypeValue::Number(2.to_string())),
+                TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("2"))),
                 TokenMetadata::new(1, 23),
             ),
             Token::new(
@@ -489,7 +499,7 @@ mod test {
                 TokenMetadata::new(1, 25),
             ),
             Token::new(
-                TokenType::TypeValue(TypeValue::Number(2.to_string())),
+                TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("2"))),
                 TokenMetadata::new(1, 26),
             ),
             Token::new(
@@ -520,18 +530,18 @@ mod test {
             TokenType::TypeName(TypeName::I32),
             TokenType::TypeValue(TypeValue::Identifier("a".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::Number(5.to_string())),
+            TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("5"))),
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Statement(Statement::Let),
             TokenType::Symbol(Symbol::Colon),
             TokenType::TypeName(TypeName::I32),
             TokenType::TypeValue(TypeValue::Identifier("b".to_string())),
             TokenType::Assign(Assign::Assign),
-            TokenType::TypeValue(TypeValue::Number(0.to_string())),
+            TokenType::TypeValue(TypeValue::Number(Cow::Borrowed("0"))),
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Statement(Statement::Println),
             TokenType::Symbol(Symbol::OpenParen),
-            TokenType::TypeValue(TypeValue::QuotedString("Hello, world!".to_string())),
+            TokenType::TypeValue(TypeValue::QuotedString(Cow::Borrowed("Hello, world!"))),
             TokenType::Symbol(Symbol::CloseParen),
             TokenType::Symbol(Symbol::Semicolon),
             TokenType::Statement(Statement::Return),

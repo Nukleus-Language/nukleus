@@ -1,6 +1,7 @@
 use crate::lex_new_new::errors::LexError;
 use crate::lex_new_new::errors::LexcialError;
-use crate::tokens_new::{Statement, TokenType, TypeName};
+// use crate::tokens_new::{Statement, TokenType, TypeName};
+use crate::neo_tokens::{Statement, TokenType, TypeName};
 
 #[allow(dead_code)]
 pub fn statement_to_token(
