@@ -38,8 +38,8 @@ impl fmt::Display for ASTOperator {
         match self {
             ASTOperator::Add => write!(f, "+"),
             ASTOperator::Subtract => write!(f, "-"),
-            ASTOperator::Or => write!(f, "|"),
-            ASTOperator::And => write!(f, "&"),
+            ASTOperator::Or => write!(f, "||"),
+            ASTOperator::And => write!(f, "&&"),
             ASTOperator::Multiply => write!(f, "*"),
             ASTOperator::Divide => write!(f, "/"),
             ASTOperator::Remainder => write!(f, "%"),
