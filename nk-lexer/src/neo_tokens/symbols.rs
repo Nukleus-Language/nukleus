@@ -20,6 +20,7 @@ pub enum Symbol {
     Comment,
     Arrow,
     Semicolon,
+
 }
 impl Symbol {
     #[allow(dead_code)]
@@ -41,6 +42,7 @@ impl Symbol {
             Symbol::Comment => "//",
             Symbol::Arrow => "->",
             Symbol::Semicolon => ";",
+            
         }
     }
 }
