@@ -4,7 +4,6 @@ use std::fmt;
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum Statement {
-
     Public,
     //Import,
     Let,
@@ -20,14 +19,12 @@ pub enum Statement {
     While,
     Function,
     Inject,
-
 }
 impl Statement {
     // Returns a string representation of the statement.
     #[allow(dead_code)]
     fn as_str(&self) -> &'static str {
         match *self {
-
             Statement::Public => "public",
             //Statement::Import => "import",
             Statement::Let => "let",
