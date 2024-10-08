@@ -1,7 +1,7 @@
 pub mod ast;
-mod parser;
+// mod parser;
 pub mod parser_new;
 
 pub use ast::AST;
 
-pub use parser::Parser;
+// pub use parser::Parser;
