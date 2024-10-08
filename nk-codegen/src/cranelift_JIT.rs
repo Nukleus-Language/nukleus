@@ -10,34 +10,43 @@ use cranelift_codegen::isa::CallConv;
 use cranelift_jit::{JITBuilder, JITModule};
 use cranelift_module::{DataDescription, FuncId, Linkage, Module};
 use std::collections::HashMap;
+use std::ffi::CString;
 // use std::fs::read_to_string;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone)]
+struct VarType {
+    obj: Variable,
+    type_name: Option<ASTtypename>,
+}
+
+impl VarType {
+    fn new(obj: Variable, type_name: Option<ASTtypename>) -> Self {
+        Self { obj, type_name }
+    }
+}
+
 // This is a host function that you need to define and make accessible to the JIT.
 extern "C" fn print_function(arg: *const i8) {
-    use std::ffi::CStr;
     unsafe {
-        let c_str = CStr::from_ptr(arg);
-        if let Ok(s) = c_str.to_str() {
-            print!("{}", s);
+        if !arg.is_null() {
+            let mut len = 0;
+            // Calculate the length of the string
+            while *arg.offset(len) != 0 {
+                len += 1;
+            }
+            // Convert the byte array to a string
+            let string =
+                std::str::from_utf8(std::slice::from_raw_parts(arg as *const u8, len as usize))
+                    .unwrap_or("Invalid string");
+            print!("{}", string);
         } else {
-            println!("Invalid string");
+            eprintln!("Null pointer received");
         }
     }
 }
 
-extern "C" fn println_function(arg: *const i8) {
-    use std::ffi::CStr;
-    unsafe {
-        let c_str = CStr::from_ptr(arg);
-        if let Ok(s) = c_str.to_str() {
-            println!("{}", s);
-        } else {
-            println!("Invalid string");
-        }
-    }
-}
 pub struct JIT {
     /// The function builder context, which is reused across multiple
     /// FunctionBuilder instances.
@@ -71,7 +80,7 @@ impl Default for JIT {
 
         let mut jb = JITBuilder::with_isa(isa, cranelift_module::default_libcall_names());
         jb.symbol("print_function", print_function as *const u8);
-        jb.symbol("println_function", println_function as *const u8);
+        // jb.symbol("println_function", println_function as *const u8);
 
         let module = JITModule::new(jb);
         let functions = HashMap::new();
@@ -226,7 +235,9 @@ impl JIT {
             }
         }
         if !is_lib {
+            #[cfg(debug_assertions)]
             println!("Finalize");
+
             let code = self
                 .module
                 .get_finalized_function(*funcid.get("main").expect("main function not found"));
@@ -291,6 +302,7 @@ impl JIT {
     }
     pub fn define_print_function(&mut self) {
         let string_ptr = self.module.target_config().pointer_type();
+        // let string_ptr
         self.ctx
             .func
             .signature
@@ -321,7 +333,7 @@ impl JIT {
 struct FunctionTranslator<'a> {
     int: types::Type,
     builder: FunctionBuilder<'a>,
-    variables: HashMap<String, Variable>,
+    variables: HashMap<String, VarType>,
     functions: HashMap<String, Signature>,
     module: &'a mut JITModule,
 }
@@ -378,16 +390,33 @@ impl<'a> FunctionTranslator<'a> {
             ASTtypevalue::I64(i) => self.builder.ins().iconst(types::I64, i),
 
             ASTtypevalue::Identifier(id) => {
-                let variable = self.variables.get(&id).unwrap();
-                self.builder.use_var(*variable)
+                if let Some(variable) = self.variables.get(&id) {
+                    self.builder.use_var(variable.obj)
+                } else {
+                    eprintln!("Variable {} not found", id);
+                    // Search for simliar variable / Function
+                    let suggestion = self.variables.iter().find(|(k, _)| k.contains(&id));
+                    if let Some((suggestion, _)) = suggestion {
+                        eprintln!("Did you mean {}?", suggestion);
+                    }
+                    let _ = std::process::exit(1);
+                }
             }
             ASTtypevalue::FunctionCall { name, args } => {
                 // Clone the function reference before entering the loop
-                let functioninfo = self
-                    .functions
-                    .get(&name)
-                    .cloned()
-                    .expect("function not found");
+                let functioninfo_res = self.functions.get(&name).cloned();
+
+                let functioninfo = match functioninfo_res {
+                    Some(functioninfo) => functioninfo,
+                    None => {
+                        eprintln!("Function {} not found", name);
+                        let suggestion = self.functions.iter().find(|(k, _)| k.contains(&name));
+                        if let Some((suggestion, _)) = suggestion {
+                            eprintln!("Did you mean {}?", suggestion);
+                        }
+                        let _ = std::process::exit(1);
+                    }
+                };
 
                 // let ref_function = functioninfo.fnref;
                 // let entry_block = self.builder.create_block();
@@ -487,16 +516,16 @@ impl<'a> FunctionTranslator<'a> {
                     } => {
                         let value = self.translate_expr(*value.unwrap());
                         self.builder
-                            .def_var(*self.variables.get(&name).unwrap(), value);
+                            .def_var(self.variables.get(&name).unwrap().obj, value);
                         value
                     }
-                    ASTstatement::Print { value } => {
-                        self.translate_print(*value);
+                    ASTstatement::Print { value, args } => {
+                        self.translate_print(*value, args);
                         // Return a dummy value since print does not return anything
                         self.builder.ins().iconst(self.int, 0)
                     }
-                    ASTstatement::Println { value } => {
-                        self.translate_println(*value);
+                    ASTstatement::Println { value, args } => {
+                        self.translate_println(*value, args);
                         // Return a dummy value since print does not return anything
                         self.builder.ins().iconst(self.int, 0)
                     }
@@ -588,46 +617,81 @@ impl<'a> FunctionTranslator<'a> {
             }
         }
     }
-    fn translate_print(&mut self, value: AST) {
-        let val = self.translate_expr(value);
+    // fn translate_print(&mut self, value: AST, args: Vec<AST>) {
+    //     let str_val = value.to_string();
+    //     let mut formatted_str = str_val.clone();
+    //     let mut j: usize = 0;
+    //     for i in 0..str_val.matches("{}").count() {
+    //         if j < args.len() {
+    //             let arg_val = self.translate_expr(args[j].clone());
+    //             formatted_str = formatted_str.replacen("{}", self.builder.use_var(arg_val),1);
+    //             j += 1;
+    //         }
+    //     }
+    //     let formatted_str_ast = AST::TypeValue(ASTtypevalue::QuotedString(formatted_str));
+    //     let formatted_str_val = self.translate_expr(formatted_str_ast);
+    //     self.emit_print_call(formatted_str_val);
+    // }
+    fn translate_print(&mut self, value: AST, args: Vec<AST>) {
+        let str_val = value.to_string();
+        let splited_str = str_val.split("{}").collect::<Vec<&str>>();
+        let mut j: usize = 0;
+
+        for i in 0..splited_str.len() {
+            let ast_chunk = AST::TypeValue(ASTtypevalue::QuotedString(splited_str[i].to_string()));
+            let chunk_val = self.translate_expr(ast_chunk);
+            self.emit_print_call(chunk_val);
+
+            if j < args.len() {
+                let arg_val = self.translate_expr(args[j].clone());
+                // Check if arg_val is a variable
+                if let AST::TypeValue(ASTtypevalue::Identifier(arg)) = args[j].clone() {
+                    // let arg_val = self.translate_value(arg.clone());
+                    let arg_val = self.variables[&arg.to_string()].obj;
+                    let var_val = self.builder.use_var(arg_val);
+                    self.emit_print_call(var_val);
+                    j = j + 1;
+                    continue;
+                }
+                self.emit_print_call(arg_val);
+                j = j + 1;
+            }
+        }
+    }
+
+    fn translate_println(&mut self, value: AST, args: Vec<AST>) {
+        self.translate_print(value, args);
+        // Print a newline after all segments and arguments
+        let newline = AST::TypeValue(ASTtypevalue::QuotedString("\n".to_string()));
+        let newline_val = self.translate_expr(newline);
+        self.emit_print_call(newline_val);
+    }
+
+    // Helper function to emit a call to the print function
+    fn emit_print_call(&mut self, val: Value) {
         let functioninfo = self
             .functions
             .get("print_function")
             .cloned()
-            .expect("function not found");
-        // Retrieve the function signature for the print function.
+            .expect("print_function not found");
         let func = self
             .module
             .declare_function("print_function", Linkage::Export, &functioninfo)
             .expect("Function Link Error");
         let local_print_func = self.module.declare_func_in_func(func, self.builder.func);
-
-        // Emit a call to the print function with the translated value as an argument.
+        // let formatted_str = self.translate_value(val);
+        // println!("Formatted String: {:?}", formatted_str);
+        println!("Value: {:?}", val);
+        // let val_type = self.variables.get(&val_name).unwrap().type_name;
         let call = self.builder.ins().call(local_print_func, &[val]);
-        let _ = self.builder.inst_results(call);
+        let res = self.builder.inst_results(call);
+        println!("Result: {:?}", res);
     }
-    fn translate_println(&mut self, value: AST) {
-        let val = self.translate_expr(value);
-        let functioninfo = self
-            .functions
-            .get("println_function")
-            .cloned()
-            .expect("function not found");
-        // Retrieve the function signature for the print function.
-        let func = self
-            .module
-            .declare_function("println_function", Linkage::Export, &functioninfo)
-            .expect("Function Link Error");
-        let local_print_func = self.module.declare_func_in_func(func, self.builder.func);
 
-        // Emit a call to the print function with the translated value as an argument.
-        let call = self.builder.ins().call(local_print_func, &[val]);
-        let _ = self.builder.inst_results(call);
-    }
     fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Value {
         let new_value = self.translate_expr(expr);
         let variable = self.variables.get(&name).unwrap();
-        let var_value = self.builder.use_var(*variable);
+        let var_value = self.builder.use_var(variable.obj);
         let oped_value = match op {
             ASTOperator::Assign => new_value,
             ASTOperator::AddAssign => self.builder.ins().iadd(var_value, new_value),
@@ -643,7 +707,7 @@ impl<'a> FunctionTranslator<'a> {
                 std::process::exit(1);
             }
         };
-        self.builder.def_var(*variable, oped_value);
+        self.builder.def_var(variable.obj, oped_value);
         oped_value
     }
     fn translate_icmp(&mut self, cmp: IntCC, lhs: AST, rhs: AST) -> Value {
@@ -673,7 +737,7 @@ impl<'a> FunctionTranslator<'a> {
         // let end_value = self.translate_value(end);
         // let update_value = self.translate_value(value);
 
-        let loop_var = *self.variables.get(&start_name).unwrap();
+        let loop_var = self.variables.get(&start_name).unwrap().obj;
 
         let header_block = self.builder.create_block();
         let body_block = self.builder.create_block();
@@ -860,9 +924,12 @@ fn translate_type(base_int: types::Type, typename: ASTtypename) -> Type {
         ASTtypename::I16 => types::I16,
         ASTtypename::I32 => types::I32,
         ASTtypename::I64 => types::I64,
+        ASTtypename::QuotedString => base_int,
+        ASTtypename::Array => base_int,
         _ => unimplemented!(),
     }
 }
+
 fn declare_signature(
     int: types::Type,
     args: &[ASTtypecomp],
@@ -898,7 +965,7 @@ fn declare_variables(
     _the_return: &ASTtypename,
     stmts: &[AST],
     entry_block: Block,
-) -> HashMap<String, Variable> {
+) -> HashMap<String, VarType> {
     let mut variables = HashMap::new();
     let mut index = 0;
 
@@ -913,7 +980,14 @@ fn declare_variables(
             let type_val = translate_type(int, *type_name);
 
             let val = builder.block_params(entry_block)[i];
-            let var = declare_variable(type_val, builder, &mut variables, &mut index, &name);
+            let var = declare_variable(
+                type_val,
+                builder,
+                &mut variables,
+                &mut index,
+                Some(*type_name),
+                &name,
+            );
             builder.def_var(var, val);
         } else {
             // Handle other ASTtypecomp variants or skip
@@ -932,6 +1006,7 @@ fn declare_variables(
     // }
     for expr in stmts {
         declare_variables_in_stmt(int, builder, &mut variables, &mut index, expr);
+        println!("variables{}: {:?}", index, variables);
     }
 
     variables
@@ -942,7 +1017,7 @@ fn declare_variables(
 fn declare_variables_in_stmt(
     int: types::Type,
     builder: &mut FunctionBuilder,
-    variables: &mut HashMap<String, Variable>,
+    variables: &mut HashMap<String, VarType>,
     index: &mut usize,
     expr: &AST,
 ) {
@@ -958,7 +1033,7 @@ fn declare_variables_in_stmt(
                         Some(names) => translate_type(int, *names),
                         None => int,
                     };
-                    let _ = declare_variable(type_val, builder, variables, index, name);
+                    let _ = declare_variable(type_val, builder, variables, index, *type_name, name);
                 }
                 ASTstatement::Assignment {
                     left,
@@ -1001,13 +1076,14 @@ fn declare_variables_in_stmt(
 fn declare_variable(
     int: types::Type,
     builder: &mut FunctionBuilder,
-    variables: &mut HashMap<String, Variable>,
+    variables: &mut HashMap<String, VarType>,
     index: &mut usize,
+    type_name: Option<ASTtypename>,
     name: &str,
 ) -> Variable {
     let var = Variable::new(*index);
     if !variables.contains_key(name) {
-        variables.insert(name.into(), var);
+        variables.insert(name.into(), VarType::new(var, type_name));
         builder.declare_var(var, int);
         *index += 1;
     }
