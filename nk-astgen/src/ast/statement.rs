@@ -56,9 +56,11 @@ pub enum ASTstatement {
     },
     Print {
         value: Box<AST>,
+        args: Vec<AST>,
     },
     Println {
         value: Box<AST>,
+        args: Vec<AST>,
     },
     Return {
         value: Box<AST>,
@@ -180,8 +182,21 @@ impl fmt::Display for ASTstatement {
                         .join("\n")
                 )
             }
-            ASTstatement::Print { value } => write!(f, "print {}", value),
-            ASTstatement::Println { value } => write!(f, "print {} \\n", value),
+            ASTstatement::Print { value, args } => {
+                write!(f, "print {}", value);
+                for arg in args {
+                    write!(f, " {}", arg);
+                }
+                Ok(())
+            }
+            ASTstatement::Println { value, args } => {
+                write!(f, "println {}", value);
+                for arg in args {
+                    write!(f, " {}", arg);
+                }
+                write!(f, "\n");
+                Ok(())
+            }
             ASTstatement::Return { value } => write!(f, "return {}", value),
         }
     }
