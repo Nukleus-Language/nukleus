@@ -1,5 +1,8 @@
-fn main() -> void
+fn main() -> i64
 {
-	println("Hello World!");
-	return;	
+	let:i64 a = 2345;
+	let:i64 ab = 125;
+	let:String b = "hi";
+	println("hellooo hi {}", b);
+	return 0;	
 }

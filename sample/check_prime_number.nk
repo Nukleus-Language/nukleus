@@ -1,12 +1,13 @@
-fn main() -> void 
+fn main() -> i64
 {
-    let:i32 n = 10;
-    let:i32 i = 2;
-    let:i32 count = 0;
+    let:i64 n = 10;
+    let:i64 i = 2;
+    let:i64 count = 0;
+    let:i64 j = 0;
 
     for ( i -> n :: 1 ) 
     {
-        let:i32 j = n;
+        j=n;
         j %= i;
     
         if ( j == 0 ) 
@@ -16,11 +17,11 @@ fn main() -> void
     }
 
     if (count == 0) {
-        println("this is prime number!");
+        println(1);
     }
     if (count != 0) {
-        println("this is not prime number!");
+        println(0);
     }
 
-    return;
+    return 0;
 }

@@ -1,14 +1,15 @@
-fn main() -> void
+fn main() -> i64
 {
-	let:i32 i = 0;
+	let:i64 i = 0;
+	let:i64 j = 0;
 	for(i -> 10 :: 1)
 	{
-		let:i32 j = 0;
+		j = 0;
 		for(j -> i :: 1)
 		{
 			print("*");
 		}
-		println(" ");
+		println("");
 	}
-	return ;
+	return 0;
 }

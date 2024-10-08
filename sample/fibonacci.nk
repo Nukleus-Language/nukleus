@@ -7,15 +7,15 @@ fn fibonacci(i64:n) -> i64
 	}
 	else {
 		return_val = fibonacci( n-1 ) + fibonacci( n-2 );
-
 	}
 	return  return_val;
 }
 
 fn main() -> i64
 {
-	let:i64 x = 47;
-	return fibonacci(x);
+	let:i64 x = 35;
+	println(fibonacci(x));
+	return 0;
 }
 
 

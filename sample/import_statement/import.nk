@@ -1,7 +1,0 @@
-inject "fibonacci";
-
-fn main() -> i64
-{
-	let:i64 result = fibonacci(47);
-	return result;
-}
