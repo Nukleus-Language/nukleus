@@ -33,6 +33,7 @@ pub enum AstError {
     UnexpectedToken(),
     InvalidNumberFormat(String),
     UnexpectedEOF(),
+    MismatchedArgumentCount(usize, usize),
 }
 impl fmt::Display for AstError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -43,6 +44,9 @@ impl fmt::Display for AstError {
             AstError::UnexpectedToken() => write!(f, "Unexpected token"),
             AstError::InvalidNumberFormat(num) => write!(f, "Invalid number format: {}", num),
             AstError::UnexpectedEOF() => write!(f, "Unexpected EOF"),
+            AstError::MismatchedArgumentCount(a, b) => {
+                write!(f, "Mismatched argument count: {} vs {}", a, b)
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 use inksac::{Color, Style, Stylish};
-use lexer::neo_tokens::*;
+use lexer::neo_tokens::{self, *};
 
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -202,6 +202,10 @@ impl<'a> Parser<'a> {
             AstError::UnexpectedEOF() => {
                 "Unexpected end of file. Check for missing tokens.".to_string()
             }
+            AstError::MismatchedArgumentCount(a, b) => format!(
+                "Mismatched argument count, Check the arguments. Expected: {}, Found: {}",
+                a, b
+            ),
         }
     }
     pub fn run(&mut self) -> Result<(), AstGenError> {
@@ -303,12 +307,12 @@ impl<'a> Parser<'a> {
         //println!("{} Start of Function: {:?} {}", "\x1b[34m", cur_token,"\x1b[0m");
         let function_name = cur_token.to_string();
 
-        //println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
+        // println!("{} Function name: {:?} {}", "\x1b[34m", function_name,"\x1b[0m");
 
         //println!("cur: {:?}", cur_token);
         // Parse parameters of the function
         let arguments = self.parse_arguments();
-        //println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
+        // println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
 
         // Parse function return type
         // -> <type>
@@ -572,6 +576,7 @@ impl<'a> Parser<'a> {
 
             return Ok(test);
         }
+
         // Handle literals and identifiers
         match next_token.token_type {
             // TokenType::Symbol(Symbol::OpenParen) => panic!("Open Parenthesis"),
@@ -663,22 +668,49 @@ impl<'a> Parser<'a> {
         // Consume the opening parenthesis
         let next = self.next_token();
         if next.token_type != TokenType::Symbol(Symbol::OpenParen) {
-            self.report_error(
+            return Err(self.report_error(
                 AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::OpenParen),
                     next.metadata,
                 ))),
                 &next,
-            );
+            ));
         }
 
+        // Parse the format string
+        let format_str_token = self.peek_token();
+        let format_str = match format_str_token.token_type {
+            TokenType::TypeValue(TypeValue::QuotedString(ref s)) => s,
+            _ => {
+                return Err(self.report_error(
+                    AstGenError::new(AstError::ExpectedToken(Token::new(
+                        TokenType::TypeName(TypeName::QuotedString),
+                        format_str_token.metadata,
+                    ))),
+                    &format_str_token,
+                ))
+            }
+        };
         let value = self.parse_expression()?;
-        let cur_token = self.next_token();
+        // Parse arguments
+        let mut args = Vec::new();
+        while self.peek_token().token_type == TokenType::Symbol(Symbol::Comma) {
+            self.next_token(); // Consume the comma
+            args.push(self.parse_expression()?);
+        }
+
+        // Check if the number of `{}` in the format string matches the number of arguments
+        let placeholders = format_str.matches("{}").count();
+        if placeholders != args.len() {
+            return Err(self.report_error(
+                AstGenError::new(AstError::MismatchedArgumentCount(placeholders, args.len())),
+                &format_str_token,
+            ));
+        }
+
         // Consume the closing parenthesis
+        let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::CloseParen) {
-            // println!("Consume the closing parenthesis");
-            // println!("cur token: {:?}", cur_token);
-            // println!("next token: {:?}", self.peek_token());
             return Err(self.report_error(
                 AstGenError::new(AstError::ExpectedToken(Token::new(
                     TokenType::Symbol(Symbol::CloseParen),
@@ -687,7 +719,8 @@ impl<'a> Parser<'a> {
                 &cur_token,
             ));
         }
-        // cunsume the semicolon
+
+        // Consume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
             return Err(self.report_error(
@@ -699,8 +732,10 @@ impl<'a> Parser<'a> {
             ));
         }
 
+        // Return the AST for println with the formatted string
         Ok(AST::Statement(ASTstatement::Print {
             value: Box::new(value),
+            args,
         }))
     }
     fn parse_println(&mut self) -> Result<AST, AstGenError> {
@@ -716,7 +751,36 @@ impl<'a> Parser<'a> {
             ));
         }
 
+        // Parse the format string
+        let format_str_token = self.peek_token();
+        let format_str = match format_str_token.token_type {
+            TokenType::TypeValue(TypeValue::QuotedString(ref s)) => s,
+            _ => {
+                return Err(self.report_error(
+                    AstGenError::new(AstError::ExpectedToken(Token::new(
+                        TokenType::TypeName(TypeName::QuotedString),
+                        format_str_token.metadata,
+                    ))),
+                    &format_str_token,
+                ))
+            }
+        };
         let value = self.parse_expression()?;
+        // Parse arguments
+        let mut args = Vec::new();
+        while self.peek_token().token_type == TokenType::Symbol(Symbol::Comma) {
+            self.next_token(); // Consume the comma
+            args.push(self.parse_expression()?);
+        }
+
+        // Check if the number of `{}` in the format string matches the number of arguments
+        let placeholders = format_str.matches("{}").count();
+        if placeholders != args.len() {
+            return Err(self.report_error(
+                AstGenError::new(AstError::MismatchedArgumentCount(placeholders, args.len())),
+                &format_str_token,
+            ));
+        }
 
         // Consume the closing parenthesis
         let cur_token = self.next_token();
@@ -729,7 +793,8 @@ impl<'a> Parser<'a> {
                 &cur_token,
             ));
         }
-        // cunsume the semicolon
+
+        // Consume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
             return Err(self.report_error(
@@ -741,8 +806,10 @@ impl<'a> Parser<'a> {
             ));
         }
 
+        // Return the AST for println with the formatted string
         Ok(AST::Statement(ASTstatement::Println {
             value: Box::new(value),
+            args,
         }))
     }
     fn parse_if(&mut self) -> Result<AST, AstGenError> {
