@@ -15,7 +15,7 @@ use std::str::Chars;
 //     Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
 // };
 use crate::neo_tokens::{
-    Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
+    Symbol, Token, TokenMetadata, TokenType, TypeValue,
 };
 
 use inksac::{Color, Style};
@@ -227,9 +227,8 @@ impl<'a> Lexer<'a> {
         self.state = State::EmptyState;
     }
     fn next_char(&mut self) -> Option<char> {
-        self.code.next().map(|ch| {
+        self.code.next().inspect(|&ch| {
             self.update_position(ch);
-            ch
         })
     }
     #[inline]
@@ -328,6 +327,9 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::neo_tokens::{
+        Assign, Statement, Symbol, TypeName, TypeValue, Operator
+    };
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";
@@ -363,11 +365,11 @@ mod test {
     #[test]
     fn lexing_strings() {
         let code = " \"Hello, world!\" ";
-        let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
+        let _ans = [TokenType::TypeValue(TypeValue::QuotedString(
             Cow::Borrowed("Hello, world!"),
         ))];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run();
+        let _ = lexer.run();
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }

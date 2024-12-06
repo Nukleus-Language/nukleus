@@ -41,6 +41,12 @@ pub struct Interpreter {
     cur_function: FunctionId,
 }
 
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Interpreter {
     pub fn new() -> Self {
         Interpreter {
@@ -111,7 +117,7 @@ impl Interpreter {
         );
         loop {
             print!("> ");
-            io::stdout().flush();
+            let _ = io::stdout().flush();
             let mut input = String::new();
             io::stdin().read_line(&mut input).ok();
 
@@ -149,8 +155,11 @@ impl Interpreter {
         let arg_base = self
             .functions
             .get(&self.cur_function)
-            .expect({
-                return;
+            .unwrap_or_else(|| {
+                panic!(
+                    "{}",
+                    "Function not found".to_string()
+                )
             })
             .function_get_args_format();
 

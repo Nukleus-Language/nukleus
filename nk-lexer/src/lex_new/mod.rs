@@ -12,7 +12,7 @@ use std::str::Chars;
 use inksac::{Color, Style, Stylish};
 
 use crate::tokens_new::{
-    Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
+    Symbol, Token, TokenMetadata, TokenType, TypeValue,
 };
 
 const ERRORTXTSTYLE: Style = Style {
@@ -276,6 +276,9 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::tokens_new::{
+        Assign, Statement, Symbol, TypeName, TypeValue, Operator
+    };
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";
@@ -311,7 +314,7 @@ mod test {
     #[test]
     fn lexing_strings() {
         let code = " \"Hello, world!\" ";
-        let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
+        let _ans = [TokenType::TypeValue(TypeValue::QuotedString(
             "Hello, world!".to_string(),
         ))];
         let mut lexer = Lexer::new(code);

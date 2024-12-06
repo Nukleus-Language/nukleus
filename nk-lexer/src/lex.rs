@@ -1,4 +1,4 @@
-use crate::errors::LexerError;
+use crate::LexerError;
 use crate::tokens::*;
 
 //use crate::core::lexer::{Operator, Logical, Assigns};
@@ -265,10 +265,10 @@ pub fn lexer(code: &str) -> Vec<Token> {
 // a Identifier cannot start with a number and can only contain letters, numbers and underscores
 fn identifier_parser(buffer: String) -> Result<String, LexerError> {
     if buffer.chars().next().unwrap().is_numeric() {
-        return Err(LexerError::InvalidIdentifierNum);
+        return Err(LexerError::InvalidIdentifierNum(buffer));
     }
     if buffer.chars().any(|c| !c.is_alphanumeric() && c != '_') {
-        return Err(LexerError::InvalidIdentifierChar);
+        return Err(LexerError::InvalidIdentifierChar(buffer));
     }
     Ok(buffer)
 }

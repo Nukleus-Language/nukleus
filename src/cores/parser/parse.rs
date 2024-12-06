@@ -242,13 +242,10 @@ impl<'a> Parser<'a> {
             .ok_or(AstParseError::ExpectedOther {
                 token: "Variable Name".to_owned(),
             })?;
-        match variable_name.is_identifier() {
-            false => {
-                return Err(AstParseError::ExpectedOther {
-                    token: "Variable Name".to_owned(),
-                })
-            }
-            true => (),
+        if !variable_name.is_identifier() {
+            return Err(AstParseError::ExpectedOther {
+                token: "Variable Name".to_owned(),
+            })
         }
         self.consume(); // Consume Variable Name
                         //

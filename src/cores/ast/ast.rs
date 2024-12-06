@@ -126,10 +126,7 @@ impl AsMut<HashMap<String, Token>> for AST {
 
 impl AST {
     pub fn is_function(&self) -> bool {
-        match self {
-            AST::Function { .. } => true,
-            _ => false,
-        }
+        matches!(self, AST::Function { .. })
     }
     pub fn function_get_statements(&self) -> Vec<AST> {
         match self {
