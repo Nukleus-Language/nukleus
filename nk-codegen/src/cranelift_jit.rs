@@ -8,9 +8,8 @@ use cranelift::prelude::*;
 use cranelift_codegen::ir::Signature;
 use cranelift_codegen::isa::CallConv;
 use cranelift_jit::{JITBuilder, JITModule};
-use cranelift_module::{DataDescription, FuncId, Linkage, Module};
+use cranelift_module::{DataDescription, Linkage, Module};
 use std::collections::HashMap;
-use std::ffi::CString;
 // use std::fs::read_to_string;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -108,52 +107,46 @@ impl JIT {
         self.define_println_function();
         // Function Signature Declaration
         for ast in input.clone() {
-            match ast {
-                AST::Statement(statement) => match statement {
-                    ASTstatement::Function {
-                        public: _,
-                        name,
-                        args,
-                        statements: _,
-                        return_type,
-                    } => {
-                        let int = self.module.target_config().pointer_type();
+            if let AST::Statement(statement) = ast { if let ASTstatement::Function {
+                    public: _,
+                    name,
+                    args,
+                    statements: _,
+                    return_type,
+                } = statement {
+                let int = self.module.target_config().pointer_type();
 
-                        for p in args.clone() {
-                            match p {
-                                ASTtypecomp::Argument {
-                                    type_name,
-                                    identifier: _,
-                                } => {
-                                    self.ctx
-                                        .func
-                                        .signature
-                                        .params
-                                        .push(AbiParam::new(translate_type(int, type_name)));
-                                }
-                                _ => {
-                                    println!("Invalid Type for Argument");
-                                    std::process::exit(1);
-                                }
-                            }
+                for p in args.clone() {
+                    match p {
+                        ASTtypecomp::Argument {
+                            type_name,
+                            identifier: _,
+                        } => {
+                            self.ctx
+                                .func
+                                .signature
+                                .params
+                                .push(AbiParam::new(translate_type(int, type_name)));
                         }
-                        let type_return = translate_type(int, return_type);
-
-                        self.ctx
-                            .func
-                            .signature
-                            .returns
-                            .push(AbiParam::new(type_return));
-
-                        self.functions
-                            .insert(name.clone(), self.ctx.func.signature.clone());
-                        self.module.clear_context(&mut self.ctx);
-                        // self.module.finalize_definitions().expect("Compile Error");
+                        _ => {
+                            println!("Invalid Type for Argument");
+                            std::process::exit(1);
+                        }
                     }
-                    _ => {}
-                },
-                _ => {}
-            }
+                }
+                let type_return = translate_type(int, return_type);
+
+                self.ctx
+                    .func
+                    .signature
+                    .returns
+                    .push(AbiParam::new(type_return));
+
+                self.functions
+                    .insert(name.clone(), self.ctx.func.signature.clone());
+                self.module.clear_context(&mut self.ctx);
+                // self.module.finalize_definitions().expect("Compile Error");
+            } }
         }
         for ast in input {
             match ast {
@@ -179,7 +172,7 @@ impl JIT {
                         let new_new_tokens = new_new_lexer.get_tokens();
 
                         let mut mid_ir = astgen::parser_new::Parser::new(
-                            &new_new_tokens,
+                            new_new_tokens,
                             Path::new(&name).to_path_buf(),
                             &contents,
                         );
@@ -192,7 +185,7 @@ impl JIT {
                             self.compile(ast_new.clone(), resolved_path.to_str().unwrap(), true);
                         for (name, signature) in self.functions.iter() {
                             println!("Function Name: {}, Signature: {:?}", name, signature);
-                            println!("");
+                            println!();
                         }
                     }
                     ASTstatement::Function {
@@ -338,7 +331,7 @@ struct FunctionTranslator<'a> {
     module: &'a mut JITModule,
 }
 
-impl<'a> FunctionTranslator<'a> {
+impl FunctionTranslator<'_> {
     fn translate_value(&mut self, value: ASTtypevalue) -> Value {
         match value {
             ASTtypevalue::Char(c) => {
@@ -353,6 +346,7 @@ impl<'a> FunctionTranslator<'a> {
                 let string_slot = self.builder.create_sized_stack_slot(StackSlotData::new(
                     StackSlotKind::ExplicitSlot,
                     len as u32,
+                    8,
                 ));
 
                 // Get a pointer to the stack slot
@@ -399,7 +393,7 @@ impl<'a> FunctionTranslator<'a> {
                     if let Some((suggestion, _)) = suggestion {
                         eprintln!("Did you mean {}?", suggestion);
                     }
-                    let _ = std::process::exit(1);
+                    std::process::exit(1);
                 }
             }
             ASTtypevalue::FunctionCall { name, args } => {
@@ -414,7 +408,7 @@ impl<'a> FunctionTranslator<'a> {
                         if let Some((suggestion, _)) = suggestion {
                             eprintln!("Did you mean {}?", suggestion);
                         }
-                        let _ = std::process::exit(1);
+                        std::process::exit(1);
                     }
                 };
 
@@ -440,13 +434,13 @@ impl<'a> FunctionTranslator<'a> {
                 let call = self.builder.ins().call(func, arguments.as_slice());
                 let results = self.builder.inst_results(call);
                 assert_eq!(results.len(), 1);
-                let result_val = results[0];
+                
                 // self.builder.seal_all_blocks();
                 // self.builder.finalize();
                 // self.builder.finalize();
                 // self.module.clear_context(&mut self.codegen_context);
                 // self.module.finalize_definitions()?;
-                result_val
+                results[0]
 
                 // self.builder.ins().iconst(self.int, 0)
             }
@@ -463,6 +457,7 @@ impl<'a> FunctionTranslator<'a> {
                 let array_var = self.builder.create_sized_stack_slot(StackSlotData::new(
                     StackSlotKind::ExplicitSlot,
                     array_len as u32,
+                    8,
                 ));
                 for (i, val) in translated_values.iter().enumerate() {
                     let index = self.builder.ins().iconst(types::I32, i as i64);
@@ -650,11 +645,11 @@ impl<'a> FunctionTranslator<'a> {
                     let arg_val = self.variables[&arg.to_string()].obj;
                     let var_val = self.builder.use_var(arg_val);
                     self.emit_print_call(var_val);
-                    j = j + 1;
+                    j += 1;
                     continue;
                 }
                 self.emit_print_call(arg_val);
-                j = j + 1;
+                j += 1;
             }
         }
     }
