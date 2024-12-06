@@ -194,7 +194,7 @@ impl fmt::Display for ASTstatement {
                 for arg in args {
                     write!(f, " {}", arg);
                 }
-                write!(f, "\n");
+                writeln!(f);
                 Ok(())
             }
             ASTstatement::Return { value } => write!(f, "return {}", value),

@@ -1,7 +1,6 @@
 use inksac::{Color, Style, Stylish};
-use lexer::neo_tokens::{self, *};
+use lexer::neo_tokens::{*};
 
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::iter::{Cloned, Peekable};
 use std::path::PathBuf;
@@ -194,7 +193,7 @@ impl<'a> Parser<'a> {
             ),
             AstError::ExpectedExpression() => "Expected an expression. Check syntax.".to_string(),
             AstError::ExpectedStatement() => "Expected a statement. Check syntax.".to_string(),
-            AstError::UnexpectedToken() => format!("Unexpected token. Check syntax."),
+            AstError::UnexpectedToken() => "Unexpected token. Check syntax.".to_string(),
             AstError::InvalidNumberFormat(num) => format!(
                 "Ensure the number is correctly formatted. Invalid input: '{}'",
                 num
@@ -655,10 +654,10 @@ impl<'a> Parser<'a> {
                 // "{} Current Token: {:?}{}",
                 // "\x1b[36m", next_token, "\x1b[0m"
                 // );
-                return Err(self.report_error(
+                Err(self.report_error(
                     AstGenError::new(AstError::ExpectedExpression()),
                     &next_token,
-                ));
+                ))
                 // AST::TypeValue(ASTtypevalue::TypeVoid) // Placeholder
             }
         }
@@ -838,7 +837,7 @@ impl<'a> Parser<'a> {
         }
         Ok(AST::Statement(ASTstatement::If {
             condition: Box::new(condition),
-            statements: statements,
+            statements,
             elif,
             else_statements,
         }))
@@ -895,7 +894,7 @@ impl<'a> Parser<'a> {
             match (&token.token_type, &status) {
                 // Us
                 (TokenType::TypeName(typename), 2) => {
-                    if let Some(ast_type) = type_map.get(&typename) {
+                    if let Some(ast_type) = type_map.get(typename) {
                         type_name = Some(*ast_type);
                         self.next_token();
                         status = 3;
