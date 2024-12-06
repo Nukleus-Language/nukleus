@@ -1,0 +1,19 @@
+fn factorial(i64:n) -> i64
+{
+    let:i64 return_val = 0;
+    if (n == 1 || n == 0) {
+        return_val = 1;
+    }
+     else {
+        return_val = n * factorial(n - 1);
+    }
+    return return_val;
+}
+
+fn main() -> i64
+{
+    let:i64 number = 5;
+    let:i64 result =factorial(number);
+    println("result of factorial {}: {}",number,result);
+    return 0;
+}
