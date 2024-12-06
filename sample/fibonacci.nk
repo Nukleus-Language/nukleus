@@ -14,8 +14,8 @@ fn fibonacci(i64:n) -> i64
 fn main() -> i64
 {
 	let:i64 x = 35;
-	println(fibonacci(x));
-	return 0;
+	let:i64 result = fibonacci(x);
+	return result;
 }
 
 
