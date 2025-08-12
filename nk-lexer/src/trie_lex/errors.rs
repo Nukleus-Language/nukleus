@@ -6,11 +6,33 @@ pub struct LexcialError {
     pub column: usize,
     pub message: LexError,
 }
+
+impl LexcialError {
+    #[inline(always)]
+    pub fn new_invalid_statement(statement: &str, line: usize, column: usize) -> Self {
+        Self {
+            line,
+            column,
+            message: LexError::InvalidStatement(statement.to_string()),
+        }
+    }
+
+    #[inline(always)]
+    pub fn new_invalid_type(typename: &str, line: usize, column: usize) -> Self {
+        Self {
+            line,
+            column,
+            message: LexError::InvalidTypeName(typename.to_string()),
+        }
+    }
+}
+
 impl fmt::Display for LexcialError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Lexical Error: {}", self.message)
     }
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -25,6 +47,7 @@ pub enum LexError {
     InvalidDoubleSymbol(String),
     ExpectedQuote(),
 }
+
 impl fmt::Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

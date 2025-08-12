@@ -1,54 +1,53 @@
-use crate::trie_tokens::TokenType;
+use crate::neo_tokens::TokenType;
+use std::collections::HashMap;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug)]
 pub struct TrieNode {
-    children: Vec<Option<Box<TrieNode>>>,
+    ascii_children: Vec<Option<Box<TrieNode>>>,
+    unicode_children: Option<HashMap<char, Box<TrieNode>>>,
     is_end: bool,
     token_type: Option<TokenType>,
 }
 
 impl TrieNode {
-    fn new() -> Self {
+    pub fn new() -> Self {
+        let mut ascii_children = Vec::with_capacity(128);
+        ascii_children.resize_with(128, || None);
+
         TrieNode {
-            children: Vec::new(),
+            ascii_children,
+            unicode_children: None,
             is_end: false,
             token_type: None,
         }
     }
 
-    // Add a method to ensure the children vector has the correct capacity
-    fn ensure_children_capacity(&mut self) {
-        if self.children.len() < 128 {
-            self.children.resize_with(128, || None);
-        }
-    }
-
-    // Update other methods that work with children to use ensure_children_capacity
-    fn insert(&mut self, word: &str, token_type: TokenType) {
-        self.ensure_children_capacity();
+    pub fn insert(&mut self, word: &str, token_type: TokenType) {
         let mut node = self;
-        for &ch in word.as_bytes() {
-            node = node.children[ch as usize].get_or_insert_with(|| Box::new(TrieNode::new()));
+        for ch in word.chars() {
+            node = if (ch as u32) < 128 {
+                node.ascii_children[ch as usize].get_or_insert_with(|| Box::new(TrieNode::new()))
+            } else {
+                node.unicode_children
+                    .get_or_insert_with(HashMap::new)
+                    .entry(ch)
+                    .or_insert_with(|| Box::new(TrieNode::new()))
+            };
         }
         node.is_end = true;
         node.token_type = Some(token_type);
     }
 
-    fn get_child(&mut self, c: char) -> Option<&mut Box<TrieNode>> {
-        self.ensure_children_capacity();
-        self.children[c as usize].as_mut()
-    }
-
     #[inline]
     pub fn search(&self, word: &str) -> Option<&TokenType> {
         let mut node = self;
-        for &ch in word.as_bytes() {
-            node = node.children[ch as usize].as_ref()?;
+        for ch in word.chars() {
+            node = if (ch as u32) < 128 {
+                node.ascii_children[ch as usize].as_ref()?
+            } else {
+                node.unicode_children.as_ref()?.get(&ch)?
+            };
         }
-        if node.is_end {
-            node.token_type.as_ref()
-        } else {
-            None
-        }
+        node.token_type.as_ref()
     }
 }

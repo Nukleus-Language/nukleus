@@ -9,9 +9,7 @@ use errors::{LexError, LexcialError};
 use std::borrow::Cow;
 use std::path::PathBuf;
 
-use crate::neo_tokens::{
-    Symbol, Token, TokenMetadata, TokenType, TypeValue,
-};
+use crate::neo_tokens::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
 
 use inksac::{Color, Style};
 
@@ -45,13 +43,15 @@ pub struct Lexer<'a> {
     column: usize,
     file_path: PathBuf,
     source: &'a str,
+    capacity: usize,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(file_path: PathBuf, code: &'a str) -> Self {
+        let estimated_tokens = code.len() / 5;
         Lexer {
             code: code.as_bytes(),
-            tokens: Vec::new(),
+            tokens: Vec::with_capacity(estimated_tokens),
             state: State::EmptyState,
             buffer_st: 0,
             buffer_ed: 0,
@@ -59,6 +59,7 @@ impl<'a> Lexer<'a> {
             column: 0,
             file_path,
             source: code,
+            capacity: estimated_tokens,
         }
     }
 
@@ -200,36 +201,31 @@ impl<'a> Lexer<'a> {
 
     #[inline]
     fn next_char(&mut self) -> Option<char> {
-        if self.buffer_ed < self.code.len() {
-            let ch = self.code[self.buffer_ed] as char;
-            self.update_position(ch);
-            Some(ch)
-        } else {
-            None
+        if self.buffer_ed >= self.code.len() {
+            return None;
         }
+
+        let ch = self.code[self.buffer_ed] as char;
+        self.buffer_ed += ch.len_utf8();
+
+        match ch {
+            '\n' => {
+                self.line += 1;
+                self.column = 0;
+            }
+            '\t' => self.column += 4,
+            _ => self.column += 1,
+        }
+
+        Some(ch)
     }
 
     #[inline]
-    fn update_position(&mut self, ch: char) {
-        self.column += match ch {
-            '\n' => {
-                self.line += 1;
-                0
-            }
-            '\t' => 4,
-            _ => 1,
-        };
-        self.buffer_ed += ch.len_utf8();
-    }
-
     fn peek_char(&self) -> Option<char> {
-        if self.buffer_ed < self.code.len() {
-            Some(self.code[self.buffer_ed] as char)
-        } else {
-            None
-        }
+        self.code.get(self.buffer_ed).map(|&b| b as char)
     }
 
+    #[inline]
     fn insert_token(&mut self, token: TokenType) {
         self.tokens.push(Token::new(
             token,
@@ -303,9 +299,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::neo_tokens::{
-        Assign, Statement, Symbol, TypeName, TypeValue, Operator
-    };
+    use crate::neo_tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";

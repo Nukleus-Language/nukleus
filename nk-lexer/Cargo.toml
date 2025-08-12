@@ -8,7 +8,6 @@ edition = "2021"
 
 [dependencies]
 inksac = "0.4.0"
-snafu = "0.7.4"
 
 [lints.clippy]
 unwrap_used = "deny"
