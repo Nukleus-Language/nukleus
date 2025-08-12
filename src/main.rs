@@ -144,9 +144,9 @@ fn main() {
     // println!("Old Chars Per Second: {}", old_chars_per_second);
     // calculate how much characters the new lexer can lex per second
     let new_chars_per_second = contents.len() as f64 / duration_new.as_secs_f64();
-    let _new_chars_mb_per_second = new_chars_per_second * 4.0 / 1024.0 / 1024.0;
+    let new_chars_mb_per_second = new_chars_per_second * 4.0 / 1024.0 / 1024.0;
     let new_new_chars_per_second = contents.len() as f64 / duration_new_new.as_secs_f64();
-    let _new_new_chars_mb_per_second = new_new_chars_per_second * 4.0 / 1024.0 / 1024.0;
+    let new_new_chars_mb_per_second = new_new_chars_per_second * 4.0 / 1024.0 / 1024.0;
     #[cfg(debug_assertions)]
     {
         println!("New Chars Per Second: {}", new_chars_per_second);
@@ -186,7 +186,7 @@ fn main() {
 
     // let old_tokens_per_second = tokens.len() as f64 / duration_parser_old.as_secs_f64();
     // println!("Old Tokens Per Second: {}", old_tokens_per_second);
-    let _new_tokens_per_second = new_tokens.len() as f64 / duration_parser_new.as_secs_f64();
+    let new_tokens_per_second = new_tokens.len() as f64 / duration_parser_new.as_secs_f64();
     #[cfg(debug_assertions)]
     println!("New Tokens Per Second: {}", new_tokens_per_second);
 
