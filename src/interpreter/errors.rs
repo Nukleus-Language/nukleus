@@ -1,11 +1,19 @@
-use snafu::prelude::*;
+use std::fmt;
 
-#[derive(Debug, Snafu)]
-#[snafu(visibility(pub))]
+#[derive(Debug)]
 pub enum InterpretingError {
-    #[snafu(display("Syntax error: {}", source))]
     SyntaxError { source: String },
-    #[snafu(display("Runtime error: {}", source))]
     RuntimeError { source: String },
-}       
+}
+
+impl fmt::Display for InterpretingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InterpretingError::SyntaxError { source } => write!(f, "Syntax error: {}", source),
+            InterpretingError::RuntimeError { source } => write!(f, "Runtime error: {}", source),
+        }
+    }
+}
+
+impl std::error::Error for InterpretingError {}       
 

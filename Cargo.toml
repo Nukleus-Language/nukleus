@@ -10,7 +10,7 @@ license = "Apache-2.0"
 [dependencies]
 # inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm16-0"] }
 
-snafu = "0.7.4"
+# snafu = "0.7.4"
 clap = "4.2.0"
 
 lexer = { path = "./nk-lexer", package="nk-lexer"}

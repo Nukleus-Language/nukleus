@@ -1,14 +1,22 @@
-use snafu::prelude::*;
+use std::fmt;
 
-#[derive(Debug, Clone, Snafu)]
-#[snafu(visibility(pub))]
+#[derive(Debug, Clone)]
 pub enum AstParseError {
-    #[snafu(display("Unknown token `{token}`"))]
     UnknownToken { token: String },
-    #[snafu(display("Expected `{token}`"))]
     ExpectedOther { token: String },
-    #[snafu(display("End of file"))]
     EndOfFile,
-    #[snafu(display("Unknown error"))]
     Unknown,
 }
+
+impl fmt::Display for AstParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AstParseError::UnknownToken { token } => write!(f, "Unknown token `{}`", token),
+            AstParseError::ExpectedOther { token } => write!(f, "Expected `{}`", token),
+            AstParseError::EndOfFile => write!(f, "End of file"),
+            AstParseError::Unknown => write!(f, "Unknown error"),
+        }
+    }
+}
+
+impl std::error::Error for AstParseError {}
