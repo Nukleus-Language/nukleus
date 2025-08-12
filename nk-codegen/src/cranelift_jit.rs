@@ -107,46 +107,49 @@ impl JIT {
         self.define_println_function();
         // Function Signature Declaration
         for ast in input.clone() {
-            if let AST::Statement(statement) = ast { if let ASTstatement::Function {
+            if let AST::Statement(statement) = ast {
+                if let ASTstatement::Function {
                     public: _,
                     name,
                     args,
                     statements: _,
                     return_type,
-                } = statement {
-                let int = self.module.target_config().pointer_type();
+                } = statement
+                {
+                    let int = self.module.target_config().pointer_type();
 
-                for p in args.clone() {
-                    match p {
-                        ASTtypecomp::Argument {
-                            type_name,
-                            identifier: _,
-                        } => {
-                            self.ctx
-                                .func
-                                .signature
-                                .params
-                                .push(AbiParam::new(translate_type(int, type_name)));
-                        }
-                        _ => {
-                            println!("Invalid Type for Argument");
-                            std::process::exit(1);
+                    for p in args.clone() {
+                        match p {
+                            ASTtypecomp::Argument {
+                                type_name,
+                                identifier: _,
+                            } => {
+                                self.ctx
+                                    .func
+                                    .signature
+                                    .params
+                                    .push(AbiParam::new(translate_type(int, type_name)));
+                            }
+                            _ => {
+                                println!("Invalid Type for Argument");
+                                std::process::exit(1);
+                            }
                         }
                     }
+                    let type_return = translate_type(int, return_type);
+
+                    self.ctx
+                        .func
+                        .signature
+                        .returns
+                        .push(AbiParam::new(type_return));
+
+                    self.functions
+                        .insert(name.clone(), self.ctx.func.signature.clone());
+                    self.module.clear_context(&mut self.ctx);
+                    // self.module.finalize_definitions().expect("Compile Error");
                 }
-                let type_return = translate_type(int, return_type);
-
-                self.ctx
-                    .func
-                    .signature
-                    .returns
-                    .push(AbiParam::new(type_return));
-
-                self.functions
-                    .insert(name.clone(), self.ctx.func.signature.clone());
-                self.module.clear_context(&mut self.ctx);
-                // self.module.finalize_definitions().expect("Compile Error");
-            } }
+            }
         }
         for ast in input {
             match ast {
@@ -434,7 +437,7 @@ impl FunctionTranslator<'_> {
                 let call = self.builder.ins().call(func, arguments.as_slice());
                 let results = self.builder.inst_results(call);
                 assert_eq!(results.len(), 1);
-                
+
                 // self.builder.seal_all_blocks();
                 // self.builder.finalize();
                 // self.builder.finalize();

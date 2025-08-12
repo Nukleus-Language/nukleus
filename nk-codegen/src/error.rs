@@ -41,4 +41,4 @@ impl From<&str> for CodegenError {
     fn from(err: &str) -> Self {
         CodegenError::CompilationError(err.to_string())
     }
-} 
+}

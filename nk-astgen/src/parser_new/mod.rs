@@ -1,5 +1,5 @@
 use inksac::{Color, Style, Stylish};
-use lexer::neo_tokens::{*};
+use lexer::neo_tokens::*;
 
 use std::collections::HashMap;
 use std::iter::{Cloned, Peekable};

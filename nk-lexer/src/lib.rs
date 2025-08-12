@@ -8,8 +8,8 @@ pub mod trie_lex;
 pub mod trie_tokens;
 
 pub mod tokens_new;
+pub use error::LexerError;
 pub use lex::lexer;
 pub use tokens::*;
-pub use error::LexerError;
 
 // benchmark between the two lexers

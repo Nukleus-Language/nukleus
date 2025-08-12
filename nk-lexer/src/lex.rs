@@ -1,5 +1,5 @@
-use crate::LexerError;
 use crate::tokens::*;
+use crate::LexerError;
 
 //use crate::core::lexer::{Operator, Logical, Assigns};
 

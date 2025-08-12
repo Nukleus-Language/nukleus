@@ -14,9 +14,7 @@ use std::str::Chars;
 // use crate::tokens_new::{
 //     Assign, Operator, Statement, Symbol, Token, TokenMetadata, TokenType, TypeName, TypeValue,
 // };
-use crate::neo_tokens::{
-    Symbol, Token, TokenMetadata, TokenType, TypeValue,
-};
+use crate::neo_tokens::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
 
 use inksac::{Color, Style};
 
@@ -327,9 +325,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::neo_tokens::{
-        Assign, Statement, Symbol, TypeName, TypeValue, Operator
-    };
+    use crate::neo_tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";

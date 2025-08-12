@@ -155,12 +155,7 @@ impl Interpreter {
         let arg_base = self
             .functions
             .get(&self.cur_function)
-            .unwrap_or_else(|| {
-                panic!(
-                    "{}",
-                    "Function not found".to_string()
-                )
-            })
+            .unwrap_or_else(|| panic!("{}", "Function not found".to_string()))
             .function_get_args_format();
 
         for (i, arg) in arg_base.iter().enumerate() {

@@ -11,9 +11,7 @@ use std::str::Chars;
 
 use inksac::{Color, Style, Stylish};
 
-use crate::tokens_new::{
-    Symbol, Token, TokenMetadata, TokenType, TypeValue,
-};
+use crate::tokens_new::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
 
 const ERRORTXTSTYLE: Style = Style {
     foreground: Color::Red,
@@ -276,9 +274,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tokens_new::{
-        Assign, Statement, Symbol, TypeName, TypeValue, Operator
-    };
+    use crate::tokens_new::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";
