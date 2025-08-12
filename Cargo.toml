@@ -39,7 +39,6 @@ members = [
 	"nk-lexer",
 	"nk-astgen",
 	"nk-codegen", 
-	"plurize",
 ]
 
 [profile.release]
