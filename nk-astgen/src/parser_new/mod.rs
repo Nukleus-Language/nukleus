@@ -145,19 +145,22 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
     fn report_error(&self, error: AstGenError, token: &Token) -> AstGenError {
-        let context_lines: usize = 3; // Number of lines to show around the error
+        let context_lines: usize = 3;
         let lines: Vec<&str> = self.source.split('\n').collect();
-        let start_line = std::cmp::max(token.metadata.line - context_lines, 0) as usize;
-        let end_line = std::cmp::min(token.metadata.line + context_lines, lines.len());
+        let line_one_based = token.metadata.line.max(1);
+        let line_idx = line_one_based - 1;
+        let start_line = line_idx.saturating_sub(context_lines);
+        let end_line = std::cmp::min(line_idx + context_lines + 1, lines.len());
 
         let context_snippet: String = lines[start_line..end_line]
             .iter()
             .enumerate()
             .map(|(i, line)| {
-                if i + start_line + 1 == token.metadata.line {
-                    format!("> {} | {}", i + start_line + 1, line)
+                let display_line = i + start_line + 1;
+                if display_line == line_one_based {
+                    format!("> {} | {}", display_line, line)
                 } else {
-                    format!("  {} | {}", i + start_line + 1, line)
+                    format!("  {} | {}", display_line, line)
                 }
             })
             .collect::<Vec<_>>()
@@ -176,13 +179,11 @@ impl<'a> Parser<'a> {
             self.suggest_fix(&error)
         );
 
-        let error_fin = AstGenError {
+        AstGenError {
             message: error.message,
-            pretty_display: report_text.clone(),
-        };
-
-        eprintln!("{}", report_text);
-        error_fin
+            pretty_display: report_text,
+            span: Some((token.metadata.line, token.metadata.column)),
+        }
     }
 
     fn suggest_fix(&self, error: &AstGenError) -> String {
@@ -310,7 +311,7 @@ impl<'a> Parser<'a> {
 
         //println!("cur: {:?}", cur_token);
         // Parse parameters of the function
-        let arguments = self.parse_arguments();
+        let arguments = self.parse_arguments()?;
         // println!("{} Arguments: {:?} {}", "\x1b[34m", arguments,"\x1b[0m");
 
         // Parse function return type
@@ -328,10 +329,6 @@ impl<'a> Parser<'a> {
                 _ => {
                     return Err(
                         self.report_error(AstGenError::new(AstError::UnexpectedToken()), &next)
-                    );
-                    panic!(
-                        "{} Require type to construct function! {:?}{}",
-                        "\x1b[31m", cur_token, "\x1b[0m"
                     );
                 }
             }
@@ -374,7 +371,8 @@ impl<'a> Parser<'a> {
         }))
     }
     fn parse_assignment(&mut self, ident: String) -> Result<AST, AstGenError> {
-        let op = match self.next_token().token_type {
+        let assign_token = self.next_token();
+        let op = match assign_token.token_type {
             TokenType::Assign(op) => match op {
                 Assign::Assign => ASTOperator::Assign,
                 Assign::AddAssign => ASTOperator::AddAssign,
@@ -386,7 +384,15 @@ impl<'a> Parser<'a> {
                 Assign::BitOrAssign => ASTOperator::BitOrAssign,
                 Assign::BitXorAssign => ASTOperator::BitXorAssign,
             },
-            _ => unreachable!(),
+            _ => {
+                return Err(self.report_error(
+                    AstGenError::new(AstError::ExpectedToken(Token::new(
+                        TokenType::Assign(Assign::Assign),
+                        assign_token.metadata,
+                    ))),
+                    &assign_token,
+                ));
+            }
         };
         // println!("{} Op: {:?} {}", "\x1b[34m", op, "\x1b[0m");
         let right_expr = self.parse_expression()?;
@@ -459,13 +465,14 @@ impl<'a> Parser<'a> {
                 Logical::Equals | Logical::NotEquals => {
                     self.next_token();
                     let right_node = self.parse_level4()?;
+                    let ast_op = if matches!(op, Logical::Equals) {
+                        ASTOperator::Equals
+                    } else {
+                        ASTOperator::NotEquals
+                    };
                     node = AST::Logic(ASTlogic::BinaryOperation {
                         left: Box::new(node),
-                        op: match op {
-                            Logical::Equals => ASTOperator::Equals,
-                            Logical::NotEquals => ASTOperator::NotEquals,
-                            _ => unreachable!(),
-                        },
+                        op: ast_op,
                         right: Box::new(right_node),
                     });
                 }
@@ -483,17 +490,23 @@ impl<'a> Parser<'a> {
                 | Logical::LessThanEquals
                 | Logical::GreaterThan
                 | Logical::GreaterThanEquals => {
-                    self.next_token();
+                    let token = self.next_token();
                     let right_node = self.parse_level5()?;
+                    let ast_op = match op {
+                        Logical::LessThan => ASTOperator::Less,
+                        Logical::LessThanEquals => ASTOperator::LessEquals,
+                        Logical::GreaterThan => ASTOperator::Greater,
+                        Logical::GreaterThanEquals => ASTOperator::GreaterEquals,
+                        _ => {
+                            return Err(self.report_error(
+                                AstGenError::new(AstError::UnexpectedToken()),
+                                &token,
+                            ));
+                        }
+                    };
                     node = AST::Logic(ASTlogic::BinaryOperation {
                         left: Box::new(node),
-                        op: match op {
-                            Logical::LessThan => ASTOperator::Less,
-                            Logical::LessThanEquals => ASTOperator::LessEquals,
-                            Logical::GreaterThan => ASTOperator::Greater,
-                            Logical::GreaterThanEquals => ASTOperator::GreaterEquals,
-                            _ => unreachable!(),
-                        },
+                        op: ast_op,
                         right: Box::new(right_node),
                     });
                 }
@@ -510,13 +523,14 @@ impl<'a> Parser<'a> {
                 Operator::Add | Operator::Subtract => {
                     self.next_token();
                     let right_node = self.parse_level6()?;
+                    let ast_op = if matches!(op, Operator::Add) {
+                        ASTOperator::Add
+                    } else {
+                        ASTOperator::Subtract
+                    };
                     node = AST::Logic(ASTlogic::BinaryOperation {
                         left: Box::new(node),
-                        op: match op {
-                            Operator::Add => ASTOperator::Add,
-                            Operator::Subtract => ASTOperator::Subtract,
-                            _ => unreachable!(),
-                        },
+                        op: ast_op,
                         right: Box::new(right_node),
                     });
                 }
@@ -531,16 +545,22 @@ impl<'a> Parser<'a> {
         while let TokenType::Operator(op) = self.peek_token().token_type {
             match op {
                 Operator::Multiply | Operator::Divide | Operator::Remainder => {
-                    self.next_token();
+                    let token = self.next_token();
                     let right_node = self.parse_primary()?;
+                    let ast_op = match op {
+                        Operator::Multiply => ASTOperator::Multiply,
+                        Operator::Divide => ASTOperator::Divide,
+                        Operator::Remainder => ASTOperator::Remainder,
+                        _ => {
+                            return Err(self.report_error(
+                                AstGenError::new(AstError::UnexpectedToken()),
+                                &token,
+                            ));
+                        }
+                    };
                     node = AST::Logic(ASTlogic::BinaryOperation {
                         left: Box::new(node),
-                        op: match op {
-                            Operator::Multiply => ASTOperator::Multiply,
-                            Operator::Divide => ASTOperator::Divide,
-                            Operator::Remainder => ASTOperator::Remainder,
-                            _ => unreachable!(),
-                        },
+                        op: ast_op,
                         right: Box::new(right_node),
                     });
                 }
@@ -638,10 +658,12 @@ impl<'a> Parser<'a> {
                 }
             }
             TokenType::TypeValue(TypeValue::QuotedString(s)) => {
-                match self.peek_token().token_type {
-                    TokenType::Logical(_) => {
-                        panic!("Logical operator is not allowed in quoted string!")
-                    }
+                let peeked = self.peek_token();
+                match peeked.token_type {
+                    TokenType::Logical(_) => Err(self.report_error(
+                        AstGenError::new(AstError::ExpectedExpression()),
+                        &peeked,
+                    )),
                     _ => {
                         self.next_token();
                         Ok(AST::TypeValue(ASTtypevalue::QuotedString(s.to_string())))
@@ -993,12 +1015,9 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 _ => {
-                    //println!("{} cur statement token: {:?} {}", "\x1b[31m", token, "\x1b[0m");
-                    //println!("{} cur statement status: {:?} {}", "\x1b[31m", status, "\x1b[0m");
                     return Err(
                         self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
                     );
-                    panic!("{} Invalid for statement! {}", "\x1b[31m", "\x1b[0m");
                 }
             }
         }
@@ -1034,7 +1053,7 @@ impl<'a> Parser<'a> {
     // parse statements
     self.parse_statement();
     }*/
-    fn parse_arguments(&mut self) -> Vec<ASTtypecomp> {
+    fn parse_arguments(&mut self) -> Result<Vec<ASTtypecomp>, AstGenError> {
         let mut args: Vec<ASTtypecomp> = Vec::new();
         let mut state: ArgumentParseState = ArgumentParseState::WaitForType;
         let mut cur_type = ASTtypename::TypeVoid;
@@ -1100,30 +1119,15 @@ impl<'a> Parser<'a> {
                 }
 
                 _ => {
-                    let error_msg = match state {
-                        ArgumentParseState::WaitForType => {
-                            "Require a type to construct an argument!"
-                        }
-                        ArgumentParseState::WaitForColon => {
-                            "Require a colon to construct an argument!"
-                        }
-                        ArgumentParseState::WaitForIdentifier => {
-                            "Require an identifier to construct an argument!"
-                        }
-                        ArgumentParseState::WaitForCommaOrCloseParen => {
-                            "Require a comma or close paren to construct an argument!"
-                        }
-                    };
-                    //println!("{} {} {}", "\x1b[33m", token, "\x1b[0m");
-                    // return Err(self.report_error(AstGenError {
-                    // message: AstError::UnexpectedToken(),
-                    // }, &token));
-                    panic!("{} {} {}", "\x1b[31m", error_msg, "\x1b[0m");
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken()),
+                        &token,
+                    ));
                 }
             }
         }
 
-        args
+        Ok(args)
     }
     #[allow(dead_code)]
     pub fn get_asts(&self) -> &Vec<AST> {

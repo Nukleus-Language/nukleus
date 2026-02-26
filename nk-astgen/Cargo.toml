@@ -10,6 +10,7 @@ env_logger = "0.11.5"
 inksac = "0.4.0"
 lexer = { path = "../nk-lexer", package="nk-lexer"}
 log = "0.4.20"
+nk-diagnostics = { path = "../nk-diagnostics" }
 
 [lints.clippy]
 unwrap_used = "deny"
