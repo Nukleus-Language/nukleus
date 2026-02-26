@@ -20,7 +20,3 @@ lamina = "0.0.8"
 [lints.clippy]
 unwrap_used = "deny"
 cognitive_complexity = "deny"
-
-[profile.release]
-lto = true
-pgo = true

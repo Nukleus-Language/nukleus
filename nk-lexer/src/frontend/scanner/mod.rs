@@ -23,7 +23,6 @@ enum State {
 }
 
 pub struct Lexer<'a> {
-    code: &'a [u8],
     tokens: Vec<Token>,
     state: State,
     buffer_st: usize,
@@ -37,7 +36,6 @@ impl<'a> Lexer<'a> {
     pub fn new(_file_path: std::path::PathBuf, code: &'a str) -> Self {
         let estimated_tokens = code.len() / 5;
         Lexer {
-            code: code.as_bytes(),
             tokens: Vec::with_capacity(estimated_tokens),
             state: State::EmptyState,
             buffer_st: 0,
@@ -187,11 +185,8 @@ impl<'a> Lexer<'a> {
 
     #[inline]
     fn next_char(&mut self) -> Option<char> {
-        if self.buffer_ed >= self.code.len() {
-            return None;
-        }
-
-        let ch = self.code[self.buffer_ed] as char;
+        let rest = self.source.get(self.buffer_ed..)?;
+        let ch = rest.chars().next()?;
         self.buffer_ed += ch.len_utf8();
 
         match ch {
@@ -208,7 +203,7 @@ impl<'a> Lexer<'a> {
 
     #[inline]
     fn peek_char(&self) -> Option<char> {
-        self.code.get(self.buffer_ed).map(|&b| b as char)
+        self.source.get(self.buffer_ed..)?.chars().next()
     }
 
     #[inline]
@@ -285,6 +280,16 @@ impl<'a> Lexer<'a> {
 mod test {
     use super::*;
     use crate::neo_tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
+    #[test]
+    fn lexing_utf8_multibyte() {
+        let code = "let:String msg = \"Hello \u{4E2D}\u{6587}\";";
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
+        let result = lexer.run();
+        assert!(result.is_ok(), "UTF-8 multibyte lexing failed: {:?}", result);
+        let tokens = lexer.get_tokens();
+        assert!(!tokens.is_empty(), "Expected tokens from UTF-8 source");
+    }
+
     #[test]
     fn lexing_numbers() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\n}";

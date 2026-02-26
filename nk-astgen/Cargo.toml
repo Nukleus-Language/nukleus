@@ -14,7 +14,3 @@ log = "0.4.20"
 [lints.clippy]
 unwrap_used = "deny"
 cognitive_complexity = "deny"
-
-[profile.release]
-lto = true
-pgo = true

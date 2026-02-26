@@ -1,7 +1,6 @@
 use astgen::ast::*;
 // use astgen::parser_new::Parser;
 use astgen::AST;
-// use lexer::lex_new_new::Lexer;
 
 use cranelift::prelude::*;
 // use cranelift_codegen::ir::entities::FuncRef;
@@ -160,22 +159,15 @@ impl JIT {
                         let contents = std::fs::read_to_string(&resolved_path).map_err(|e| {
                             format!("Failed to read file '{}': {}", resolved_path.display(), e)
                         })?;
-                        let mut new_lexer = lexer::lex_new::Lexer::new(&contents);
-                        new_lexer.run();
-                        let new_tokens = new_lexer.get_tokens();
-
-                        let mut new_new_lexer = lexer::lex_new_new::Lexer::new(
-                            Path::new(&name).to_path_buf(),
-                            &contents,
-                        );
-                        let lex_result = new_new_lexer.run();
-                        if lex_result.is_err() {
-                            println!("Error: {}", lex_result.err().unwrap());
+                        let mut lexer =
+                            lexer::frontend::Lexer::from_path(Path::new(&name), &contents);
+                        if let Err(e) = lexer.run() {
+                            println!("Error: {}", e);
                         }
-                        let new_new_tokens = new_new_lexer.get_tokens();
+                        let tokens = lexer.tokens().to_vec();
 
                         let mut mid_ir = astgen::parser_new::Parser::new(
-                            new_new_tokens,
+                            &tokens,
                             Path::new(&name).to_path_buf(),
                             &contents,
                         );
