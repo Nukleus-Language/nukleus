@@ -1,10 +1,10 @@
 mod context;
-pub mod error;
 pub mod cranelift_jit;
+pub mod error;
+pub mod lamina;
 
-
-use cranelift_codegen::ir::entities::FuncRef;
 use cranelift_codegen::ir::Signature;
+use cranelift_codegen::ir::entities::FuncRef;
 use cranelift_module::FuncId;
 
 #[derive(Debug, Clone)]
