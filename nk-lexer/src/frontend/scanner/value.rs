@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
-use crate::lex_new_new::errors::LexError;
-use crate::lex_new_new::errors::LexcialError;
+use super::errors::{LexError, LexicalError};
 // use crate::tokens_new::{TokenType, TypeValue};
 use crate::neo_tokens::{TokenType, TypeValue};
 
@@ -10,7 +9,7 @@ pub fn number_to_token(
     number: &str,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
+) -> Result<TokenType, LexicalError> {
     //check if the number is parseable while not changing the type of number to i32
     let trimed_number = number;
     let test_parse = trimed_number.trim_matches('-').parse::<u64>();
@@ -19,10 +18,11 @@ pub fn number_to_token(
         Ok(_) => Ok(TokenType::TypeValue(TypeValue::Number(Cow::Owned(
             number.to_owned(),
         )))),
-        Err(_) => Err(LexcialError {
+        Err(_) => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidNumber(number.to_string()),
+            note: None,
         }),
     }
 }

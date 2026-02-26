@@ -1,14 +1,14 @@
-use crate::lex_new::errors::LexError;
-use crate::lex_new::errors::LexcialError;
-use crate::tokens_new::*;
+use super::errors::{LexError, LexicalError};
+// use crate::tokens_new::{Statement, TokenType, TypeName};
+use crate::neo_tokens::{Statement, TokenType, TypeName};
 
 #[allow(dead_code)]
 pub fn statement_to_token(
-    statement: String,
+    statement: &str,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
-    match statement.as_str() {
+) -> Result<TokenType, LexicalError> {
+    match statement {
         "let" => Ok(TokenType::Statement(Statement::Let)),
         "fn" => Ok(TokenType::Statement(Statement::Function)),
         "return" => Ok(TokenType::Statement(Statement::Return)),
@@ -32,20 +32,21 @@ pub fn statement_to_token(
         "u16" => Ok(TokenType::TypeName(TypeName::U16)),
         "u32" => Ok(TokenType::TypeName(TypeName::U32)),
         "u64" => Ok(TokenType::TypeName(TypeName::U64)),*/
-        _ => Err(LexcialError {
+        _ => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidStatement(statement.to_string()),
+            note: None,
         }),
     }
 }
 #[allow(dead_code)]
 pub fn type_name_to_token(
-    typename: String,
+    typename: &str,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
-    match typename.as_str() {
+) -> Result<TokenType, LexicalError> {
+    match typename {
         "Void" => Ok(TokenType::TypeName(TypeName::Void)),
         "Bool" => Ok(TokenType::TypeName(TypeName::Bool)),
         "String" => Ok(TokenType::TypeName(TypeName::QuotedString)),
@@ -57,10 +58,12 @@ pub fn type_name_to_token(
         "u16" => Ok(TokenType::TypeName(TypeName::U16)),
         "u32" => Ok(TokenType::TypeName(TypeName::U32)),
         "u64" => Ok(TokenType::TypeName(TypeName::U64)),
-        _ => Err(LexcialError {
+        "Char" => Ok(TokenType::TypeName(TypeName::Char)),
+        _ => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidTypeName(typename.to_string()),
+            note: None,
         }),
     }
 }

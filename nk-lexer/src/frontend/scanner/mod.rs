@@ -1,26 +1,15 @@
 mod errors;
 mod identifier;
 mod symbol;
-mod trie;
 mod value;
 
-use errors::{LexError, LexcialError};
-
-use std::borrow::Cow;
-use std::path::PathBuf;
+use errors::{LexError, LexicalError};
 
 use crate::neo_tokens::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
+use std::borrow::Cow;
 
-use inksac::{Color, Style};
-
-const ERRORTXTSTYLE: Style = Style {
-    foreground: Color::Red,
-    background: Color::Empty,
-    bold: true,
-    dim: false,
-    italic: true,
-    underline: false,
-};
+#[cfg(test)]
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq)]
 enum State {
@@ -41,13 +30,11 @@ pub struct Lexer<'a> {
     buffer_ed: usize,
     line: usize,
     column: usize,
-    file_path: PathBuf,
     source: &'a str,
-    capacity: usize,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(file_path: PathBuf, code: &'a str) -> Self {
+    pub fn new(_file_path: std::path::PathBuf, code: &'a str) -> Self {
         let estimated_tokens = code.len() / 5;
         Lexer {
             code: code.as_bytes(),
@@ -57,13 +44,11 @@ impl<'a> Lexer<'a> {
             buffer_ed: 0,
             line: 1,
             column: 0,
-            file_path,
             source: code,
-            capacity: estimated_tokens,
         }
     }
 
-    pub fn run(&mut self) -> Result<(), LexcialError> {
+    pub fn run(&mut self) -> Result<(), LexicalError> {
         while let Some(c) = self.next_char() {
             let peeked_char = self.peek_char().unwrap_or('\0');
 
@@ -189,10 +174,11 @@ impl<'a> Lexer<'a> {
         }
 
         if let State::QuotedString = self.state {
-            return self.report_error(LexcialError {
+            return self.report_error(LexicalError {
                 line: self.line,
                 column: self.column,
                 message: LexError::ExpectedQuote(),
+                note: None,
             });
         }
 
@@ -233,7 +219,7 @@ impl<'a> Lexer<'a> {
         ));
     }
 
-    fn report_error(&self, error: LexcialError) -> Result<(), LexcialError> {
+    fn report_error(&self, error: LexicalError) -> Result<(), LexicalError> {
         let context_window = 10;
 
         let start = self.buffer_st.saturating_sub(context_window);
@@ -243,10 +229,6 @@ impl<'a> Lexer<'a> {
         let error_pos_in_context = self.source[start..self.buffer_st].chars().count();
         let error_location_marker = " ".repeat(error_pos_in_context) + "^";
 
-        let errortxt = format!(
-            "Context:\n{}\n{}\n--> Error at Line: {}, Column: {}: {}",
-            context_snippet, error_location_marker, self.line, self.column, error
-        );
         let suggestion = match &error.message {
             LexError::InvalidCharacter(c) => {
                 format!(
@@ -281,12 +263,15 @@ impl<'a> Lexer<'a> {
             }
         };
 
-        eprintln!("{}\n{}", errortxt, suggestion);
-        Err(error)
+        let note = format!(
+            "context:\n{}\n{}\n{}",
+            context_snippet, error_location_marker, suggestion
+        );
+        Err(error.with_note(note))
     }
 
-    pub fn get_tokens(&self) -> &Vec<Token> {
-        &self.tokens
+    pub fn get_tokens(&self) -> &[Token] {
+        self.tokens.as_slice()
     }
 
     #[inline]

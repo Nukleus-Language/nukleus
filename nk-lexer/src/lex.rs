@@ -3,37 +3,6 @@ use crate::LexerError;
 
 //use crate::core::lexer::{Operator, Logical, Assigns};
 
-// Struct to hold the lexer state
-struct Lexer {
-    tokens: Vec<Token>, // Vector of tokens
-    pos: usize,         // Current position in the vector
-}
-
-// Returns a new lexer
-impl Lexer {
-    fn new(code: &str) -> Self {
-        // Tokenize the code
-        let tokens = lexer(code);
-
-        Lexer { tokens, pos: 0 }
-    }
-}
-
-// Returns the next token from the lexer
-impl Iterator for Lexer {
-    type Item = Token;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.tokens.len() {
-            None
-        } else {
-            let token = self.tokens[self.pos].clone();
-            self.pos += 1;
-            Some(token)
-        }
-    }
-}
-
 // Returns a vector of tokens from a string
 pub fn lexer(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
@@ -188,7 +157,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i16" => Token::TypeName(TypeName::I16),
                 "i32" => Token::TypeName(TypeName::I32),
 
-                " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
+                " " | "\n" | "\t" | "\r" => continue,
                 _ => Token::TypeValue(TypeValue::Identifier(
                     identifier_parser(buffer.clone()).unwrap(),
                 )),
@@ -221,7 +190,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             ',' => Token::Symbol(Symbol::Comma),
             '!' => Token::Logical(Logical::Not),
 
-            ' ' | '\n' | '\t' | '\u{20}' | '\r' => continue,
+            ' ' | '\n' | '\t' | '\r' => continue,
             _ => panic!("Unexpected character: {}", c),
         };
         tokens.push(token);
@@ -251,7 +220,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i32" => Token::TypeName(TypeName::I32),
                 "i64" => Token::TypeName(TypeName::I64),
 
-                " " | "\n" | "\t" | "\u{20}" | "\r" => continue,
+                " " | "\n" | "\t" | "\r" => continue,
                 _ => Token::TypeValue(TypeValue::Identifier(
                     identifier_parser(buffer.clone()).unwrap(),
                 )),

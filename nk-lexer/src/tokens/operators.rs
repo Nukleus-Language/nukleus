@@ -52,7 +52,6 @@ impl Iterator for Operator {
             Operator::BitAnd => Some(Operator::BitAnd),
             Operator::BitOr => Some(Operator::BitOr),
             Operator::BitXor => Some(Operator::BitXor),
-            _ => None,
         }
     }
 }
@@ -105,7 +104,6 @@ impl Iterator for Logical {
             Logical::And => Some(Logical::And),
             Logical::Or => Some(Logical::Or),
             Logical::Not => Some(Logical::Not),
-            _ => None,
         }
     }
 }
@@ -163,7 +161,6 @@ impl Iterator for Assign {
             Assign::BitAndAssign => Some(Assign::BitAndAssign),
             Assign::BitOrAssign => Some(Assign::BitOrAssign),
             Assign::BitXorAssign => Some(Assign::BitXorAssign),
-            _ => None,
         }
     }
 }

@@ -1,5 +1,4 @@
-use crate::trie_lex::errors::LexError;
-use crate::trie_lex::errors::LexcialError;
+use super::errors::{LexError, LexicalError};
 // use crate::tokens_new::{Assign, Logical, Operator, Symbol, TokenType};
 use crate::neo_tokens::{Assign, Logical, Operator, Symbol, TokenType};
 
@@ -8,7 +7,7 @@ pub fn symbol_to_token(
     symbol: char,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
+) -> Result<TokenType, LexicalError> {
     match symbol {
         ',' => Ok(TokenType::Symbol(Symbol::Comma)),
         ':' => Ok(TokenType::Symbol(Symbol::Colon)),
@@ -29,10 +28,11 @@ pub fn symbol_to_token(
         // '/' => Ok(TokenType::Operator(Operator::Divide)),
         //"," => Ok(TokenType::Symbol(Symbol::Comma)),
         //"!" => Ok(TokenType::Logical(Logical::Not)),
-        _ => Err(LexcialError {
+        _ => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidSymbol(symbol.to_string()),
+            note: None,
         }),
     }
 }
@@ -41,7 +41,7 @@ pub fn double_symbol_to_token(
     double_symbol: &str,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
+) -> Result<TokenType, LexicalError> {
     match double_symbol {
         "==" => Ok(TokenType::Logical(Logical::Equals)),
         "!=" => Ok(TokenType::Logical(Logical::NotEquals)),
@@ -60,10 +60,11 @@ pub fn double_symbol_to_token(
         "<<" => Ok(TokenType::Operator(Operator::ShiftLeft)),
         ">>" => Ok(TokenType::Operator(Operator::ShiftRight)),
         "//" => Ok(TokenType::Symbol(Symbol::Comment)),
-        _ => Err(LexcialError {
+        _ => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidDoubleSymbol(double_symbol.to_string()),
+            note: None,
         }),
     }
 }
@@ -72,7 +73,7 @@ pub fn operator_to_token(
     operator: char,
     line: usize,
     column: usize,
-) -> Result<TokenType, LexcialError> {
+) -> Result<TokenType, LexicalError> {
     match operator {
         '+' => Ok(TokenType::Operator(Operator::Add)),
         '-' => Ok(TokenType::Operator(Operator::Subtract)),
@@ -82,10 +83,11 @@ pub fn operator_to_token(
         '&' => Ok(TokenType::Operator(Operator::BitAnd)),
         '|' => Ok(TokenType::Operator(Operator::BitOr)),
         '^' => Ok(TokenType::Operator(Operator::BitXor)),
-        _ => Err(LexcialError {
+        _ => Err(LexicalError {
             line,
             column,
             message: LexError::InvalidOperator(operator.to_string()),
+            note: None,
         }),
     }
 }
