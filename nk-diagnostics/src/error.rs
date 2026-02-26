@@ -1,5 +1,4 @@
-use super::codes::ErrorCode;
-use super::span::Span;
+use super::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
@@ -20,7 +19,7 @@ impl Severity {
 
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
-    pub code: ErrorCode,
+    pub code: String,
     pub severity: Severity,
     pub message: String,
     pub primary_span: Option<Span>,
@@ -28,9 +27,13 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub fn error(code: ErrorCode, message: impl Into<String>, primary_span: Option<Span>) -> Self {
+    pub fn error(
+        code: impl std::fmt::Display,
+        message: impl Into<String>,
+        primary_span: Option<Span>,
+    ) -> Self {
         Self {
-            code,
+            code: code.to_string(),
             severity: Severity::Error,
             message: message.into(),
             primary_span,

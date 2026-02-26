@@ -1,0 +1,12 @@
+[package]
+name = "nk-diagnostics"
+version = "0.1.0"
+edition = "2024"
+description = "Shared diagnostics primitives for Nukleus compiler stages"
+license = "Apache-2.0"
+
+[dependencies]
+
+[lints.clippy]
+unwrap_used = "deny"
+cognitive_complexity = "deny"

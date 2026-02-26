@@ -8,6 +8,10 @@ impl Position {
     pub fn new(line: usize, column: usize) -> Self {
         Self { line, column }
     }
+
+    pub fn start() -> Self {
+        Self::new(1, 1)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -24,6 +28,13 @@ impl Span {
     pub fn point(line: usize, column: usize) -> Self {
         let p = Position::new(line, column);
         Self { start: p, end: p }
+    }
+
+    pub fn at_position(position: Position) -> Self {
+        Self {
+            start: position,
+            end: position,
+        }
     }
 }
 
