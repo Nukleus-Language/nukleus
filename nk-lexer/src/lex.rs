@@ -1,4 +1,4 @@
-use crate::tokens::*;
+use crate::tokens_legacy::*;
 use crate::LexerError;
 
 // Legacy lexer; scheduled for removal per plan.md Phase 5.

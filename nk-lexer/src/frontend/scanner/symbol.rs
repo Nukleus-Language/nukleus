@@ -1,6 +1,6 @@
 use super::errors::{LexError, LexicalError};
 // use crate::tokens_new::{Assign, Logical, Operator, Symbol, TokenType};
-use crate::neo_tokens::{Assign, Logical, Operator, Symbol, TokenType};
+use crate::tokens::{Assign, Logical, Operator, Symbol, TokenType};
 
 #[allow(dead_code)]
 pub fn symbol_to_token(

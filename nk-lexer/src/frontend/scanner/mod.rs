@@ -5,7 +5,7 @@ mod value;
 
 use errors::{LexError, LexicalError};
 
-use crate::neo_tokens::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
+use crate::tokens::{Symbol, Token, TokenMetadata, TokenType, TypeValue};
 use std::borrow::Cow;
 
 #[cfg(test)]
@@ -282,7 +282,7 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::neo_tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
+    use crate::tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
 
     fn token_with_type<'a>(tokens: &'a [Token], expected: &TokenType) -> Option<&'a Token> {
         tokens.iter().find(|token| &token.token_type == expected)

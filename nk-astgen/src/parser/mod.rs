@@ -1,4 +1,4 @@
-use lexer::neo_tokens::*;
+use lexer::tokens::*;
 
 mod error;
 use crate::ast::*;

@@ -1,7 +1,8 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Symbol {
     Colon,
     Comma,
@@ -21,7 +22,8 @@ pub enum Symbol {
     Semicolon,
 }
 impl Symbol {
-    pub fn as_str(&self) -> &'static str {
+    #[allow(dead_code)]
+    fn as_str(&self) -> &'static str {
         match self {
             Symbol::Colon => ":",
             Symbol::Comma => ",",
@@ -36,9 +38,9 @@ impl Symbol {
             Symbol::CloseBrace => "}",
             //Symbol::CloseAngle => ">",
             Symbol::CloseSquare => "]",
+            Symbol::Comment => "//",
             Symbol::Arrow => "->",
             Symbol::Semicolon => ";",
-            Symbol::Comment => "//",
         }
     }
 }

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use super::errors::{LexError, LexicalError};
 // use crate::tokens_new::{TokenType, TypeValue};
-use crate::neo_tokens::{TokenType, TypeValue};
+use crate::tokens::{TokenType, TypeValue};
 
 #[allow(dead_code)]
 pub fn number_to_token(

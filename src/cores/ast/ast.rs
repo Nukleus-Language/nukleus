@@ -1,4 +1,4 @@
-use lexer::Token;
+use lexer::tokens_legacy::Token;
 
 use std::collections::HashMap;
 use std::convert::AsMut;

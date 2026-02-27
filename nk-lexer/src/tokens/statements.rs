@@ -1,13 +1,16 @@
 use std::fmt;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
+#[allow(dead_code)]
 pub enum Statement {
     Public,
+    //Import,
     Let,
     Return,
     Print,
     Println,
+    Scanln,
     Break,
     If,
     Else,
@@ -15,17 +18,20 @@ pub enum Statement {
     For,
     While,
     Function,
-    Import,
+    Inject,
 }
 impl Statement {
-    /// Returns a string representation of the statement.
-    pub fn as_str(&self) -> &str {
+    // Returns a string representation of the statement.
+    #[allow(dead_code)]
+    fn as_str(&self) -> &'static str {
         match *self {
             Statement::Public => "public",
+            //Statement::Import => "import",
             Statement::Let => "let",
             Statement::Return => "return",
             Statement::Print => "print",
             Statement::Println => "println",
+            Statement::Scanln => "scanln",
             Statement::Break => "break",
             Statement::If => "if",
             Statement::Else => "else",
@@ -33,7 +39,7 @@ impl Statement {
             Statement::For => "for",
             Statement::While => "while",
             Statement::Function => "fn",
-            Statement::Import => "import",
+            Statement::Inject => "inject",
         }
     }
 }

@@ -14,10 +14,7 @@ use std::io::{self, Write};
 use crate::cores::ast::AST;
 use crate::cores::parser::parse::Parser;
 
-use lexer::Logical;
-use lexer::Token;
-use lexer::TypeName;
-use lexer::TypeValue;
+use lexer::tokens_legacy::{Logical, Token, TypeName, TypeValue};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FunctionId {
@@ -174,7 +171,7 @@ impl Interpreter {
                 .expect("Function not found");
             func.function_insert_variable(
                 arg.1.clone().to_string(),
-                lexer::Token::TypeValue(getten_value),
+                Token::TypeValue(getten_value),
             );
         }
 
@@ -195,7 +192,7 @@ impl Interpreter {
                         .expect("Function not found");
                     func.function_insert_variable(
                         name.clone(),
-                        lexer::Token::TypeValue(getten_value),
+                        Token::TypeValue(getten_value),
                     );
                 }
                 AST::Print { value } => {

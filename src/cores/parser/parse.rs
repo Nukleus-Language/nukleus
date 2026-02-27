@@ -1,5 +1,5 @@
 use crate::cores::ast::{AstParseError, AST};
-use lexer::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
+use lexer::tokens_legacy::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;
 

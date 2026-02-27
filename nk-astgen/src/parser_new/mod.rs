@@ -1,5 +1,5 @@
-use inksac::{Color, Style, Stylish};
-use lexer::neo_tokens::*;
+use inksac::{Color, Style, Styleable};
+use lexer::tokens::*;
 
 use std::collections::HashMap;
 use std::iter::{Cloned, Peekable};
@@ -10,14 +10,12 @@ use error::{AstError, AstGenError};
 
 use crate::ast::*;
 
-const ERRORTXTSTYLE: Style = Style {
-    foreground: Color::Red,
-    background: Color::Empty,
-    bold: true,
-    dim: false,
-    italic: false,
-    underline: false,
-};
+fn error_style() -> Style {
+    Style::builder()
+        .foreground(Color::Red)
+        .bold()
+        .build()
+}
 
 #[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::enum_variant_names, dead_code)]
@@ -179,7 +177,7 @@ impl<'a> Parser<'a> {
             "Context around Line {}:\n{}\n{}\nSuggestion: {}",
             token.metadata.line,
             context_snippet,
-            error_text.styled(ERRORTXTSTYLE),
+            error_text.style(error_style()),
             self.suggest_fix(&error)
         );
 

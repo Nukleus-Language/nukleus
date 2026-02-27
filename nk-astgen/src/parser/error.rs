@@ -1,4 +1,4 @@
-use lexer::neo_tokens::Token;
+use lexer::tokens::Token;
 
 use std::fmt;
 
