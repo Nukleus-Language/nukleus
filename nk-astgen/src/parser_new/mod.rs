@@ -190,7 +190,7 @@ impl<'a> Parser<'a> {
 
     fn suggest_fix(&self, error: &AstGenError) -> String {
         match &error.message {
-            AstError::ExpectedToken(ref t) => format!(
+            AstError::ExpectedToken(t) => format!(
                 "Add {} on line:{}, col{}",
                 t.token_type, t.metadata.line, t.metadata.column
             ),

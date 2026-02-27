@@ -714,7 +714,7 @@ impl<'a> Parser<'a> {
                 status = 4;
             }
             _ => {
-                println!("Invalid `let` statement Contruction Detected");
+                log::error!("Invalid `let` statement construction detected");
                 std::process::exit(0);
             }
         }
@@ -731,7 +731,7 @@ impl<'a> Parser<'a> {
                         status = 3;
                         continue;
                     }
-                    println!("Missing Type Announcement for `let` statement After `:`");
+                    log::error!("Missing type announcement for `let` statement after `:`");
                 }
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 3) => {
                     name = ident.to_string();
