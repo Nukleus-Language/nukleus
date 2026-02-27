@@ -79,7 +79,8 @@ mod test {
         assert!(out.contains("TEST-001"));
         assert!(out.contains("line two"));
         assert!(out.contains("^"));
-        assert!(out.contains("Suggestion: Fix it"));
+        assert!(out.contains("Suggestion"));
+        assert!(out.contains("Fix it"));
     }
 }
 

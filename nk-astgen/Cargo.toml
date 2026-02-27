@@ -6,7 +6,6 @@ edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-inksac = "0.5.0"
 lexer = { path = "../nk-lexer", package = "nk-lexer" }
 log = "0.4"
 nk-diagnostics = { path = "../nk-diagnostics" }

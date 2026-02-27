@@ -1,6 +1,49 @@
-use super::{Diagnostic, Span};
+use inksac::{Color, Style, Styleable};
+
+use super::{Diagnostic, Severity, Span};
 
 const CONTEXT_LINES: usize = 3;
+
+fn error_style() -> Style {
+    Style::builder()
+        .foreground(Color::Red)
+        .bold()
+        .build()
+}
+
+fn warning_style() -> Style {
+    Style::builder()
+        .foreground(Color::Yellow)
+        .bold()
+        .build()
+}
+
+fn info_style() -> Style {
+    Style::builder()
+        .foreground(Color::Cyan)
+        .bold()
+        .build()
+}
+
+fn accent_style() -> Style {
+    Style::builder()
+        .foreground(Color::Red)
+        .build()
+}
+
+fn suggestion_style() -> Style {
+    Style::builder()
+        .foreground(Color::Cyan)
+        .build()
+}
+
+fn severity_style(severity: Severity) -> Style {
+    match severity {
+        Severity::Error => error_style(),
+        Severity::Warning => warning_style(),
+        Severity::Info => info_style(),
+    }
+}
 
 pub fn format_diagnostic_with_source(
     diag: &Diagnostic,
@@ -9,9 +52,11 @@ pub fn format_diagnostic_with_source(
 ) -> String {
     let mut out = String::new();
 
+    let label = diag.severity.label();
+    let style = severity_style(diag.severity);
     let header = format!(
         "{}: {} ({})",
-        diag.severity.label(),
+        label.style(style),
         diag.message,
         diag.code
     );
@@ -29,7 +74,8 @@ pub fn format_diagnostic_with_source(
     }
 
     if let Some(suggestion) = &diag.suggestion {
-        out.push_str("\nSuggestion: ");
+        out.push_str("\n");
+        out.push_str(&"Suggestion: ".style(suggestion_style()).to_string());
         out.push_str(suggestion);
         out.push('\n');
     }
@@ -67,19 +113,21 @@ fn build_snippet(source: &str, span: &Span) -> String {
     for i in start_line..end_line {
         let display_line = i + 1;
         let line_content = lines[i];
-        let marker = if display_line == line_one { ">" } else { " " };
+        let marker = if display_line == line_one {
+            ">".style(accent_style()).to_string()
+        } else {
+            " ".to_string()
+        };
         out.push_str(&format!("{} {} | {}\n", marker, display_line, line_content));
 
         if display_line == line_one {
             let caret = build_caret_line(line_content, col_one, span);
-            out.push_str(&format!("    | {}\n", caret));
+            out.push_str(&format!("    | {}\n", caret.style(accent_style())));
         }
     }
 
-    out.push_str(&format!(
-        "\n  --> Error at Line: {}, Column: {}",
-        line_one, col_one
-    ));
+    let error_loc = format!("  --> Error at Line: {}, Column: {}", line_one, col_one);
+    out.push_str(&error_loc.style(accent_style()).to_string());
 
     out
 }
