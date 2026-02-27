@@ -1,4 +1,4 @@
-use crate::cores::ast::{AstParseError, AST};
+use crate::legacy::cores::ast::{AstParseError, AST};
 use lexer::tokens_legacy::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;
@@ -780,7 +780,7 @@ impl<'a> Parser<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::cores::ast::AST;
+    use crate::legacy::cores::ast::AST;
 
     #[test]
     fn test_parse_function() {

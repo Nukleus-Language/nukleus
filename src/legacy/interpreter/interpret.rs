@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::{self, Write};
 
-use crate::cores::ast::AST;
-use crate::cores::parser::parse::Parser;
+use crate::legacy::cores::ast::AST;
+use crate::legacy::cores::parser::parse::Parser;
 
 use lexer::tokens_legacy::{Logical, Token, TypeName, TypeValue};
 
