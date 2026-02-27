@@ -280,6 +280,18 @@ impl<'a> Lexer<'a> {
 mod test {
     use super::*;
     use crate::neo_tokens::{Assign, Operator, Statement, Symbol, TypeName, TypeValue};
+
+    fn token_with_type<'a>(tokens: &'a [Token], expected: &TokenType) -> Option<&'a Token> {
+        tokens.iter().find(|token| &token.token_type == expected)
+    }
+
+    fn first_quoted_string_token(tokens: &[Token]) -> Option<&Token> {
+        tokens.iter().find(|token| match &token.token_type {
+            TokenType::TypeValue(TypeValue::QuotedString(_)) => true,
+            _ => false,
+        })
+    }
+
     #[test]
     fn lexing_utf8_multibyte() {
         let code = "let:String msg = \"Hello \u{4E2D}\u{6587}\";";
@@ -288,6 +300,64 @@ mod test {
         assert!(result.is_ok(), "UTF-8 multibyte lexing failed: {:?}", result);
         let tokens = lexer.get_tokens();
         assert!(!tokens.is_empty(), "Expected tokens from UTF-8 source");
+
+        let quoted_string_token = first_quoted_string_token(tokens);
+        assert!(
+            quoted_string_token.is_some(),
+            "Expected quoted string token in UTF-8 source"
+        );
+
+        let semicolon_token = token_with_type(tokens, &TokenType::Symbol(Symbol::Semicolon));
+        assert!(semicolon_token.is_some(), "Expected semicolon token");
+
+        let quoted_string_column = quoted_string_token
+            .map(|token| token.metadata.column)
+            .unwrap_or_default();
+        let semicolon_column = semicolon_token
+            .map(|token| token.metadata.column)
+            .unwrap_or_default();
+        assert_eq!(
+            semicolon_column,
+            quoted_string_column + 1,
+            "Semicolon should appear right after closing quote"
+        );
+    }
+
+    #[test]
+    fn lexing_utf8_multibyte_across_lines_tracks_metadata() {
+        let code = "let:String first = \"\u{4E2D}\"\nlet:String second = \"\u{6587}\";";
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
+        let result = lexer.run();
+        assert!(result.is_ok(), "UTF-8 multiline lexing failed: {:?}", result);
+
+        let tokens = lexer.get_tokens();
+        let second_identifier = token_with_type(
+            tokens,
+            &TokenType::TypeValue(TypeValue::Identifier("second".to_string())),
+        );
+        assert!(
+            second_identifier.is_some(),
+            "Expected second identifier token"
+        );
+        assert_eq!(
+            second_identifier.map(|token| token.metadata.line),
+            Some(2),
+            "Expected second identifier on line 2"
+        );
+
+        let final_semicolon = tokens.last();
+        assert!(
+            matches!(
+                final_semicolon.map(|token| &token.token_type),
+                Some(TokenType::Symbol(Symbol::Semicolon))
+            ),
+            "Expected final token to be semicolon"
+        );
+        assert_eq!(
+            final_semicolon.map(|token| token.metadata.line),
+            Some(2),
+            "Expected final semicolon on line 2"
+        );
     }
 
     #[test]
@@ -329,7 +399,8 @@ mod test {
             Cow::Borrowed("Hello, world!"),
         ))];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run();
+        let result = lexer.run();
+        assert!(result.is_ok(), "String lexing failed: {:?}", result);
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }
