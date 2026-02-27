@@ -10,9 +10,12 @@
     clippy::unnecessary_cast,
     clippy::match_like_matches_macro,
     clippy::needless_range_loop,
-    clippy::not_unsafe_ptr_arg_deref
+    clippy::not_unsafe_ptr_arg_deref,
+    clippy::single_match,
+    clippy::match_wild_err_arm
 )]
 
+use crate::error::CodegenError;
 use astgen::ast::*;
 // use astgen::parser_new::Parser;
 use astgen::AST;
@@ -115,7 +118,7 @@ impl JIT {
         input: Vec<AST>,
         file_location: &str,
         is_lib: bool,
-    ) -> Result<*const u8, String> {
+    ) -> Result<*const u8, CodegenError> {
         let mut funcid = HashMap::new();
         self.define_print_function();
         self.define_println_function();
@@ -145,8 +148,9 @@ impl JIT {
                                     .push(AbiParam::new(translate_type(int, type_name)));
                             }
                             _ => {
-                                println!("Invalid Type for Argument");
-                                std::process::exit(1);
+                                return Err(CodegenError::InvalidArgumentType(
+                                    "Invalid argument form in function signature".to_string(),
+                                ));
                             }
                         }
                     }
@@ -170,15 +174,13 @@ impl JIT {
                 AST::Statement(statement) => match statement {
                     ASTstatement::Import { name } => {
                         // Resolve file path based on the operating system
-                        let resolved_path = resolve_file_path(&name, file_location)?;
-                        let contents = std::fs::read_to_string(&resolved_path).map_err(|e| {
-                            format!("Failed to read file '{}': {}", resolved_path.display(), e)
-                        })?;
+                        let resolved_path = resolve_file_path(&name, file_location)
+                            .map_err(CodegenError::CompilationError)?;
+                        let contents = std::fs::read_to_string(&resolved_path)
+                            .map_err(CodegenError::IoError)?;
                         let mut lexer =
                             lexer::frontend::Lexer::from_path(Path::new(&name), &contents);
-                        if let Err(e) = lexer.run() {
-                            println!("Error: {}", e);
-                        }
+                        lexer.run().map_err(|e| CodegenError::CompilationError(e.to_string()))?;
                         let tokens = lexer.tokens().to_vec();
 
                         let mut mid_ir = astgen::parser_new::Parser::new(
@@ -186,17 +188,14 @@ impl JIT {
                             Path::new(&name).to_path_buf(),
                             &contents,
                         );
-                        let ast_result = mid_ir.run();
-                        if ast_result.is_err() {
-                            println!("Error: {}", ast_result.err().unwrap());
-                        }
+                        mid_ir
+                            .run()
+                            .map_err(|e| CodegenError::CompilationError(e.to_diagnostic().to_string()))?;
                         let ast_new = mid_ir.get_asts();
-                        let _ =
-                            self.compile(ast_new.clone(), resolved_path.to_str().unwrap(), true);
-                        for (name, signature) in self.functions.iter() {
-                            println!("Function Name: {}, Signature: {:?}", name, signature);
-                            println!();
-                        }
+                        let path_str = resolved_path
+                            .to_str()
+                            .ok_or_else(|| CodegenError::CompilationError("Invalid path".to_string()))?;
+                        let _ = self.compile(ast_new.clone(), path_str, true)?;
                     }
                     ASTstatement::Function {
                         public: _,
@@ -205,8 +204,11 @@ impl JIT {
                         statements,
                         return_type,
                     } => {
-                        self.ctx.func.signature =
-                            self.functions.get(name.as_str()).unwrap().clone();
+                        self.ctx.func.signature = self
+                            .functions
+                            .get(name.as_str())
+                            .ok_or_else(|| CodegenError::CompilationError(format!("Function '{}' not in signature map", name)))?
+                            .clone();
 
                         self.translate(
                             args.clone(),
@@ -218,34 +220,29 @@ impl JIT {
                         let id = self
                             .module
                             .declare_function(&name, Linkage::Local, &self.ctx.func.signature)
-                            .map_err(|e| e.to_string())?;
+                            .map_err(|e| CodegenError::ModuleError(e.to_string()))?;
                         self.module
                             .define_function(id, &mut self.ctx)
-                            .map_err(|e| e.to_string())
-                            .expect("Compile Error");
+                            .map_err(|e| CodegenError::ModuleError(e.to_string()))?;
 
                         funcid.insert(name.clone(), id);
                         self.module.clear_context(&mut self.ctx);
-                        self.module.finalize_definitions().unwrap();
+                        self.module
+                            .finalize_definitions()
+                            .map_err(|e| CodegenError::ModuleError(e.to_string()))?;
                     }
-                    _ => {
-                        println!("Not a Function: {:?}", statement);
-                    }
+                    _ => {}
                 },
-                _ => {
-                    println!("Not a Function: {:?}", ast);
-                }
+                _ => {}
             }
         }
         if !is_lib {
-            #[cfg(debug_assertions)]
-            println!("Finalize");
+            let code = self.module.get_finalized_function(
+                *funcid
+                    .get("main")
+                    .ok_or_else(|| CodegenError::FunctionNotFound("main".to_string()))?,
+            );
 
-            let code = self
-                .module
-                .get_finalized_function(*funcid.get("main").expect("main function not found"));
-
-            println!("code: {:?}", code);
             Ok(code)
         } else {
             Ok(std::ptr::null::<u8>() as *const u8)
@@ -258,7 +255,7 @@ impl JIT {
         statements: Vec<AST>,
         return_type: ASTtypename,
         functions: HashMap<String, Signature>,
-    ) -> Result<(), String> {
+    ) -> Result<(), CodegenError> {
         let is_void = match return_type {
             ASTtypename::TypeVoid => true,
             _ => false,
@@ -295,12 +292,11 @@ impl JIT {
             module: &mut self.module,
         };
         for expr in statements {
-            trans.translate_expr(expr);
+            let _ = trans.translate_expr(expr)?;
         }
 
         // Tell the builder we're done with this function.
         trans.builder.finalize();
-        println!("\nircode:\n{}\n", self.ctx.func.clone());
         Ok(())
     }
     pub fn define_print_function(&mut self) {
@@ -342,11 +338,11 @@ struct FunctionTranslator<'a> {
 }
 
 impl FunctionTranslator<'_> {
-    fn translate_value(&mut self, value: ASTtypevalue) -> Value {
+    fn translate_value(&mut self, value: ASTtypevalue) -> Result<Value, CodegenError> {
         match value {
             ASTtypevalue::Char(c) => {
                 let imm: i8 = c as i8;
-                self.builder.ins().iconst(types::I8, i64::from(imm))
+                Ok(self.builder.ins().iconst(types::I8, i64::from(imm)))
             }
             ASTtypevalue::QuotedString(str) => {
                 // Calculate the length of the string (including the null terminator)
@@ -376,51 +372,35 @@ impl FunctionTranslator<'_> {
                     .ins()
                     .store(MemFlags::new(), null_val, string_ptr, len - 1);
 
-                // Return the pointer to the string as a Value
-                string_ptr
+                Ok(string_ptr)
             }
             ASTtypevalue::I8(i) => {
                 let imm: i8 = i;
-                self.builder.ins().iconst(types::I8, i64::from(imm))
+                Ok(self.builder.ins().iconst(types::I8, i64::from(imm)))
             }
             ASTtypevalue::I16(i) => {
                 let imm: i16 = i;
-                self.builder.ins().iconst(types::I16, i64::from(imm))
+                Ok(self.builder.ins().iconst(types::I16, i64::from(imm)))
             }
             ASTtypevalue::I32(i) => {
                 let imm: i32 = i;
-                self.builder.ins().iconst(types::I32, i64::from(imm))
+                Ok(self.builder.ins().iconst(types::I32, i64::from(imm)))
             }
-            ASTtypevalue::I64(i) => self.builder.ins().iconst(types::I64, i),
+            ASTtypevalue::I64(i) => Ok(self.builder.ins().iconst(types::I64, i)),
 
             ASTtypevalue::Identifier(id) => {
                 if let Some(variable) = self.variables.get(&id) {
-                    self.builder.use_var(variable.obj)
+                    Ok(self.builder.use_var(variable.obj))
                 } else {
-                    eprintln!("Variable {} not found", id);
-                    // Search for simliar variable / Function
-                    let suggestion = self.variables.iter().find(|(k, _)| k.contains(&id));
-                    if let Some((suggestion, _)) = suggestion {
-                        eprintln!("Did you mean {}?", suggestion);
-                    }
-                    std::process::exit(1);
+                    Err(CodegenError::VariableNotFound(id))
                 }
             }
             ASTtypevalue::FunctionCall { name, args } => {
-                // Clone the function reference before entering the loop
-                let functioninfo_res = self.functions.get(&name).cloned();
-
-                let functioninfo = match functioninfo_res {
-                    Some(functioninfo) => functioninfo,
-                    None => {
-                        eprintln!("Function {} not found", name);
-                        let suggestion = self.functions.iter().find(|(k, _)| k.contains(&name));
-                        if let Some((suggestion, _)) = suggestion {
-                            eprintln!("Did you mean {}?", suggestion);
-                        }
-                        std::process::exit(1);
-                    }
-                };
+                let functioninfo = self
+                    .functions
+                    .get(&name)
+                    .cloned()
+                    .ok_or_else(|| CodegenError::FunctionNotFound(name.clone()))?;
 
                 // let ref_function = functioninfo.fnref;
                 // let entry_block = self.builder.create_block();
@@ -429,38 +409,24 @@ impl FunctionTranslator<'_> {
                 let func = self
                     .module
                     .declare_function(&name, Linkage::Import, &functioninfo)
-                    .expect("Function Link Error");
+                    .map_err(|e| CodegenError::ModuleError(e.to_string()))?;
                 let func = self.module.declare_func_in_func(func, self.builder.func);
 
                 let mut arguments = Vec::new();
                 for arg in args {
-                    arguments.push(self.translate_expr(arg.clone()));
+                    arguments.push(self.translate_expr(arg.clone())?);
                 }
-                // self.module.define_function(func, &mut self.ctx);
-                // self
-                // .module
-                // .get_finalized_function(functioninfo.id);
-                // Deref ref_function here as call expects a reference
                 let call = self.builder.ins().call(func, arguments.as_slice());
                 let results = self.builder.inst_results(call);
                 assert_eq!(results.len(), 1);
 
-                // self.builder.seal_all_blocks();
-                // self.builder.finalize();
-                // self.builder.finalize();
-                // self.module.clear_context(&mut self.codegen_context);
-                // self.module.finalize_definitions()?;
-                results[0]
-
-                // self.builder.ins().iconst(self.int, 0)
+                Ok(results[0])
             }
             ASTtypevalue::Array(values) => {
-                // Handle array translation here
-                // Iterate through the values and translate each element
-                let translated_values: Vec<Value> = values
-                    .iter()
-                    .map(|val| self.translate_value(val.clone()))
-                    .collect();
+                let mut translated_values = Vec::new();
+                for val in values.iter() {
+                    translated_values.push(self.translate_value(val.clone())?);
+                }
                 // Populate the array with the translated values
                 let array_len = translated_values.len() as i32;
                 let array_type = self.module.target_config().pointer_type();
@@ -480,17 +446,14 @@ impl FunctionTranslator<'_> {
                         .store(MemFlags::new(), *val, elem_addr, 0);
                 }
                 let array_ptr = self.builder.ins().stack_load(array_type, array_var, 0);
-                array_ptr
+                Ok(array_ptr)
             }
-            ASTtypevalue::TypeVoid => self.builder.ins().iconst(self.int, 0),
-            _ => {
-                println!("Unsupported type: {:?}", value);
-                self.builder.ins().iconst(self.int, 0)
-            }
+            ASTtypevalue::TypeVoid => Ok(self.builder.ins().iconst(self.int, 0)),
+            _ => Ok(self.builder.ins().iconst(self.int, 0)),
         }
     }
 
-    fn translate_expr(&mut self, expr: AST) -> Value {
+    fn translate_expr(&mut self, expr: AST) -> Result<Value, CodegenError> {
         match expr {
             AST::Statement(statement) => {
                 match statement {
@@ -500,18 +463,10 @@ impl FunctionTranslator<'_> {
 
                         match *left {
                             AST::TypeValue(value) => match value {
-                                ASTtypevalue::Identifier(id) => {
-                                    self.translate_assign(id, op, *right)
-                                }
-                                _ => {
-                                    println!("Unsupported statementVal: {:?}", value);
-                                    self.builder.ins().iconst(self.int, 0)
-                                }
+                                ASTtypevalue::Identifier(id) => self.translate_assign(id, op, *right),
+                                _ => Ok(self.builder.ins().iconst(self.int, 0)),
                             },
-                            _ => {
-                                println!("Unsupported statementVal: ");
-                                self.builder.ins().iconst(self.int, 0)
-                            }
+                            _ => Ok(self.builder.ins().iconst(self.int, 0)),
                         }
                     }
                     ASTstatement::Let {
@@ -519,20 +474,21 @@ impl FunctionTranslator<'_> {
                         type_name: _,
                         value,
                     } => {
-                        let value = self.translate_expr(*value.unwrap());
-                        self.builder
-                            .def_var(self.variables.get(&name).unwrap().obj, value);
-                        value
+                        let value_val = self.translate_expr(*value.ok_or_else(|| CodegenError::CompilationError("Let requires value".to_string()))?)?;
+                        let var = self
+                            .variables
+                            .get(&name)
+                            .ok_or_else(|| CodegenError::VariableNotFound(name.clone()))?;
+                        self.builder.def_var(var.obj, value_val);
+                        Ok(value_val)
                     }
                     ASTstatement::Print { value, args } => {
-                        self.translate_print(*value, args);
-                        // Return a dummy value since print does not return anything
-                        self.builder.ins().iconst(self.int, 0)
+                        self.translate_print(*value, args)?;
+                        Ok(self.builder.ins().iconst(self.int, 0))
                     }
                     ASTstatement::Println { value, args } => {
-                        self.translate_println(*value, args);
-                        // Return a dummy value since print does not return anything
-                        self.builder.ins().iconst(self.int, 0)
+                        self.translate_println(*value, args)?;
+                        Ok(self.builder.ins().iconst(self.int, 0))
                     }
                     ASTstatement::For {
                         start,
@@ -547,29 +503,19 @@ impl FunctionTranslator<'_> {
                         else_statements,
                     } => self.translate_if_else(*condition, statements, elif, else_statements),
                     ASTstatement::Return { value } => {
-                        // if *value == AST::TypeValue(ASTtypevalue::TypeVoid) {
-                        // println!("return void");
-                        // return self.builder.ins().iconst(self.int, 0);
-                        // }
-                        let value_val = self.translate_expr(*value.clone());
+                        let value_val = self.translate_expr(*value.clone())?;
                         self.builder.ins().return_(&[value_val]);
-                        // self.builder.seal_all_blocks();
-                        // self.builder
-                        //     .def_var(*self.variables.get("return").unwrap(), value_val);
-                        value_val
+                        Ok(value_val)
                     }
-                    _ => {
-                        println!("Unsupported statement: {:?}", statement);
-                        self.builder.ins().iconst(self.int, 0)
-                    }
+                    _ => Ok(self.builder.ins().iconst(self.int, 0)),
                 }
             }
 
             AST::Logic(logic) => match logic {
                 ASTlogic::BinaryOperation { left, op, right } => {
-                    let lhs = self.translate_expr(*left);
-                    let rhs = self.translate_expr(*right);
-                    match op {
+                    let lhs = self.translate_expr(*left)?;
+                    let rhs = self.translate_expr(*right)?;
+                    Ok(match op {
                         ASTOperator::Add => self.builder.ins().iadd(lhs, rhs),
                         ASTOperator::Subtract => self.builder.ins().isub(lhs, rhs),
                         ASTOperator::Multiply => self.builder.ins().imul(lhs, rhs),
@@ -608,18 +554,12 @@ impl FunctionTranslator<'_> {
                         }
                         ASTOperator::BitAnd => self.builder.ins().band(lhs, rhs),
                         ASTOperator::BitOr => self.builder.ins().bor(lhs, rhs),
-                        _ => {
-                            println!("Unsupported operator: {:?}", op);
-                            self.builder.ins().iconst(self.int, 0)
-                        }
-                    }
+                        _ => self.builder.ins().iconst(self.int, 0),
+                    })
                 }
             },
             AST::TypeValue(value) => self.translate_value(value),
-            _ => {
-                println!("Unsupported expression: {:?}", expr);
-                self.builder.ins().iconst(self.int, 0)
-            }
+            _ => Ok(self.builder.ins().iconst(self.int, 0)),
         }
     }
     // fn translate_print(&mut self, value: AST, args: Vec<AST>) {
@@ -637,39 +577,40 @@ impl FunctionTranslator<'_> {
     //     let formatted_str_val = self.translate_expr(formatted_str_ast);
     //     self.emit_print_call(formatted_str_val);
     // }
-    fn translate_print(&mut self, value: AST, args: Vec<AST>) {
+    fn translate_print(&mut self, value: AST, args: Vec<AST>) -> Result<(), CodegenError> {
         let str_val = value.to_string();
         let splited_str = str_val.split("{}").collect::<Vec<&str>>();
         let mut j: usize = 0;
 
         for i in 0..splited_str.len() {
             let ast_chunk = AST::TypeValue(ASTtypevalue::QuotedString(splited_str[i].to_string()));
-            let chunk_val = self.translate_expr(ast_chunk);
+            let chunk_val = self.translate_expr(ast_chunk)?;
             self.emit_print_call(chunk_val);
 
             if j < args.len() {
-                let arg_val = self.translate_expr(args[j].clone());
-                // Check if arg_val is a variable
                 if let AST::TypeValue(ASTtypevalue::Identifier(arg)) = args[j].clone() {
-                    // let arg_val = self.translate_value(arg.clone());
-                    let arg_val = self.variables[&arg.to_string()].obj;
-                    let var_val = self.builder.use_var(arg_val);
+                    let var = self
+                        .variables
+                        .get(&arg.to_string())
+                        .ok_or_else(|| CodegenError::VariableNotFound(arg.to_string()))?;
+                    let var_val = self.builder.use_var(var.obj);
                     self.emit_print_call(var_val);
-                    j += 1;
-                    continue;
+                } else {
+                    let arg_val = self.translate_expr(args[j].clone())?;
+                    self.emit_print_call(arg_val);
                 }
-                self.emit_print_call(arg_val);
                 j += 1;
             }
         }
+        Ok(())
     }
 
-    fn translate_println(&mut self, value: AST, args: Vec<AST>) {
-        self.translate_print(value, args);
-        // Print a newline after all segments and arguments
+    fn translate_println(&mut self, value: AST, args: Vec<AST>) -> Result<(), CodegenError> {
+        self.translate_print(value, args)?;
         let newline = AST::TypeValue(ASTtypevalue::QuotedString("\n".to_string()));
-        let newline_val = self.translate_expr(newline);
+        let newline_val = self.translate_expr(newline)?;
         self.emit_print_call(newline_val);
+        Ok(())
     }
 
     // Helper function to emit a call to the print function
@@ -686,16 +627,17 @@ impl FunctionTranslator<'_> {
         let local_print_func = self.module.declare_func_in_func(func, self.builder.func);
         // let formatted_str = self.translate_value(val);
         // println!("Formatted String: {:?}", formatted_str);
-        println!("Value: {:?}", val);
         // let val_type = self.variables.get(&val_name).unwrap().type_name;
         let call = self.builder.ins().call(local_print_func, &[val]);
         let res = self.builder.inst_results(call);
-        println!("Result: {:?}", res);
     }
 
-    fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Value {
-        let new_value = self.translate_expr(expr);
-        let variable = self.variables.get(&name).unwrap();
+    fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Result<Value, CodegenError> {
+        let new_value = self.translate_expr(expr)?;
+        let variable = self
+            .variables
+            .get(&name)
+            .ok_or(CodegenError::VariableNotFound(name))?;
         let var_value = self.builder.use_var(variable.obj);
         let oped_value = match op {
             ASTOperator::Assign => new_value,
@@ -708,17 +650,16 @@ impl FunctionTranslator<'_> {
             ASTOperator::BitOrAssign => self.builder.ins().bor(var_value, new_value),
             ASTOperator::BitXorAssign => self.builder.ins().bxor(var_value, new_value),
             _ => {
-                println!("Invalid Assign operator: {:?}", op);
-                std::process::exit(1);
+                return Err(CodegenError::InvalidAssignOperator(format!("{:?}", op)));
             }
         };
         self.builder.def_var(variable.obj, oped_value);
-        oped_value
+        Ok(oped_value)
     }
-    fn translate_icmp(&mut self, cmp: IntCC, lhs: AST, rhs: AST) -> Value {
-        let lhs = self.translate_expr(lhs);
-        let rhs = self.translate_expr(rhs);
-        self.builder.ins().icmp(cmp, lhs, rhs)
+    fn translate_icmp(&mut self, cmp: IntCC, lhs: AST, rhs: AST) -> Result<Value, CodegenError> {
+        let lhs = self.translate_expr(lhs)?;
+        let rhs = self.translate_expr(rhs)?;
+        Ok(self.builder.ins().icmp(cmp, lhs, rhs))
     }
 
     fn translate_for(
@@ -727,22 +668,22 @@ impl FunctionTranslator<'_> {
         end: ASTtypevalue,
         value: ASTtypevalue,
         statements: Vec<AST>,
-    ) -> Value {
+    ) -> Result<Value, CodegenError> {
         let start_name = match start.clone() {
             ASTtypevalue::Identifier(id) => id,
             _ => {
-                println!("Start value of an `for` loop must be an identifier");
-                std::process::exit(1);
+                return Err(CodegenError::InvalidForStartValue(
+                    "Start value of a `for` loop must be an identifier".to_string(),
+                ));
             }
         };
-        let start_value = self.translate_value(start);
-        // check if the start_value is an identifier and get the id
+        let _start_value = self.translate_value(start)?;
 
-        // println!("start_value: {}", start_value);
-        // let end_value = self.translate_value(end);
-        // let update_value = self.translate_value(value);
-
-        let loop_var = self.variables.get(&start_name).unwrap().obj;
+        let loop_var = self
+            .variables
+            .get(&start_name)
+            .ok_or_else(|| CodegenError::VariableNotFound(start_name.clone()))?
+            .obj;
 
         let header_block = self.builder.create_block();
         let body_block = self.builder.create_block();
@@ -754,7 +695,7 @@ impl FunctionTranslator<'_> {
 
         // Fetch the current value of the loop variable
         let current_value = self.builder.use_var(loop_var);
-        let end_value = self.translate_value(end);
+        let end_value = self.translate_value(end)?;
         let cmp = self
             .builder
             .ins()
@@ -768,11 +709,11 @@ impl FunctionTranslator<'_> {
 
         // Translate the body of the loop
         for stmt in statements {
-            self.translate_expr(stmt);
+            let _ = self.translate_expr(stmt)?;
         }
 
         // Update the loop variable
-        let update_value = self.translate_value(value);
+        let update_value = self.translate_value(value)?;
         let updated_value = self.builder.ins().iadd(current_value, update_value);
         self.builder.def_var(loop_var, updated_value);
 
@@ -783,20 +724,17 @@ impl FunctionTranslator<'_> {
         self.builder.seal_block(header_block);
         self.builder.seal_block(exit_block);
 
-        // Just return 0 for now
-        self.builder.ins().iconst(self.int, 0)
+        Ok(self.builder.ins().iconst(self.int, 0))
     }
 
     fn translate_if_else(
         &mut self,
         condition: AST,
-        // statements: Vec<AST>,
         then_body: Vec<AST>,
-        // else_body: Vec<AST>,
-        elif: Option<Box<AST>>,
+        _elif: Option<Box<AST>>,
         else_body: Option<Vec<AST>>,
-    ) -> Value {
-        let condition_value = self.translate_expr(condition);
+    ) -> Result<Value, CodegenError> {
+        let condition_value = self.translate_expr(condition)?;
 
         let then_block = self.builder.create_block();
         let else_block = self.builder.create_block();
@@ -818,10 +756,9 @@ impl FunctionTranslator<'_> {
         self.builder.seal_block(then_block);
         let mut then_return = self.builder.ins().iconst(self.int, 0);
         for expr in then_body {
-            then_return = self.translate_expr(expr);
+            then_return = self.translate_expr(expr)?;
         }
 
-        // Jump to the merge block, passing it the block return value.
         self.builder.ins().jump(merge_block, &[then_return]);
 
         self.builder.switch_to_block(else_block);
@@ -829,9 +766,8 @@ impl FunctionTranslator<'_> {
         let mut else_return = self.builder.ins().iconst(self.int, 0);
         if let Some(body) = &else_body {
             for expr in body {
-                else_return = self.translate_expr(expr.clone());
+                else_return = self.translate_expr(expr.clone())?;
             }
-            println!("else_return: {}", else_return);
         }
         // let else_return = self.translate_expr(elif.unwrap());
         // for expr in else_body {
@@ -847,14 +783,11 @@ impl FunctionTranslator<'_> {
         // We've now seen all the predecessors of the merge block.
         self.builder.seal_block(merge_block);
 
-        // Read the value of the if-else by reading the merge block
-        // parameter.
         let phi = self.builder.block_params(merge_block)[0];
-
-        phi
+        Ok(phi)
     }
 
-    fn translate_while_loop(&mut self, condition: AST, loop_body: Vec<AST>) -> Value {
+    fn translate_while_loop(&mut self, condition: AST, loop_body: Vec<AST>) -> Result<Value, CodegenError> {
         let header_block = self.builder.create_block();
         let body_block = self.builder.create_block();
         let exit_block = self.builder.create_block();
@@ -862,7 +795,7 @@ impl FunctionTranslator<'_> {
         self.builder.ins().jump(header_block, &[]);
         self.builder.switch_to_block(header_block);
 
-        let condition_value = self.translate_expr(condition);
+        let condition_value = self.translate_expr(condition)?;
         self.builder
             .ins()
             .brif(condition_value, body_block, &[], exit_block, &[]);
@@ -871,7 +804,7 @@ impl FunctionTranslator<'_> {
         self.builder.seal_block(body_block);
 
         for expr in loop_body {
-            self.translate_expr(expr);
+            let _ = self.translate_expr(expr)?;
         }
         self.builder.ins().jump(header_block, &[]);
 
@@ -882,11 +815,10 @@ impl FunctionTranslator<'_> {
         self.builder.seal_block(header_block);
         self.builder.seal_block(exit_block);
 
-        // Just return 0 for now.
-        self.builder.ins().iconst(self.int, 0)
+        Ok(self.builder.ins().iconst(self.int, 0))
     }
 
-    fn translate_call(&mut self, name: String, args: Vec<AST>) -> Value {
+    fn translate_call(&mut self, name: String, args: Vec<AST>) -> Result<Value, CodegenError> {
         let mut sig = self.module.make_signature();
 
         // Add a parameter for each argument.
@@ -905,10 +837,10 @@ impl FunctionTranslator<'_> {
 
         let mut arg_values = Vec::new();
         for arg in args {
-            arg_values.push(self.translate_expr(arg))
+            arg_values.push(self.translate_expr(arg)?);
         }
         let call = self.builder.ins().call(local_callee, &arg_values);
-        self.builder.inst_results(call)[0]
+        Ok(self.builder.inst_results(call)[0])
     }
 
     fn translate_global_data_addr(&mut self, name: String) -> Value {
@@ -939,7 +871,7 @@ fn declare_signature(
     int: types::Type,
     args: &[ASTtypecomp],
     return_type: &ASTtypename,
-) -> Signature {
+) -> Result<Signature, CodegenError> {
     let mut sig = Signature::new(CallConv::SystemV);
     let mut params = Vec::new();
     for arg in args {
@@ -948,12 +880,12 @@ fn declare_signature(
                 type_name,
                 identifier: _,
             } => {
-                let _type_val = translate_type(int, *type_name);
                 params.push(AbiParam::new(translate_type(int, *type_name)));
             }
             _ => {
-                println!("Invalid Type for Arguments");
-                std::process::exit(1);
+                return Err(CodegenError::InvalidArgumentType(
+                    "Invalid type for arguments".to_string(),
+                ));
             }
         }
     }
@@ -961,7 +893,7 @@ fn declare_signature(
     let type_val = translate_type(int, *return_type);
     sig.returns.push(AbiParam::new(type_val));
 
-    sig
+    Ok(sig)
 }
 fn declare_variables(
     int: types::Type,
@@ -996,7 +928,6 @@ fn declare_variables(
             builder.def_var(var, val);
         } else {
             // Handle other ASTtypecomp variants or skip
-            println!("Unsupported param type: {:?}", param);
         }
     }
     // let zero = builder.ins().iconst(int, 0);
@@ -1011,7 +942,6 @@ fn declare_variables(
     // }
     for expr in stmts {
         declare_variables_in_stmt(int, builder, &mut variables, &mut index, expr);
-        println!("variables{}: {:?}", index, variables);
     }
 
     variables
@@ -1051,13 +981,9 @@ fn declare_variables_in_stmt(
 
                             // let _ = declare_variable(int, builder, variables, index, &name);
                         }
-                        _ => {
-                            println!("Unsupported statement: {:?}", value);
-                        }
+                        _ => {}
                     },
-                    _ => {
-                        println!("Unsupported statement");
-                    }
+                    _ => {}
                 },
                 // ASTstatement::Return { value: _ } => {
                 // let _ = declare_variable(int, builder, variables, index, "return");
@@ -1071,9 +997,7 @@ fn declare_variables_in_stmt(
             }
         }
         // ... other cases for AST variants
-        _ => {
-            println!("Unsupported expression: {:?}", expr);
-        }
+        _ => {}
     }
 }
 

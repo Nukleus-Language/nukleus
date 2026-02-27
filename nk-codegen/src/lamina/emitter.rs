@@ -5,9 +5,9 @@ use astgen::ast::{ASTOperator, ASTstatement, ASTtypecomp, ASTtypename, ASTtypeva
 use crate::error::CodegenError;
 
 use super::helpers::{
-    choose_binary_type, escape_char, extract_identifier, extract_identifier_from_ast,
-    infer_type_from_typevalue, lamina_binary_op, lamina_cmp_op, lamina_type, FunctionSignature,
-    LoweredValue,
+    choose_binary_type, escape_char, extract_identifier,
+    extract_identifier_from_ast, infer_type_from_typevalue, lamina_binary_op, lamina_cmp_op,
+    lamina_type, FunctionSignature, LoweredValue,
 };
 
 pub(super) struct FunctionEmitter<'a> {
@@ -94,6 +94,54 @@ impl<'a> FunctionEmitter<'a> {
         Ok(params.join(", "))
     }
 
+    fn lower_print(
+        &mut self,
+        value: &AST,
+        args: &[AST],
+        add_newline: bool,
+    ) -> Result<(), CodegenError> {
+        if !args.is_empty() {
+            return Err(CodegenError::CompilationError(
+                "Format string arguments not yet supported for print/println".to_string(),
+            ));
+        }
+
+        if let AST::TypeValue(astgen::ast::ASTtypevalue::QuotedString(s)) = value {
+            for b in s.bytes() {
+                let code = i64::from(b);
+                let byte_tmp = self.new_temp();
+                let discard = self.new_temp();
+                self.emit_inst(format!("%{} = add.i64 {}, 0", byte_tmp, code));
+                self.emit_inst(format!("%{} = writebyte %{}", discard, byte_tmp));
+            }
+            if add_newline {
+                let discard = self.new_temp();
+                self.emit_inst(format!("%{} = writebyte 10", discard));
+            }
+            return Ok(());
+        }
+
+        let lowered = self.lower_expr(value)?;
+        let print_var = if lowered.repr.starts_with('%') {
+            lowered.repr
+        } else {
+            let tmp = self.new_temp();
+            self.emit_inst(format!(
+                "%{} = add.{} {}, 0",
+                tmp,
+                super::helpers::lamina_type(lowered.ty)?,
+                lowered.repr
+            ));
+            format!("%{}", tmp)
+        };
+        self.emit_inst(format!("print {}", print_var));
+        if add_newline {
+            let discard = self.new_temp();
+            self.emit_inst(format!("%{} = writebyte 10", discard));
+        }
+        Ok(())
+    }
+
     fn lower_statements(&mut self, statements: &[AST]) -> Result<(), CodegenError> {
         for stmt in statements {
             if self.terminated {
@@ -160,10 +208,7 @@ impl<'a> FunctionEmitter<'a> {
             }
             AST::Statement(ASTstatement::Print { value, args })
             | AST::Statement(ASTstatement::Println { value, args }) => {
-                let _ = self.lower_expr(value)?;
-                for arg in args {
-                    let _ = self.lower_expr(arg)?;
-                }
+                self.lower_print(value, args, matches!(stmt, AST::Statement(ASTstatement::Println { .. })))?;
             }
             AST::Statement(ASTstatement::Return { value }) => {
                 let lowered = self.lower_expr(value)?;

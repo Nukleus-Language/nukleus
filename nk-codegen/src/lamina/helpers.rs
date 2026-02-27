@@ -103,6 +103,21 @@ pub(super) fn escape_char(c: char) -> String {
     }
 }
 
+/// Escapes a string for use as a Lamina IR string literal (double-quoted).
+/// Reserved for print/println when lamina supports call @puts.
+#[allow(dead_code)]
+pub(super) fn escape_lamina_string(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
 pub(super) fn infer_type_from_typevalue(value: &ASTtypevalue) -> ASTtypename {
     match value {
         ASTtypevalue::I8(_) => ASTtypename::I8,
