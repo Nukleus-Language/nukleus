@@ -5,36 +5,23 @@ use super::{Diagnostic, Severity, Span};
 const CONTEXT_LINES: usize = 3;
 
 fn error_style() -> Style {
-    Style::builder()
-        .foreground(Color::Red)
-        .bold()
-        .build()
+    Style::builder().foreground(Color::Red).bold().build()
 }
 
 fn warning_style() -> Style {
-    Style::builder()
-        .foreground(Color::Yellow)
-        .bold()
-        .build()
+    Style::builder().foreground(Color::Yellow).bold().build()
 }
 
 fn info_style() -> Style {
-    Style::builder()
-        .foreground(Color::Cyan)
-        .bold()
-        .build()
+    Style::builder().foreground(Color::Cyan).bold().build()
 }
 
 fn accent_style() -> Style {
-    Style::builder()
-        .foreground(Color::Red)
-        .build()
+    Style::builder().foreground(Color::Red).build()
 }
 
 fn suggestion_style() -> Style {
-    Style::builder()
-        .foreground(Color::Cyan)
-        .build()
+    Style::builder().foreground(Color::Cyan).build()
 }
 
 fn severity_style(severity: Severity) -> Style {
@@ -54,12 +41,7 @@ pub fn format_diagnostic_with_source(
 
     let label = diag.severity.label();
     let style = severity_style(diag.severity);
-    let header = format!(
-        "{}: {} ({})",
-        label.style(style),
-        diag.message,
-        diag.code
-    );
+    let header = format!("{}: {} ({})", label.style(style), diag.message, diag.code);
     out.push_str(&header);
     if let Some(p) = path
         && !p.is_empty()

@@ -168,8 +168,7 @@ impl LaminaBackend {
                 }
                 emitted_any = true;
 
-                let mut emitter =
-                    FunctionEmitter::new(&self.signatures, name, &mut label_counter);
+                let mut emitter = FunctionEmitter::new(&self.signatures, name, &mut label_counter);
                 output.push_str(&emitter.lower_function(name, args, statements, *return_type)?);
             }
         }

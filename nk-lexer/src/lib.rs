@@ -8,7 +8,7 @@ pub mod frontend;
 mod lex;
 /// Canonical token types.
 pub mod tokens;
-/// Legacy token model.
+/// Legacy token model. Use `tokens` for new code.
 pub mod tokens_legacy;
 
 pub use error::LexerError;

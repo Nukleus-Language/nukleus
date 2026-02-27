@@ -177,7 +177,11 @@ fn run_lamina(
         .code()
         .unwrap_or(255);
 
-    eprintln!("Run: {:.3}s (exit code {})", run_duration.as_secs_f64(), exit_code);
+    eprintln!(
+        "Run: {:.3}s (exit code {})",
+        run_duration.as_secs_f64(),
+        exit_code
+    );
     log::info!("lamina ir: {}", ir_path);
     log::info!("lamina asm: {}", asm_path);
     log::info!("lamina bin: {}", bin_path);

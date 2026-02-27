@@ -38,16 +38,14 @@ fn expand_imports(
                 .map_err(|e| format!("Cannot read import '{}': {}", name, e))?;
 
             eprintln!("    Lexing {}...", resolved.display());
-            let mut lexer =
-                lexer::frontend::Lexer::from_path(resolved.as_path(), &contents);
+            let mut lexer = lexer::frontend::Lexer::from_path(resolved.as_path(), &contents);
             lexer.run().map_err(|e| {
                 e.format_with_source_and_path(&contents, canonical.display().to_string())
             })?;
 
             let tokens = lexer.tokens().to_vec();
             eprintln!("    Parsing {}...", resolved.display());
-            let mut parser =
-                astgen::parser_new::Parser::new(&tokens, canonical.clone(), &contents);
+            let mut parser = astgen::parser::Parser::new(&tokens, canonical.clone(), &contents);
             parser.run().map_err(|e| {
                 let diag = e.to_diagnostic();
                 diag.format_with_source_and_path(&contents, canonical.display().to_string())
@@ -89,7 +87,7 @@ pub fn compile(
     }
 
     eprintln!("Parsing {}...", input_path.display());
-    let mut parser = astgen::parser_new::Parser::new(&tokens, input_path.to_path_buf(), contents);
+    let mut parser = astgen::parser::Parser::new(&tokens, input_path.to_path_buf(), contents);
 
     let start_time = std::time::Instant::now();
     parser.run().map_err(|e| {

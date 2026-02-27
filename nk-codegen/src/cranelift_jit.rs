@@ -17,7 +17,7 @@
 
 use crate::error::CodegenError;
 use astgen::ast::*;
-// use astgen::parser_new::Parser;
+// use astgen::parser::Parser;
 use astgen::AST;
 
 use cranelift::prelude::*;
@@ -132,39 +132,39 @@ impl JIT {
                 return_type,
             }) = ast
             {
-                    let int = self.module.target_config().pointer_type();
+                let int = self.module.target_config().pointer_type();
 
-                    for p in args.clone() {
-                        match p {
-                            ASTtypecomp::Argument {
-                                type_name,
-                                identifier: _,
-                            } => {
-                                self.ctx
-                                    .func
-                                    .signature
-                                    .params
-                                    .push(AbiParam::new(translate_type(int, type_name)));
-                            }
-                            _ => {
-                                return Err(CodegenError::InvalidArgumentType(
-                                    "Invalid argument form in function signature".to_string(),
-                                ));
-                            }
+                for p in args.clone() {
+                    match p {
+                        ASTtypecomp::Argument {
+                            type_name,
+                            identifier: _,
+                        } => {
+                            self.ctx
+                                .func
+                                .signature
+                                .params
+                                .push(AbiParam::new(translate_type(int, type_name)));
+                        }
+                        _ => {
+                            return Err(CodegenError::InvalidArgumentType(
+                                "Invalid argument form in function signature".to_string(),
+                            ));
                         }
                     }
-                    let type_return = translate_type(int, return_type);
+                }
+                let type_return = translate_type(int, return_type);
 
-                    self.ctx
-                        .func
-                        .signature
-                        .returns
-                        .push(AbiParam::new(type_return));
+                self.ctx
+                    .func
+                    .signature
+                    .returns
+                    .push(AbiParam::new(type_return));
 
-                    self.functions
-                        .insert(name.clone(), self.ctx.func.signature.clone());
-                    self.module.clear_context(&mut self.ctx);
-                    // self.module.finalize_definitions().expect("Compile Error");
+                self.functions
+                    .insert(name.clone(), self.ctx.func.signature.clone());
+                self.module.clear_context(&mut self.ctx);
+                // self.module.finalize_definitions().expect("Compile Error");
             }
         }
         for ast in input {
@@ -183,7 +183,7 @@ impl JIT {
                             .map_err(|e| CodegenError::CompilationError(e.to_string()))?;
                         let tokens = lexer.tokens().to_vec();
 
-                        let mut mid_ir = astgen::parser_new::Parser::new(
+                        let mut mid_ir = astgen::parser::Parser::new(
                             &tokens,
                             Path::new(&name).to_path_buf(),
                             &contents,

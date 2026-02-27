@@ -552,7 +552,11 @@ mod test {
         let code = "fn caf\u{00e9}() -> i64 { return 0; }";
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         let result = lexer.run();
-        assert!(result.is_ok(), "Unicode identifier lexing failed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "Unicode identifier lexing failed: {:?}",
+            result
+        );
 
         let tokens = lexer.get_tokens();
         let ident = token_with_type(
