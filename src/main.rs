@@ -3,59 +3,23 @@
 //pub mod compiler;
 #![allow(clippy::cognitive_complexity, clippy::needless_borrow)]
 
+mod cli;
 #[cfg(feature = "legacy")]
 pub mod cores;
 mod errors;
 #[cfg(feature = "legacy")]
 pub mod interpreter;
+mod logger;
 
-use std::env;
 use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 use std::process::Command as ProcessCommand;
 
-use clap::{Arg, ArgAction, Command};
 #[cfg(feature = "jit")]
 use codegen::cranelift_jit::{save_executable, JIT};
 use codegen::lamina::LaminaBackend;
-// use codegen::JIT;
-
-// use inksac::types::*;
-
-fn cli() -> Command {
-    Command::new("nukleus")
-        .version(env!("CARGO_PKG_VERSION"))
-        .author("Skuld Norniern. <skuldnorniern@gmail.com>")
-        .about("Nukleus Language")
-        .arg(Arg::new("input").default_value("repl"))
-        .arg(
-            Arg::new("backend")
-                .long("backend")
-                .short('b')
-                .default_value("lamina")
-                .value_parser(["cranelift", "lamina"]),
-        )
-        .arg(
-            Arg::new("emit-asm")
-                .long("emit-asm")
-                .value_name("PATH")
-                .help("When using --backend lamina, write assembly to this path"),
-        )
-        .arg(
-            Arg::new("emit-ir")
-                .long("emit-ir")
-                .value_name("PATH")
-                .help("When using --backend lamina, write Lamina IR to this path"),
-        )
-        .arg(
-            Arg::new("lamina")
-                .long("lamina")
-                .action(ArgAction::SetTrue)
-                .help("Use Lamina backend (shorthand for --backend lamina)"),
-        )
-}
 
 fn read_file(filename: &str) -> Result<String, std::io::Error> {
     // Get the file
@@ -95,30 +59,22 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 // }
 
 fn main() {
+    logger::init();
     if let Err(e) = run_cli() {
-        eprintln!("{}", e);
+        log::error!("{}", e);
         std::process::exit(1);
     }
 }
 
 fn run_cli() -> Result<(), String> {
-    let matches = cli().get_matches();
-    let input = matches
-        .get_one::<String>("input")
-        .ok_or("Input argument not found")?;
-    let mut backend = matches
-        .get_one::<String>("backend")
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "lamina".to_string());
-    let emit_asm_path = matches.get_one::<String>("emit-asm").map(String::as_str);
-    let emit_ir_path = matches.get_one::<String>("emit-ir").map(String::as_str);
-
-    if matches.get_flag("lamina") {
-        backend = "lamina".to_string();
-    }
+    let args = cli::parse_args()?;
+    let input = &args.input;
+    let mut backend = args.backend.clone();
+    let emit_asm_path = args.emit_asm.as_deref();
+    let emit_ir_path = args.emit_ir.as_deref();
 
     if backend == "cranelift" && !cfg!(target_arch = "x86_64") {
-        println!(
+        log::warn!(
             "cranelift backend is not supported on this architecture yet; falling back to lamina"
         );
         backend = "lamina".to_string();
@@ -144,15 +100,14 @@ fn run_cli() -> Result<(), String> {
     let mut lexer = lexer::frontend::Lexer::from_path(input_path, &contents);
     lexer.run().map_err(|e| format!("Lexer error: {}", e))?;
     let lex_duration = lex_start.elapsed();
-    println!("Lexer Time: {:?}", lex_duration);
+    log::debug!("Lexer time: {:?}", lex_duration);
     let tokens = lexer.tokens().to_vec();
 
     #[cfg(debug_assertions)]
     {
         let chars_per_second = contents.len() as f64 / lex_duration.as_secs_f64();
         let chars_mb_per_second = chars_per_second * 4.0 / 1024.0 / 1024.0;
-        println!("Lexer Chars Per Second: {}", chars_per_second);
-        println!("Lexer Chars MB/s: {}", chars_mb_per_second);
+        log::debug!("Lexer chars/s: {} MB/s: {}", chars_per_second, chars_mb_per_second);
     }
 
     // println!("Tokens: {:?}", tokens);
@@ -172,17 +127,12 @@ fn run_cli() -> Result<(), String> {
 
     let duration_parser_new = end_time_parser_new.duration_since(start_time_parser_new);
     #[cfg(debug_assertions)]
-    println!("New Parser Time: {:?}", duration_parser_new);
+    log::debug!("Parser time: {:?}", duration_parser_new);
 
-    // let speedup = duration_parser_old.as_nanos() as f64 / duration_parser_new.as_nanos() as f64;
-    // println!("Speedup: {}x", speedup);
-
-    // let old_tokens_per_second = tokens.len() as f64 / duration_parser_old.as_secs_f64();
-    // println!("Old Tokens Per Second: {}", old_tokens_per_second);
     #[cfg(debug_assertions)]
     {
         let new_tokens_per_second = tokens.len() as f64 / duration_parser_new.as_secs_f64();
-        println!("New Tokens Per Second: {}", new_tokens_per_second);
+        log::debug!("Parser tokens/s: {}", new_tokens_per_second);
     }
 
     //let old_tokens_mb_per_second = old_tokens_per_second / 1024.0 / 1024.0;
@@ -287,14 +237,14 @@ fn run_cli() -> Result<(), String> {
             .code()
             .unwrap_or(255);
 
-        println!(
+        log::info!(
             "exit with code {} in {:?}",
             exit_code,
             lex_duration + duration_parser_new + compile_duration + link_duration + run_duration
         );
-        println!("lamina ir: {}", ir_path);
-        println!("lamina asm: {}", asm_path);
-        println!("lamina bin: {}", bin_path);
+        log::info!("lamina ir: {}", ir_path);
+        log::info!("lamina asm: {}", asm_path);
+        log::info!("lamina bin: {}", bin_path);
 
         drop(contents);
         return Ok(());
@@ -311,13 +261,13 @@ fn run_cli() -> Result<(), String> {
         let pre_run_time = std::time::Instant::now();
         let result = run_jit(raw_code_ptr).map_err(|e| format!("Error during execution: {}", e))?;
         let duration = pre_run_time.elapsed();
-        println!(
+        log::info!(
             "exit with code {} in {:?}",
             result,
             duration + duration_jit + lex_duration + duration_parser_new
         );
         if let Err(e) = save_executable(raw_code_ptr, "a") {
-            eprintln!("Failed to save executable: {}", e);
+            log::error!("Failed to save executable: {}", e);
         }
         drop(jit);
         drop(contents);
@@ -404,6 +354,6 @@ unsafe fn run_code<I, O>(codeptr: *const u8, input: I) -> Result<O, String> {
     if codeptr.is_null() {
         return Err("Null function pointer".to_string());
     }
-    let code_fn = std::mem::transmute::<*const u8, fn(I) -> O>(codeptr);
+    let code_fn = unsafe { std::mem::transmute::<*const u8, fn(I) -> O>(codeptr) };
     Ok(code_fn(input))
 }

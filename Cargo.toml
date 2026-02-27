@@ -7,15 +7,17 @@ description = "New AI, GUI, Cross-Platform Programming language"
 edition = "2024"
 license = "Apache-2.0"
 
+[features]
+default = []
+jit = ["codegen/jit"]
+legacy = []
+
 [dependencies]
-# inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = ["llvm16-0"] }
+log = "0.4"
 
-# snafu = "0.7.4"
-clap = "4.2.0"
-
-lexer = { path = "./nk-lexer", package="nk-lexer"}
+lexer = { path = "./nk-lexer", package = "nk-lexer" }
 astgen = { path = "./nk-astgen" }
-codegen = { path = "./nk-codegen" }
+codegen = { path = "./nk-codegen", default-features = false, features = ["lamina"] }
 inksac = "0.5.0"
 
 [dev-dependencies]
