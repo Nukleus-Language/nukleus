@@ -8,10 +8,10 @@ use std::process::Command as ProcessCommand;
 
 pub fn ensure_parent_dir(path: &str) -> Result<(), std::io::Error> {
     let parent = Path::new(path).parent();
-    if let Some(dir) = parent {
-        if !dir.as_os_str().is_empty() {
-            fs::create_dir_all(dir)?;
-        }
+    if let Some(dir) = parent
+        && !dir.as_os_str().is_empty()
+    {
+        fs::create_dir_all(dir)?;
     }
     Ok(())
 }

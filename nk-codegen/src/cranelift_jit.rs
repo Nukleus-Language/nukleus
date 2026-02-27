@@ -124,15 +124,14 @@ impl JIT {
         self.define_println_function();
         // Function Signature Declaration
         for ast in input.clone() {
-            if let AST::Statement(statement) = ast {
-                if let ASTstatement::Function {
-                    public: _,
-                    name,
-                    args,
-                    statements: _,
-                    return_type,
-                } = statement
-                {
+            if let AST::Statement(ASTstatement::Function {
+                public: _,
+                name,
+                args,
+                statements: _,
+                return_type,
+            }) = ast
+            {
                     let int = self.module.target_config().pointer_type();
 
                     for p in args.clone() {
@@ -166,7 +165,6 @@ impl JIT {
                         .insert(name.clone(), self.ctx.func.signature.clone());
                     self.module.clear_context(&mut self.ctx);
                     // self.module.finalize_definitions().expect("Compile Error");
-                }
             }
         }
         for ast in input {

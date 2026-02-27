@@ -548,6 +548,49 @@ mod test {
         assert_eq!(lexer.tokens, ans);
     }
     #[test]
+    fn unicode_identifier_span_tracks_line_column() {
+        let code = "fn caf\u{00e9}() -> i64 { return 0; }";
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
+        let result = lexer.run();
+        assert!(result.is_ok(), "Unicode identifier lexing failed: {:?}", result);
+
+        let tokens = lexer.get_tokens();
+        let ident = token_with_type(
+            tokens,
+            &TokenType::TypeValue(TypeValue::Identifier("caf\u{00e9}".to_string())),
+        );
+        assert!(ident.is_some(), "Expected identifier caf\u{00e9}");
+        assert_eq!(
+            ident.map(|t| t.metadata.line),
+            Some(1),
+            "Unicode identifier should be on line 1"
+        );
+        assert!(
+            ident.map(|t| t.metadata.column).unwrap_or(0) >= 4,
+            "Identifier column should be at or after column 4"
+        );
+    }
+
+    #[test]
+    fn unicode_in_string_preserves_content_and_span() {
+        let code = "println(\"\u{03B1}\u{03B2}\");";
+        let mut lexer = Lexer::new(PathBuf::from("test"), code);
+        let result = lexer.run();
+        assert!(result.is_ok(), "Unicode in string failed: {:?}", result);
+
+        let tokens = lexer.get_tokens();
+        let qs = first_quoted_string_token(tokens);
+        assert!(qs.is_some());
+        let content = qs
+            .and_then(|t| match &t.token_type {
+                TokenType::TypeValue(TypeValue::QuotedString(s)) => Some(s.to_string()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        assert_eq!(content, "\u{03B1}\u{03B2}", "String content should match");
+    }
+
+    #[test]
     fn lexing_complex() {
         let code = "fn main() -> Void \n{\nlet:i32 a = 5;\nlet:i32 b = 0;\nprintln(\"Hello, world!\");\nreturn;\n}";
         let _ans = vec![

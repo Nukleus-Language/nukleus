@@ -12,23 +12,29 @@ use super::helpers::{
 
 pub(super) struct FunctionEmitter<'a> {
     signatures: &'a HashMap<String, FunctionSignature>,
+    func_name: String,
     lines: Vec<String>,
     vars: HashMap<String, ASTtypename>,
     var_ptrs: HashMap<String, String>,
     temp_counter: usize,
-    label_counter: usize,
+    label_counter: &'a mut usize,
     terminated: bool,
 }
 
 impl<'a> FunctionEmitter<'a> {
-    pub(super) fn new(signatures: &'a HashMap<String, FunctionSignature>) -> Self {
+    pub(super) fn new(
+        signatures: &'a HashMap<String, FunctionSignature>,
+        func_name: &str,
+        label_counter: &'a mut usize,
+    ) -> Self {
         Self {
             signatures,
+            func_name: func_name.to_string(),
             lines: Vec::new(),
             vars: HashMap::new(),
             var_ptrs: HashMap::new(),
             temp_counter: 0,
-            label_counter: 0,
+            label_counter,
             terminated: false,
         }
     }
@@ -672,8 +678,8 @@ impl<'a> FunctionEmitter<'a> {
     }
 
     fn new_label(&mut self, prefix: &str) -> String {
-        let label = format!("{}_{}", prefix, self.label_counter);
-        self.label_counter += 1;
+        let label = format!("{}_{}_{}", prefix, self.func_name, *self.label_counter);
+        *self.label_counter += 1;
         label
     }
 }

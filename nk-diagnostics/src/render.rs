@@ -61,10 +61,10 @@ pub fn format_diagnostic_with_source(
         diag.code
     );
     out.push_str(&header);
-    if let Some(p) = path {
-        if !p.is_empty() {
-            out.push_str(&format!(" in {}", p));
-        }
+    if let Some(p) = path
+        && !p.is_empty()
+    {
+        out.push_str(&format!(" in {}", p));
     }
     out.push('\n');
 
@@ -74,7 +74,7 @@ pub fn format_diagnostic_with_source(
     }
 
     if let Some(suggestion) = &diag.suggestion {
-        out.push_str("\n");
+        out.push('\n');
         out.push_str(&"Suggestion: ".style(suggestion_style()).to_string());
         out.push_str(suggestion);
         out.push('\n');
@@ -110,9 +110,8 @@ fn build_snippet(source: &str, span: &Span) -> String {
     out.push_str(&line_one.to_string());
     out.push_str(":\n");
 
-    for i in start_line..end_line {
-        let display_line = i + 1;
-        let line_content = lines[i];
+    for (i, line_content) in lines[start_line..end_line].iter().enumerate() {
+        let display_line = start_line + i + 1;
         let marker = if display_line == line_one {
             ">".style(accent_style()).to_string()
         } else {

@@ -13,3 +13,4 @@ nk-diagnostics = { path = "../nk-diagnostics" }
 [lints.clippy]
 unwrap_used = "deny"
 cognitive_complexity = "deny"
+result_large_err = "allow"

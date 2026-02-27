@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::convert::AsMut;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum AST {
     // A leaf node representing a single token
     Token(Token),

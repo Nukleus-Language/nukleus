@@ -62,28 +62,6 @@ impl Diagnostic {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::super::Span;
-    use super::*;
-
-    #[test]
-    fn format_with_source_shows_context_and_caret() {
-        let diag = Diagnostic::error("TEST-001", "test error", Some(Span::point(2, 5)))
-            .with_suggestion("Fix it");
-
-        let source = "line one\nline two\nline three";
-        let out = diag.format_with_source(source);
-
-        assert!(out.contains("test error"));
-        assert!(out.contains("TEST-001"));
-        assert!(out.contains("line two"));
-        assert!(out.contains("^"));
-        assert!(out.contains("Suggestion"));
-        assert!(out.contains("Fix it"));
-    }
-}
-
 impl std::fmt::Display for Diagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let loc = self
@@ -105,5 +83,27 @@ impl std::fmt::Display for Diagnostic {
             writeln!(f, "  suggestion: {}", s)?;
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::super::Span;
+    use super::*;
+
+    #[test]
+    fn format_with_source_shows_context_and_caret() {
+        let diag = Diagnostic::error("TEST-001", "test error", Some(Span::point(2, 5)))
+            .with_suggestion("Fix it");
+
+        let source = "line one\nline two\nline three";
+        let out = diag.format_with_source(source);
+
+        assert!(out.contains("test error"));
+        assert!(out.contains("TEST-001"));
+        assert!(out.contains("line two"));
+        assert!(out.contains("^"));
+        assert!(out.contains("Suggestion"));
+        assert!(out.contains("Fix it"));
     }
 }

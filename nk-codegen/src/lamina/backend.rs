@@ -53,10 +53,10 @@ fn @nk_print_digits(i64 %num) -> i64 {
 
 fn ast_uses_integer_print(ast: &[AST]) -> bool {
     for node in ast {
-        if let AST::Statement(ASTstatement::Function { statements, .. }) = node {
-            if statements_use_integer_print(statements) {
-                return true;
-            }
+        if let AST::Statement(ASTstatement::Function { statements, .. }) = node
+            && statements_use_integer_print(statements)
+        {
+            return true;
         }
     }
     false
@@ -102,15 +102,15 @@ fn ast_uses_integer_print_inner(ast: &AST) -> bool {
             if statements_use_integer_print(then_s) {
                 return true;
             }
-            if let Some(elif_ast) = elif {
-                if ast_uses_integer_print_inner(elif_ast) {
-                    return true;
-                }
+            if let Some(elif_ast) = elif
+                && ast_uses_integer_print_inner(elif_ast)
+            {
+                return true;
             }
-            if let Some(else_s) = else_statements {
-                if statements_use_integer_print(else_s) {
-                    return true;
-                }
+            if let Some(else_s) = else_statements
+                && statements_use_integer_print(else_s)
+            {
+                return true;
             }
         }
         AST::Statement(ASTstatement::For {
@@ -126,10 +126,7 @@ fn ast_uses_integer_print_inner(ast: &AST) -> bool {
 }
 
 fn needs_integer_print(ast: &AST) -> bool {
-    match ast {
-        AST::TypeValue(ASTtypevalue::QuotedString(_)) => false,
-        _ => true,
-    }
+    !matches!(ast, AST::TypeValue(ASTtypevalue::QuotedString(_)))
 }
 
 #[derive(Debug, Default)]
@@ -155,6 +152,7 @@ impl LaminaBackend {
         }
 
         let mut emitted_any = false;
+        let mut label_counter = 0usize;
 
         for node in input {
             if let AST::Statement(ASTstatement::Function {
@@ -170,7 +168,8 @@ impl LaminaBackend {
                 }
                 emitted_any = true;
 
-                let mut emitter = FunctionEmitter::new(&self.signatures);
+                let mut emitter =
+                    FunctionEmitter::new(&self.signatures, name, &mut label_counter);
                 output.push_str(&emitter.lower_function(name, args, statements, *return_type)?);
             }
         }

@@ -33,6 +33,7 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
     Ok(contents)
 }
 
+#[allow(clippy::needless_return)]
 pub fn run(command: &Command) -> Result<(), String> {
     let args = match command {
         Command::Repl => {
@@ -105,8 +106,10 @@ fn run_lamina(
 ) -> Result<(), String> {
     use std::process::Command as ProcessCommand;
 
+    eprintln!("Compiling...");
     let compile_start = std::time::Instant::now();
     let mut lamina_backend = LaminaBackend::new();
+    eprintln!("  Generating IR...");
     let ir = lamina_backend
         .compile_ast_to_ir(&ast_new)
         .map_err(|e| format!("Lamina Compile Error: {}", e))?;
@@ -114,6 +117,7 @@ fn run_lamina(
     let ir_path = aot::output_ir_path(input, emit_ir_path);
     let asm_path = aot::output_asm_path(input, emit_asm_path);
 
+    eprintln!("  Writing IR to {}...", ir_path);
     aot::ensure_parent_dir(&ir_path).map_err(|e| {
         format!(
             "Failed to prepare IR output directory for '{}': {}",
@@ -123,11 +127,13 @@ fn run_lamina(
     fs::write(&ir_path, &ir)
         .map_err(|e| format!("Failed to write Lamina IR '{}': {}", ir_path, e))?;
 
+    eprintln!("  Generating assembly...");
     let assembly = lamina_backend
         .compile_ir_to_assembly(&ir, None)
         .map_err(|e| format!("Lamina Assembly Error: {}", e))?;
     let compile_duration = compile_start.elapsed();
 
+    eprintln!("  Writing assembly to {}...", asm_path);
     aot::ensure_parent_dir(&asm_path).map_err(|e| {
         format!(
             "Failed to prepare assembly output directory for '{}': {}",
@@ -146,9 +152,21 @@ fn run_lamina(
     })?;
 
     let link_start = std::time::Instant::now();
+    eprintln!("  Linking {} -> {}...", asm_path, bin_path);
     aot::link_assembly(&asm_path, &bin_path)?;
     let link_duration = link_start.elapsed();
 
+    let compile_total = lex_duration + parse_duration + compile_duration + link_duration;
+    eprintln!(
+        "Compile: {:.3}s (lex {:.0}ms, parse {:.0}ms, codegen {:.0}ms, link {:.0}ms)",
+        compile_total.as_secs_f64(),
+        lex_duration.as_secs_f64() * 1000.0,
+        parse_duration.as_secs_f64() * 1000.0,
+        compile_duration.as_secs_f64() * 1000.0,
+        link_duration.as_secs_f64() * 1000.0
+    );
+
+    eprintln!("Running...");
     let run_start = std::time::Instant::now();
     let run_target = aot::executable_invocation_path(&bin_path);
     let run_status = ProcessCommand::new(&run_target).status();
@@ -159,11 +177,7 @@ fn run_lamina(
         .code()
         .unwrap_or(255);
 
-    log::info!(
-        "exit with code {} in {:?}",
-        exit_code,
-        lex_duration + parse_duration + compile_duration + link_duration + run_duration
-    );
+    eprintln!("Run: {:.3}s (exit code {})", run_duration.as_secs_f64(), exit_code);
     log::info!("lamina ir: {}", ir_path);
     log::info!("lamina asm: {}", asm_path);
     log::info!("lamina bin: {}", bin_path);
