@@ -1,3 +1,18 @@
+// JIT backend; scheduled for deprecation per plan.md. Lamina is the default AOT path.
+#![allow(
+    dead_code,
+    unused_variables,
+    unused_assignments,
+    clippy::unwrap_used,
+    clippy::unnecessary_unwrap,
+    clippy::cognitive_complexity,
+    clippy::collapsible_match,
+    clippy::unnecessary_cast,
+    clippy::match_like_matches_macro,
+    clippy::needless_range_loop,
+    clippy::not_unsafe_ptr_arg_deref
+)]
+
 use astgen::ast::*;
 // use astgen::parser_new::Parser;
 use astgen::AST;
@@ -812,9 +827,9 @@ impl FunctionTranslator<'_> {
         self.builder.switch_to_block(else_block);
         self.builder.seal_block(else_block);
         let mut else_return = self.builder.ins().iconst(self.int, 0);
-        if else_body.is_some() {
-            for expr in else_body.unwrap() {
-                else_return = self.translate_expr(expr);
+        if let Some(body) = &else_body {
+            for expr in body {
+                else_return = self.translate_expr(expr.clone());
             }
             println!("else_return: {}", else_return);
         }

@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use cranelift::prelude::types;
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Variable {
     pub name: Cow<'static, str>,
     pub type_name: Cow<'static, str>,

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use astgen::ast::{AST, ASTstatement, ASTtypecomp};
+use astgen::ast::{ASTstatement, ASTtypecomp, AST};
 
 use crate::error::CodegenError;
 

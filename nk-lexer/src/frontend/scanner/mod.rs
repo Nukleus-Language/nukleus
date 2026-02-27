@@ -12,6 +12,7 @@ use std::borrow::Cow;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::enum_variant_names)]
 enum State {
     EmptyState,
     DefaultState,
@@ -46,6 +47,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     pub fn run(&mut self) -> Result<(), LexicalError> {
         while let Some(c) = self.next_char() {
             let peeked_char = self.peek_char().unwrap_or('\0');
@@ -286,9 +288,11 @@ mod test {
     }
 
     fn first_quoted_string_token(tokens: &[Token]) -> Option<&Token> {
-        tokens.iter().find(|token| match &token.token_type {
-            TokenType::TypeValue(TypeValue::QuotedString(_)) => true,
-            _ => false,
+        tokens.iter().find(|token| {
+            matches!(
+                &token.token_type,
+                TokenType::TypeValue(TypeValue::QuotedString(_))
+            )
         })
     }
 
@@ -297,7 +301,11 @@ mod test {
         let code = "let:String msg = \"Hello \u{4E2D}\u{6587}\";";
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         let result = lexer.run();
-        assert!(result.is_ok(), "UTF-8 multibyte lexing failed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "UTF-8 multibyte lexing failed: {:?}",
+            result
+        );
         let tokens = lexer.get_tokens();
         assert!(!tokens.is_empty(), "Expected tokens from UTF-8 source");
 
@@ -328,7 +336,11 @@ mod test {
         let code = "let:String first = \"\u{4E2D}\"\nlet:String second = \"\u{6587}\";";
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         let result = lexer.run();
-        assert!(result.is_ok(), "UTF-8 multiline lexing failed: {:?}", result);
+        assert!(
+            result.is_ok(),
+            "UTF-8 multiline lexing failed: {:?}",
+            result
+        );
 
         let tokens = lexer.get_tokens();
         let second_identifier = token_with_type(
@@ -388,14 +400,14 @@ mod test {
             TokenType::Symbol(Symbol::CloseBrace),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_numbers failed");
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_strings() {
         let code = " \"Hello, world!\" ";
-        let _ans = vec![TokenType::TypeValue(TypeValue::QuotedString(
+        let _ans = [TokenType::TypeValue(TypeValue::QuotedString(
             Cow::Borrowed("Hello, world!"),
         ))];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
@@ -421,14 +433,14 @@ mod test {
             TokenType::Symbol(Symbol::CloseBrace),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_comments failed");
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_string_assign() {
         let code = "let:String a = \"Hello, world!\";";
-        let _ans = vec![
+        let _ans = [
             TokenType::Statement(Statement::Let),
             TokenType::Symbol(Symbol::Colon),
             TokenType::TypeName(TypeName::QuotedString),
@@ -438,14 +450,14 @@ mod test {
             TokenType::Symbol(Symbol::Semicolon),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_string_assign failed");
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }
-    // #[test]
+    #[test]
     fn lexing_underbar_started_var() {
         let code = "let:i32 _a = 5;";
-        let _ans = vec![
+        let _ans = [
             TokenType::Statement(Statement::Let),
             TokenType::Symbol(Symbol::Colon),
             TokenType::TypeName(TypeName::I32),
@@ -455,7 +467,7 @@ mod test {
             TokenType::Symbol(Symbol::Semicolon),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_underbar_started_var failed");
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }
@@ -541,7 +553,7 @@ mod test {
             ),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_nested_expression failed");
         for token in lexer.tokens.clone() {
             eprintln!("{:?}", token);
         }
@@ -582,7 +594,7 @@ mod test {
             TokenType::Symbol(Symbol::CloseBrace),
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
-        lexer.run().unwrap();
+        assert!(lexer.run().is_ok(), "lexing_complex failed");
         println!("{:?}", lexer.tokens);
         // assert_eq!(lexer.tokens, ans);
     }

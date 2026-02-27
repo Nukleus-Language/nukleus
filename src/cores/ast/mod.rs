@@ -1,3 +1,4 @@
+#[allow(clippy::module_inception, clippy::unwrap_used)]
 mod ast;
 mod errors;
 

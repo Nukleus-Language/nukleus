@@ -20,6 +20,7 @@ const ERRORTXTSTYLE: Style = Style {
 };
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::enum_variant_names, dead_code)]
 enum State {
     EmptyState,
     DefaultState,
@@ -30,12 +31,14 @@ enum State {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::enum_variant_names)]
 enum ArgumentParseState {
     WaitForType,
     WaitForColon,
     WaitForIdentifier,
     WaitForCommaOrCloseParen,
 }
+#[allow(dead_code)]
 pub struct Parser<'a> {
     tokens: Peekable<Cloned<std::slice::Iter<'a, Token>>>,
     state: State,
@@ -80,12 +83,13 @@ impl<'a> Parser<'a> {
         }
     }
     #[allow(dead_code)]
-    fn expect(&mut self, _current: Token, expected: Token) -> Result<(), AstGenError> {
-        // println!("{} Current Token: {:?}{}", "\x1b[37m", current, "\x1b[0m");
-        match expected.token_type {
-            _cur_token => Ok(()),
-            TokenType::EOF => Err(AstGenError::new(AstError::UnexpectedEOF())),
-            _ => Err(AstGenError::new(AstError::ExpectedToken(expected))),
+    fn expect(&mut self, current: Token, expected: Token) -> Result<(), AstGenError> {
+        if current.token_type == expected.token_type {
+            Ok(())
+        } else if matches!(current.token_type, TokenType::EOF) {
+            Err(AstGenError::new(AstError::UnexpectedEOF()))
+        } else {
+            Err(AstGenError::new(AstError::ExpectedToken(expected)))
         }
     }
     fn parse_statement(&mut self) -> Result<Vec<AST>, AstGenError> {
@@ -660,10 +664,8 @@ impl<'a> Parser<'a> {
             TokenType::TypeValue(TypeValue::QuotedString(s)) => {
                 let peeked = self.peek_token();
                 match peeked.token_type {
-                    TokenType::Logical(_) => Err(self.report_error(
-                        AstGenError::new(AstError::ExpectedExpression()),
-                        &peeked,
-                    )),
+                    TokenType::Logical(_) => Err(self
+                        .report_error(AstGenError::new(AstError::ExpectedExpression()), &peeked)),
                     _ => {
                         self.next_token();
                         Ok(AST::TypeValue(ASTtypevalue::QuotedString(s.to_string())))
@@ -864,6 +866,7 @@ impl<'a> Parser<'a> {
             else_statements,
         }))
     }
+    #[allow(unused_assignments)]
     fn parse_let(&mut self) -> Result<AST, AstGenError> {
         // Let Statement Example
         // let:i32 a = 5;
@@ -940,13 +943,10 @@ impl<'a> Parser<'a> {
                 }
                 (_, 5) => {
                     value = Some(Box::new(self.parse_expression()?));
-                    // println!("Value: {:?}", value);
-                    status = 6;
                     break;
                 }
                 (TokenType::Symbol(Symbol::Semicolon), 6) => {
                     self.next_token();
-                    println!("End of `let` statement");
                     break;
                 }
                 _ => {
@@ -994,7 +994,13 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 (TokenType::TypeValue(TypeValue::Number(num)), 4) => {
-                    end_val = ASTtypevalue::I64(num.parse::<i64>().unwrap());
+                    let parsed = num.parse::<i64>().map_err(|_| {
+                        self.report_error(
+                            AstGenError::new(AstError::InvalidNumberFormat(num.to_string())),
+                            &token,
+                        )
+                    })?;
+                    end_val = ASTtypevalue::I64(parsed);
                     status = 5;
                     continue;
                 }
@@ -1003,7 +1009,13 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 (TokenType::TypeValue(TypeValue::Number(num)), 6) => {
-                    val = ASTtypevalue::I64(num.parse::<i64>().unwrap());
+                    let parsed = num.parse::<i64>().map_err(|_| {
+                        self.report_error(
+                            AstGenError::new(AstError::InvalidNumberFormat(num.to_string())),
+                            &token,
+                        )
+                    })?;
+                    val = ASTtypevalue::I64(parsed);
                     status = 7;
                     continue;
                 }
@@ -1119,10 +1131,9 @@ impl<'a> Parser<'a> {
                 }
 
                 _ => {
-                    return Err(self.report_error(
-                        AstGenError::new(AstError::UnexpectedToken()),
-                        &token,
-                    ));
+                    return Err(
+                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
+                    );
                 }
             }
         }

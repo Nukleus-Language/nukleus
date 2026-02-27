@@ -99,13 +99,11 @@ impl fmt::Display for ASTstatement {
                 type_name,
                 value,
             } => {
-                write!(
-                    f,
-                    "let {} : {} = {}",
-                    name,
-                    (*type_name).unwrap(),
-                    value.clone().unwrap()
-                )
+                let type_str = type_name
+                    .as_ref()
+                    .map_or("_".to_string(), |t| t.to_string());
+                let value_str = value.as_ref().map_or("_".to_string(), |v| v.to_string());
+                write!(f, "let {} : {} = {}", name, type_str, value_str)
             }
             ASTstatement::Assignment { left, op, right } => {
                 write!(f, "{} {} {}", left, op, right)
@@ -183,18 +181,18 @@ impl fmt::Display for ASTstatement {
                 )
             }
             ASTstatement::Print { value, args } => {
-                write!(f, "print {}", value);
+                write!(f, "print {}", value)?;
                 for arg in args {
-                    write!(f, " {}", arg);
+                    write!(f, " {}", arg)?;
                 }
                 Ok(())
             }
             ASTstatement::Println { value, args } => {
-                write!(f, "println {}", value);
+                write!(f, "println {}", value)?;
                 for arg in args {
-                    write!(f, " {}", arg);
+                    write!(f, " {}", arg)?;
                 }
-                writeln!(f);
+                writeln!(f)?;
                 Ok(())
             }
             ASTstatement::Return { value } => write!(f, "return {}", value),

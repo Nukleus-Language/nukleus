@@ -1,9 +1,8 @@
 use crate::tokens::*;
 use crate::LexerError;
 
-//use crate::core::lexer::{Operator, Logical, Assigns};
-
-// Returns a vector of tokens from a string
+// Legacy lexer; scheduled for removal per plan.md Phase 5.
+#[allow(clippy::cognitive_complexity)]
 pub fn lexer(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut buffer = String::new();
@@ -35,10 +34,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
             buffer.push(c);
 
             // If the next character is not a digit, add the numeric literal to the tokens list
-            if (i + 1 == code.len() || !code.chars().nth(i + 1).unwrap().is_alphanumeric())
+            if (i + 1 == code.len() || code.chars().nth(i + 1).is_none_or(|n| !n.is_alphanumeric()))
                 && buffer.chars().all(char::is_numeric)
             {
-                tokens.push(Token::TypeValue(TypeValue::I32(buffer.parse().unwrap())));
+                if let Ok(n) = buffer.parse::<i32>() {
+                    tokens.push(Token::TypeValue(TypeValue::I32(n)));
+                }
                 buffer.clear();
             }
             continue;
@@ -53,12 +54,12 @@ pub fn lexer(code: &str) -> Vec<Token> {
         match c {
             '-' => {
                 // Check if the Double Symbol is a Arrow
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '>' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('>')) {
                     tokens.push(Token::Symbol(Symbol::Arrow));
                     buffer.clear();
                     double_state = true;
                     continue;
-                } else if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                } else if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Assign(Assign::SubAssign));
                     buffer.clear();
                     double_state = true;
@@ -67,7 +68,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '=' => {
                 // Check if the Double Symbol is a Equals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Logical(Logical::Equals));
                     buffer.clear();
                     double_state = true;
@@ -76,7 +77,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '!' => {
                 // Check if the Double Symbol is a NotEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Logical(Logical::NotEquals));
                     buffer.clear();
                     double_state = true;
@@ -85,7 +86,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '+' => {
                 // Check if the Double Symbol is a PlusEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Assign(Assign::AddAssign));
                     buffer.clear();
                     double_state = true;
@@ -94,7 +95,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '*' => {
                 // Check if the Double Symbol is a StarEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Assign(Assign::MulAssign));
                     buffer.clear();
                     double_state = true;
@@ -103,7 +104,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '/' => {
                 // Check if the Double Symbol is a SlashEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Assign(Assign::DivAssign));
                     buffer.clear();
                     double_state = true;
@@ -112,7 +113,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
             }
             '%' => {
                 // Check if the Double Symbol is a PercentEquals
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == '=' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some('=')) {
                     tokens.push(Token::Assign(Assign::RemAssign));
                     buffer.clear();
                     double_state = true;
@@ -122,7 +123,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
 
             ':' => {
                 // Check if the Double Symbol is a DoubleColon
-                if i + 1 < code.len() && code.chars().nth(i + 1).unwrap() == ':' {
+                if i + 1 < code.len() && (code.chars().nth(i + 1) == Some(':')) {
                     tokens.push(Token::Symbol(Symbol::DoubleColon));
                     buffer.clear();
                     double_state = true;
@@ -158,9 +159,10 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i32" => Token::TypeName(TypeName::I32),
 
                 " " | "\n" | "\t" | "\r" => continue,
-                _ => Token::TypeValue(TypeValue::Identifier(
-                    identifier_parser(buffer.clone()).unwrap(),
-                )),
+                _ => match identifier_parser(buffer.clone()) {
+                    Ok(ident) => Token::TypeValue(TypeValue::Identifier(ident)),
+                    Err(_) => continue,
+                },
             };
             tokens.push(token);
             buffer.clear();
@@ -221,9 +223,10 @@ pub fn lexer(code: &str) -> Vec<Token> {
                 "i64" => Token::TypeName(TypeName::I64),
 
                 " " | "\n" | "\t" | "\r" => continue,
-                _ => Token::TypeValue(TypeValue::Identifier(
-                    identifier_parser(buffer.clone()).unwrap(),
-                )),
+                _ => match identifier_parser(buffer.clone()) {
+                    Ok(ident) => Token::TypeValue(TypeValue::Identifier(ident)),
+                    Err(_) => continue,
+                },
             };
             tokens.push(token);
         }
@@ -233,7 +236,7 @@ pub fn lexer(code: &str) -> Vec<Token> {
 }
 // a Identifier cannot start with a number and can only contain letters, numbers and underscores
 fn identifier_parser(buffer: String) -> Result<String, LexerError> {
-    if buffer.chars().next().unwrap().is_numeric() {
+    if buffer.chars().next().is_some_and(|c| c.is_numeric()) {
         return Err(LexerError::InvalidIdentifierNum(buffer));
     }
     if buffer.chars().any(|c| !c.is_alphanumeric() && c != '_') {

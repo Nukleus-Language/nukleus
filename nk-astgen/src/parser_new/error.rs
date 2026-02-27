@@ -57,14 +57,8 @@ impl AstGenError {
     }
 
     pub fn to_diagnostic(&self) -> Diagnostic {
-        let span = self
-            .span
-            .map(|(line, col)| Span::point(line, col));
-        let mut diag = Diagnostic::error(
-            self.message.code(),
-            self.message.to_string(),
-            span,
-        );
+        let span = self.span.map(|(line, col)| Span::point(line, col));
+        let mut diag = Diagnostic::error(self.message.code(), self.message.to_string(), span);
         if !self.pretty_display.is_empty() {
             diag = diag.with_note(self.pretty_display.clone());
         }

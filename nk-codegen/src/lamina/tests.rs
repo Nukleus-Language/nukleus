@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use astgen::ast::{AST, ASTlogic, ASTstatement, ASTtypecomp, ASTtypename, ASTtypevalue};
+use astgen::ast::{ASTlogic, ASTstatement, ASTtypecomp, ASTtypename, ASTtypevalue, AST};
 
 use super::LaminaBackend;
 
