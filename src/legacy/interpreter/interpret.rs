@@ -190,10 +190,7 @@ impl Interpreter {
                         .functions
                         .get_mut(&self.cur_function)
                         .expect("Function not found");
-                    func.function_insert_variable(
-                        name.clone(),
-                        Token::TypeValue(getten_value),
-                    );
+                    func.function_insert_variable(name.clone(), Token::TypeValue(getten_value));
                 }
                 AST::Print { value } => {
                     print!("{}", self.eval_expr(&value));

@@ -1,4 +1,3 @@
-use inksac::{Color, Style, Styleable};
 use lexer::tokens::*;
 
 use std::collections::HashMap;
@@ -9,13 +8,6 @@ mod error;
 use error::{AstError, AstGenError};
 
 use crate::ast::*;
-
-fn error_style() -> Style {
-    Style::builder()
-        .foreground(Color::Red)
-        .bold()
-        .build()
-}
 
 #[derive(Debug, Clone, PartialEq)]
 #[allow(clippy::enum_variant_names, dead_code)]
@@ -147,44 +139,12 @@ impl<'a> Parser<'a> {
         Ok(statements)
     }
     fn report_error(&self, error: AstGenError, token: &Token) -> AstGenError {
-        let context_lines: usize = 3;
-        let lines: Vec<&str> = self.source.split('\n').collect();
-        let line_one_based = token.metadata.line.max(1);
-        let line_idx = line_one_based - 1;
-        let start_line = line_idx.saturating_sub(context_lines);
-        let end_line = std::cmp::min(line_idx + context_lines + 1, lines.len());
-
-        let context_snippet: String = lines[start_line..end_line]
-            .iter()
-            .enumerate()
-            .map(|(i, line)| {
-                let display_line = i + start_line + 1;
-                if display_line == line_one_based {
-                    format!("> {} | {}", display_line, line)
-                } else {
-                    format!("  {} | {}", display_line, line)
-                }
-            })
-            .collect::<Vec<_>>()
-            .join("\n");
-
-        let error_text = format!(
-            "--> Error at Line: {}, Column: {}: {}",
-            token.metadata.line, token.metadata.column, error
-        );
-
-        let report_text = format!(
-            "Context around Line {}:\n{}\n{}\nSuggestion: {}",
-            token.metadata.line,
-            context_snippet,
-            error_text.style(error_style()),
-            self.suggest_fix(&error)
-        );
-
+        let suggestion = self.suggest_fix(&error);
         AstGenError {
             message: error.message,
-            pretty_display: report_text,
+            pretty_display: String::new(),
             span: Some((token.metadata.line, token.metadata.column)),
+            suggestion: Some(suggestion),
         }
     }
 
@@ -196,7 +156,7 @@ impl<'a> Parser<'a> {
             ),
             AstError::ExpectedExpression() => "Expected an expression. Check syntax.".to_string(),
             AstError::ExpectedStatement() => "Expected a statement. Check syntax.".to_string(),
-            AstError::UnexpectedToken() => "Unexpected token. Check syntax.".to_string(),
+            AstError::UnexpectedToken(t) => format!("Unexpected token '{}'. Check syntax.", t),
             AstError::InvalidNumberFormat(num) => format!(
                 "Ensure the number is correctly formatted. Invalid input: '{}'",
                 num
@@ -239,7 +199,7 @@ impl<'a> Parser<'a> {
                     }
                     _ => {
                         return Err(self
-                            .report_error(AstGenError::new(AstError::ExpectedStatement()), &token))
+                            .report_error(AstGenError::new(AstError::ExpectedStatement()), &token));
                     }
                 }
             }
@@ -257,8 +217,10 @@ impl<'a> Parser<'a> {
                             self.next_token();
                         }
                     } else {
-                        return Err(self
-                            .report_error(AstGenError::new(AstError::UnexpectedToken()), &peeked));
+                        return Err(self.report_error(
+                            AstGenError::new(AstError::UnexpectedToken(peeked.clone())),
+                            &peeked,
+                        ));
                     }
                 }
                 State::GlobalLet => {
@@ -329,9 +291,10 @@ impl<'a> Parser<'a> {
                     }
                 }
                 _ => {
-                    return Err(
-                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &next)
-                    );
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken(next.clone())),
+                        &next,
+                    ));
                 }
             }
         }
@@ -501,7 +464,7 @@ impl<'a> Parser<'a> {
                         Logical::GreaterThanEquals => ASTOperator::GreaterEquals,
                         _ => {
                             return Err(self.report_error(
-                                AstGenError::new(AstError::UnexpectedToken()),
+                                AstGenError::new(AstError::UnexpectedToken(token.clone())),
                                 &token,
                             ));
                         }
@@ -555,7 +518,7 @@ impl<'a> Parser<'a> {
                         Operator::Remainder => ASTOperator::Remainder,
                         _ => {
                             return Err(self.report_error(
-                                AstGenError::new(AstError::UnexpectedToken()),
+                                AstGenError::new(AstError::UnexpectedToken(token.clone())),
                                 &token,
                             ));
                         }
@@ -611,7 +574,7 @@ impl<'a> Parser<'a> {
                             Err(_) => {
                                 return Err(AstGenError::new(AstError::InvalidNumberFormat(
                                     num.to_string(),
-                                )))
+                                )));
                             }
                         },
                     )))
@@ -709,7 +672,7 @@ impl<'a> Parser<'a> {
                         format_str_token.metadata,
                     ))),
                     &format_str_token,
-                ))
+                ));
             }
         };
         self.next_token(); // Consume the format string token
@@ -780,7 +743,7 @@ impl<'a> Parser<'a> {
                         format_str_token.metadata,
                     ))),
                     &format_str_token,
-                ))
+                ));
             }
         };
         self.next_token(); // Consume the format string token
@@ -893,9 +856,10 @@ impl<'a> Parser<'a> {
                 status = 4;
             }
             _ => {
-                return Err(
-                    self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
-                );
+                return Err(self.report_error(
+                    AstGenError::new(AstError::UnexpectedToken(token.clone())),
+                    &token,
+                ));
 
                 // println!("Invalid `let` statement Contruction Detected");
 
@@ -917,9 +881,10 @@ impl<'a> Parser<'a> {
                         status = 3;
                         continue;
                     }
-                    return Err(
-                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
-                    );
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken(token.clone())),
+                        &token,
+                    ));
                     // println!("Missing Type Announcement for `let` statement After `:`");
                 }
                 (TokenType::TypeValue(TypeValue::Identifier(ident)), 3) => {
@@ -942,9 +907,10 @@ impl<'a> Parser<'a> {
                     break;
                 }
                 _ => {
-                    return Err(
-                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
-                    );
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken(token.clone())),
+                        &token,
+                    ));
                     // panic!("Unexpected token in `let` : {:?}", token);
                 }
             }
@@ -1019,9 +985,10 @@ impl<'a> Parser<'a> {
                     continue;
                 }
                 _ => {
-                    return Err(
-                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
-                    );
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken(token.clone())),
+                        &token,
+                    ));
                 }
             }
         }
@@ -1123,9 +1090,10 @@ impl<'a> Parser<'a> {
                 }
 
                 _ => {
-                    return Err(
-                        self.report_error(AstGenError::new(AstError::UnexpectedToken()), &token)
-                    );
+                    return Err(self.report_error(
+                        AstGenError::new(AstError::UnexpectedToken(token.clone())),
+                        &token,
+                    ));
                 }
             }
         }

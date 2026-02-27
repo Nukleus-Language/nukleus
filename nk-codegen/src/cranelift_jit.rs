@@ -180,7 +180,9 @@ impl JIT {
                             .map_err(CodegenError::IoError)?;
                         let mut lexer =
                             lexer::frontend::Lexer::from_path(Path::new(&name), &contents);
-                        lexer.run().map_err(|e| CodegenError::CompilationError(e.to_string()))?;
+                        lexer
+                            .run()
+                            .map_err(|e| CodegenError::CompilationError(e.to_string()))?;
                         let tokens = lexer.tokens().to_vec();
 
                         let mut mid_ir = astgen::parser_new::Parser::new(
@@ -188,13 +190,13 @@ impl JIT {
                             Path::new(&name).to_path_buf(),
                             &contents,
                         );
-                        mid_ir
-                            .run()
-                            .map_err(|e| CodegenError::CompilationError(e.to_diagnostic().to_string()))?;
+                        mid_ir.run().map_err(|e| {
+                            CodegenError::CompilationError(e.to_diagnostic().to_string())
+                        })?;
                         let ast_new = mid_ir.get_asts();
-                        let path_str = resolved_path
-                            .to_str()
-                            .ok_or_else(|| CodegenError::CompilationError("Invalid path".to_string()))?;
+                        let path_str = resolved_path.to_str().ok_or_else(|| {
+                            CodegenError::CompilationError("Invalid path".to_string())
+                        })?;
                         let _ = self.compile(ast_new.clone(), path_str, true)?;
                     }
                     ASTstatement::Function {
@@ -207,7 +209,12 @@ impl JIT {
                         self.ctx.func.signature = self
                             .functions
                             .get(name.as_str())
-                            .ok_or_else(|| CodegenError::CompilationError(format!("Function '{}' not in signature map", name)))?
+                            .ok_or_else(|| {
+                                CodegenError::CompilationError(format!(
+                                    "Function '{}' not in signature map",
+                                    name
+                                ))
+                            })?
                             .clone();
 
                         self.translate(
@@ -463,7 +470,9 @@ impl FunctionTranslator<'_> {
 
                         match *left {
                             AST::TypeValue(value) => match value {
-                                ASTtypevalue::Identifier(id) => self.translate_assign(id, op, *right),
+                                ASTtypevalue::Identifier(id) => {
+                                    self.translate_assign(id, op, *right)
+                                }
                                 _ => Ok(self.builder.ins().iconst(self.int, 0)),
                             },
                             _ => Ok(self.builder.ins().iconst(self.int, 0)),
@@ -474,7 +483,9 @@ impl FunctionTranslator<'_> {
                         type_name: _,
                         value,
                     } => {
-                        let value_val = self.translate_expr(*value.ok_or_else(|| CodegenError::CompilationError("Let requires value".to_string()))?)?;
+                        let value_val = self.translate_expr(*value.ok_or_else(|| {
+                            CodegenError::CompilationError("Let requires value".to_string())
+                        })?)?;
                         let var = self
                             .variables
                             .get(&name)
@@ -632,7 +643,12 @@ impl FunctionTranslator<'_> {
         let res = self.builder.inst_results(call);
     }
 
-    fn translate_assign(&mut self, name: String, op: ASTOperator, expr: AST) -> Result<Value, CodegenError> {
+    fn translate_assign(
+        &mut self,
+        name: String,
+        op: ASTOperator,
+        expr: AST,
+    ) -> Result<Value, CodegenError> {
         let new_value = self.translate_expr(expr)?;
         let variable = self
             .variables
@@ -787,7 +803,11 @@ impl FunctionTranslator<'_> {
         Ok(phi)
     }
 
-    fn translate_while_loop(&mut self, condition: AST, loop_body: Vec<AST>) -> Result<Value, CodegenError> {
+    fn translate_while_loop(
+        &mut self,
+        condition: AST,
+        loop_body: Vec<AST>,
+    ) -> Result<Value, CodegenError> {
         let header_block = self.builder.create_block();
         let body_block = self.builder.create_block();
         let exit_block = self.builder.create_block();

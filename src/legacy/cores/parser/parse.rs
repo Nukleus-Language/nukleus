@@ -1,4 +1,4 @@
-use crate::legacy::cores::ast::{AstParseError, AST};
+use crate::legacy::cores::ast::{AST, AstParseError};
 use lexer::tokens_legacy::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;
@@ -248,7 +248,7 @@ impl<'a> Parser<'a> {
             });
         }
         self.consume(); // Consume Variable Name
-                        //
+        //
         self.expect(Token::Assign(Assign::Assign))?;
         self.consume(); // Consume Tokens::Assign
 
@@ -261,7 +261,7 @@ impl<'a> Parser<'a> {
                 token: "Value".to_owned(),
             })?;
         self.consume(); // Consume Value
-                        // check if the value is calling a function
+        // check if the value is calling a function
         if self.tokens.peek() == Some(&Token::Symbol(Symbol::OpenParen)) {
             self.consume(); // Consume OpenParen
             let mut args: Vec<Token> = Vec::new();
@@ -303,7 +303,7 @@ impl<'a> Parser<'a> {
 
         self.expect(Token::Symbol(Symbol::Semicolon))?;
         self.consume(); // Consume Tokens::Semicolon
-                        //
+        //
         let let_statement = AST::Let {
             name: variable_name.to_string(),
             type_name: Some(type_name.to_string()),
@@ -528,7 +528,7 @@ impl<'a> Parser<'a> {
                 }
                 Some(Token::Symbol(Symbol::Comma)) => {
                     self.consume(); // Consume Comma
-                                    // Check if there is another argument
+                    // Check if there is another argument
                     if self.tokens.peek() == Some(&Token::Symbol(Symbol::CloseParen)) {
                         return Err(AstParseError::ExpectedOther {
                             token: "Argument".to_owned(),
@@ -544,7 +544,7 @@ impl<'a> Parser<'a> {
                                 token: "Argument".to_owned(),
                             })?;
                     self.consume(); // Consume Argument Name
-                                    //println!("Argument: {:?}", arg_name);
+                    //println!("Argument: {:?}", arg_name);
                     arguments.push(arg_name);
                 }
             }

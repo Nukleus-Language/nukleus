@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use astgen::ast::{ASTOperator, ASTstatement, ASTtypecomp, ASTtypename, ASTtypevalue, AST};
+use astgen::ast::{AST, ASTOperator, ASTstatement, ASTtypecomp, ASTtypename, ASTtypevalue};
 
 use crate::error::CodegenError;
 
 use super::helpers::{
-    choose_binary_type, escape_char, extract_identifier,
-    extract_identifier_from_ast, infer_type_from_typevalue, lamina_binary_op, lamina_cmp_op,
-    lamina_type, FunctionSignature, LoweredValue,
+    FunctionSignature, LoweredValue, choose_binary_type, escape_char, extract_identifier,
+    extract_identifier_from_ast, infer_type_from_typevalue, is_integer_print_type,
+    lamina_binary_op, lamina_cmp_op, lamina_type,
 };
 
 pub(super) struct FunctionEmitter<'a> {
@@ -100,30 +100,92 @@ impl<'a> FunctionEmitter<'a> {
         args: &[AST],
         add_newline: bool,
     ) -> Result<(), CodegenError> {
-        if !args.is_empty() {
-            return Err(CodegenError::CompilationError(
-                "Format string arguments not yet supported for print/println".to_string(),
-            ));
+        let format_str = match value {
+            AST::TypeValue(astgen::ast::ASTtypevalue::QuotedString(s)) => s.as_str(),
+            _ => {
+                let lowered = self.lower_expr(value)?;
+                let print_var = self.ensure_var_repr(&lowered)?;
+                self.emit_integer_print(&print_var, &lowered.ty)?;
+                if add_newline {
+                    let discard = self.new_temp();
+                    self.emit_inst(format!("%{} = writebyte 10", discard));
+                }
+                return Ok(());
+            }
+        };
+
+        let parts: Vec<&str> = format_str.split("{}").collect();
+        let placeholder_count = parts.len().saturating_sub(1);
+        if placeholder_count != args.len() {
+            return Err(CodegenError::CompilationError(format!(
+                "Format string has {} placeholders but {} arguments",
+                placeholder_count,
+                args.len()
+            )));
         }
 
-        if let AST::TypeValue(astgen::ast::ASTtypevalue::QuotedString(s)) = value {
-            for b in s.bytes() {
-                let code = i64::from(b);
-                let byte_tmp = self.new_temp();
-                let discard = self.new_temp();
-                self.emit_inst(format!("%{} = add.i64 {}, 0", byte_tmp, code));
-                self.emit_inst(format!("%{} = writebyte %{}", discard, byte_tmp));
+        for (i, part) in parts.iter().enumerate() {
+            self.emit_string_literal(part)?;
+            if i < args.len() {
+                self.emit_print_arg(&args[i])?;
             }
-            if add_newline {
-                let discard = self.new_temp();
-                self.emit_inst(format!("%{} = writebyte 10", discard));
-            }
+        }
+
+        if add_newline {
+            let discard = self.new_temp();
+            self.emit_inst(format!("%{} = writebyte 10", discard));
+        }
+        Ok(())
+    }
+
+    fn emit_string_literal(&mut self, s: &str) -> Result<(), CodegenError> {
+        for b in s.bytes() {
+            let code = i64::from(b);
+            let byte_tmp = self.new_temp();
+            let discard = self.new_temp();
+            self.emit_inst(format!("%{} = add.i64 {}, 0", byte_tmp, code));
+            self.emit_inst(format!("%{} = writebyte %{}", discard, byte_tmp));
+        }
+        Ok(())
+    }
+
+    fn emit_print_arg(&mut self, arg: &AST) -> Result<(), CodegenError> {
+        if let AST::TypeValue(astgen::ast::ASTtypevalue::QuotedString(s)) = arg {
+            return self.emit_string_literal(s);
+        }
+        let lowered = self.lower_expr(arg)?;
+        let print_var = self.ensure_var_repr(&lowered)?;
+        self.emit_integer_print(&print_var, &lowered.ty)?;
+        Ok(())
+    }
+
+    fn emit_integer_print(&mut self, var: &str, ty: &ASTtypename) -> Result<(), CodegenError> {
+        if *ty == ASTtypename::Char {
+            let discard = self.new_temp();
+            self.emit_inst(format!("%{} = writebyte {}", discard, var));
             return Ok(());
         }
+        if is_integer_print_type(*ty) {
+            let arg = if *ty == ASTtypename::I64 {
+                var.to_string()
+            } else {
+                let tmp = self.new_temp();
+                self.emit_inst(format!("%{} = add.i64 {}, 0", tmp, var));
+                format!("%{}", tmp)
+            };
+            let discard = self.new_temp();
+            self.emit_inst(format!("%{} = call @nk_print_i64({})", discard, arg));
+            return Ok(());
+        }
+        Err(CodegenError::CompilationError(format!(
+            "Cannot print type {:?}; only integers, char, and strings supported",
+            ty
+        )))
+    }
 
-        let lowered = self.lower_expr(value)?;
-        let print_var = if lowered.repr.starts_with('%') {
-            lowered.repr
+    fn ensure_var_repr(&mut self, lowered: &LoweredValue) -> Result<String, CodegenError> {
+        if lowered.repr.starts_with('%') {
+            Ok(lowered.repr.clone())
         } else {
             let tmp = self.new_temp();
             self.emit_inst(format!(
@@ -132,14 +194,8 @@ impl<'a> FunctionEmitter<'a> {
                 super::helpers::lamina_type(lowered.ty)?,
                 lowered.repr
             ));
-            format!("%{}", tmp)
-        };
-        self.emit_inst(format!("print {}", print_var));
-        if add_newline {
-            let discard = self.new_temp();
-            self.emit_inst(format!("%{} = writebyte 10", discard));
+            Ok(format!("%{}", tmp))
         }
-        Ok(())
     }
 
     fn lower_statements(&mut self, statements: &[AST]) -> Result<(), CodegenError> {
@@ -208,7 +264,11 @@ impl<'a> FunctionEmitter<'a> {
             }
             AST::Statement(ASTstatement::Print { value, args })
             | AST::Statement(ASTstatement::Println { value, args }) => {
-                self.lower_print(value, args, matches!(stmt, AST::Statement(ASTstatement::Println { .. })))?;
+                self.lower_print(
+                    value,
+                    args,
+                    matches!(stmt, AST::Statement(ASTstatement::Println { .. })),
+                )?;
             }
             AST::Statement(ASTstatement::Return { value }) => {
                 let lowered = self.lower_expr(value)?;

@@ -3,7 +3,7 @@
 //! This module defines how nukleus built-ins map to Lamina IR. Adding a new
 //! function requires: (1) register here, (2) implement lowering in emitter.
 //!
-//! Lamina provides: `print value` (built-in), `call @name(args)` (external).
+//! Lamina provides: `writebyte` for output (use only this; `print` is for debugging lamina).
 
 use astgen::ast::ASTtypename;
 

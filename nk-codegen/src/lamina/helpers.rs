@@ -1,4 +1,4 @@
-use astgen::ast::{ASTOperator, ASTtypename, ASTtypevalue, AST};
+use astgen::ast::{AST, ASTOperator, ASTtypename, ASTtypevalue};
 
 use crate::error::CodegenError;
 
@@ -116,6 +116,21 @@ pub(super) fn escape_lamina_string(s: &str) -> String {
         }
     }
     out
+}
+
+pub(super) fn is_integer_print_type(ty: ASTtypename) -> bool {
+    matches!(
+        ty,
+        ASTtypename::I8
+            | ASTtypename::I16
+            | ASTtypename::I32
+            | ASTtypename::I64
+            | ASTtypename::U8
+            | ASTtypename::U16
+            | ASTtypename::U32
+            | ASTtypename::U64
+            | ASTtypename::Bool
+    )
 }
 
 pub(super) fn infer_type_from_typevalue(value: &ASTtypevalue) -> ASTtypename {

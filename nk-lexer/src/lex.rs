@@ -1,5 +1,5 @@
-use crate::tokens_legacy::*;
 use crate::LexerError;
+use crate::tokens_legacy::*;
 
 // Legacy lexer; scheduled for removal per plan.md Phase 5.
 #[allow(clippy::cognitive_complexity)]

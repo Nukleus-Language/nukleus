@@ -17,26 +17,24 @@ pub enum LexerError {
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LexerError::InvalidIdentifierChar(id) =>
-                write!(f, "Invalid identifier character in '{}'- identifiers can only contain letters, numbers and underscores", id),
-            LexerError::InvalidIdentifierNum(id) =>
-                write!(f, "Invalid identifier '{}' - identifiers cannot start with a number", id),
-            LexerError::InvalidNumber(n) =>
-                write!(f, "Invalid number: {}", n),
-            LexerError::InvalidOperator(op) =>
-                write!(f, "Invalid operator: {}", op),
-            LexerError::InvalidString(s) =>
-                write!(f, "Invalid string: {}", s),
-            LexerError::InvalidSymbol(s) =>
-                write!(f, "Invalid symbol: {}", s),
-            LexerError::InvalidToken(t) =>
-                write!(f, "Invalid token: {}", t),
-            LexerError::UnexpectedEndOfInput =>
-                write!(f, "Unexpected end of input"),
-            LexerError::UnknownCharacter(c) =>
-                write!(f, "Unknown character: {}", c),
-            LexerError::UnmatchedQuote =>
-                write!(f, "Unmatched quote"),
+            LexerError::InvalidIdentifierChar(id) => write!(
+                f,
+                "Invalid identifier character in '{}'- identifiers can only contain letters, numbers and underscores",
+                id
+            ),
+            LexerError::InvalidIdentifierNum(id) => write!(
+                f,
+                "Invalid identifier '{}' - identifiers cannot start with a number",
+                id
+            ),
+            LexerError::InvalidNumber(n) => write!(f, "Invalid number: {}", n),
+            LexerError::InvalidOperator(op) => write!(f, "Invalid operator: {}", op),
+            LexerError::InvalidString(s) => write!(f, "Invalid string: {}", s),
+            LexerError::InvalidSymbol(s) => write!(f, "Invalid symbol: {}", s),
+            LexerError::InvalidToken(t) => write!(f, "Invalid token: {}", t),
+            LexerError::UnexpectedEndOfInput => write!(f, "Unexpected end of input"),
+            LexerError::UnknownCharacter(c) => write!(f, "Unknown character: {}", c),
+            LexerError::UnmatchedQuote => write!(f, "Unmatched quote"),
         }
     }
 }

@@ -14,12 +14,7 @@ impl Log for SimpleLogger {
         if !self.enabled(record.metadata()) {
             return;
         }
-        let _ = writeln!(
-            io::stderr(),
-            "[{}] {}",
-            record.level(),
-            record.args()
-        );
+        let _ = writeln!(io::stderr(), "[{}] {}", record.level(), record.args());
     }
 
     fn flush(&self) {

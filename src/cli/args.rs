@@ -56,7 +56,10 @@ pub fn parse_args() -> Result<Args, String> {
             i += 1;
             let val = args.get(i).ok_or("--backend requires a value")?;
             if val != "lamina" && val != "cranelift" {
-                return Err(format!("--backend must be lamina or cranelift, got: {}", val));
+                return Err(format!(
+                    "--backend must be lamina or cranelift, got: {}",
+                    val
+                ));
             }
             result.backend = val.clone();
             i += 1;

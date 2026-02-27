@@ -76,7 +76,11 @@ pub enum LexError {
 impl fmt::Display for LexError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            LexError::InvalidCharacter(c) => write!(f, "Invalid identifier character in '{}'- identifiers can only contain letters, numbers and underscores", c),
+            LexError::InvalidCharacter(c) => write!(
+                f,
+                "Invalid identifier character in '{}'- identifiers can only contain letters, numbers and underscores",
+                c
+            ),
             LexError::InvalidNumber(n) => write!(f, "Invalid number: {}", n),
             LexError::InvalidIdentifier(i) => write!(f, "Invalid identifier: {}", i),
             LexError::InvalidOperator(o) => write!(f, "Invalid operator: {}", o),

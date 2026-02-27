@@ -69,12 +69,8 @@ mod test {
 
     #[test]
     fn format_with_source_shows_context_and_caret() {
-        let diag = Diagnostic::error(
-            "TEST-001",
-            "test error",
-            Some(Span::point(2, 5)),
-        )
-        .with_suggestion("Fix it");
+        let diag = Diagnostic::error("TEST-001", "test error", Some(Span::point(2, 5)))
+            .with_suggestion("Fix it");
 
         let source = "line one\nline two\nline three";
         let out = diag.format_with_source(source);

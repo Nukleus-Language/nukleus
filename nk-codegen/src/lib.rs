@@ -6,9 +6,9 @@ pub mod error;
 pub mod lamina;
 
 #[cfg(feature = "jit")]
-use cranelift_codegen::ir::entities::FuncRef;
-#[cfg(feature = "jit")]
 use cranelift_codegen::ir::Signature;
+#[cfg(feature = "jit")]
+use cranelift_codegen::ir::entities::FuncRef;
 #[cfg(feature = "jit")]
 use cranelift_module::FuncId;
 

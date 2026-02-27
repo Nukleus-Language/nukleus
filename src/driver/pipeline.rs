@@ -44,7 +44,10 @@ pub fn run(command: &Command) -> Result<(), String> {
             }
             #[cfg(not(feature = "legacy"))]
             {
-                return Err("REPL requires legacy feature. Build with: cargo build --features legacy".to_string());
+                return Err(
+                    "REPL requires legacy feature. Build with: cargo build --features legacy"
+                        .to_string(),
+                );
             }
         }
         Command::Compile(a) => a,
@@ -68,7 +71,14 @@ pub fn run(command: &Command) -> Result<(), String> {
     let (ast_new, lex_duration, parse_duration) = compile::compile(input_path, &contents)?;
 
     if backend == "lamina" {
-        run_lamina(input, ast_new, emit_ir_path, emit_asm_path, lex_duration, parse_duration)?;
+        run_lamina(
+            input,
+            ast_new,
+            emit_ir_path,
+            emit_asm_path,
+            lex_duration,
+            parse_duration,
+        )?;
         return Ok(());
     }
 
@@ -79,7 +89,10 @@ pub fn run(command: &Command) -> Result<(), String> {
     }
 
     #[cfg(not(feature = "jit"))]
-    Err("JIT backend not available. Build with --features jit or use --backend lamina (default).".to_string())
+    Err(
+        "JIT backend not available. Build with --features jit or use --backend lamina (default)."
+            .to_string(),
+    )
 }
 
 fn run_lamina(
@@ -101,8 +114,12 @@ fn run_lamina(
     let ir_path = aot::output_ir_path(input, emit_ir_path);
     let asm_path = aot::output_asm_path(input, emit_asm_path);
 
-    aot::ensure_parent_dir(&ir_path)
-        .map_err(|e| format!("Failed to prepare IR output directory for '{}': {}", ir_path, e))?;
+    aot::ensure_parent_dir(&ir_path).map_err(|e| {
+        format!(
+            "Failed to prepare IR output directory for '{}': {}",
+            ir_path, e
+        )
+    })?;
     fs::write(&ir_path, &ir)
         .map_err(|e| format!("Failed to write Lamina IR '{}': {}", ir_path, e))?;
 
@@ -161,7 +178,7 @@ fn run_jit_backend(
     lex_duration: std::time::Duration,
     parse_duration: std::time::Duration,
 ) -> Result<(), String> {
-    use codegen::cranelift_jit::{save_executable, JIT};
+    use codegen::cranelift_jit::{JIT, save_executable};
 
     let start_time_jit = std::time::Instant::now();
     let mut jit = JIT::default();

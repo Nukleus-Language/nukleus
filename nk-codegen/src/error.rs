@@ -64,11 +64,7 @@ impl CodegenError {
     }
 
     pub fn to_diagnostic(&self) -> nk_diagnostics::Diagnostic {
-        nk_diagnostics::Diagnostic::error(
-            self.code().as_str(),
-            self.to_string(),
-            None,
-        )
+        nk_diagnostics::Diagnostic::error(self.code().as_str(), self.to_string(), None)
     }
 }
 
@@ -77,9 +73,13 @@ impl fmt::Display for CodegenError {
         match self {
             CodegenError::CompilationError(msg) => write!(f, "Compilation error: {}", msg),
             CodegenError::FunctionNotFound(name) => write!(f, "Function '{}' not found", name),
-            CodegenError::InvalidAssignOperator(msg) => write!(f, "Invalid assign operator: {}", msg),
+            CodegenError::InvalidAssignOperator(msg) => {
+                write!(f, "Invalid assign operator: {}", msg)
+            }
             CodegenError::InvalidArgumentType(msg) => write!(f, "Invalid argument type: {}", msg),
-            CodegenError::InvalidForStartValue(msg) => write!(f, "Invalid for start value: {}", msg),
+            CodegenError::InvalidForStartValue(msg) => {
+                write!(f, "Invalid for start value: {}", msg)
+            }
             CodegenError::InvalidString(msg) => write!(f, "Invalid string: {}", msg),
             CodegenError::IoError(err) => write!(f, "IO error: {}", err),
             CodegenError::ModuleError(msg) => write!(f, "Module error: {}", msg),
