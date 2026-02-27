@@ -714,15 +714,13 @@ impl<'a> Parser<'a> {
                 ))
             }
         };
-        let value = self.parse_expression()?;
-        // Parse arguments
+        self.next_token(); // Consume the format string token
         let mut args = Vec::new();
         while self.peek_token().token_type == TokenType::Symbol(Symbol::Comma) {
             self.next_token(); // Consume the comma
             args.push(self.parse_expression()?);
         }
 
-        // Check if the number of `{}` in the format string matches the number of arguments
         let placeholders = format_str.matches("{}").count();
         if placeholders != args.len() {
             return Err(self.report_error(
@@ -731,7 +729,8 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Consume the closing parenthesis
+        let value = AST::TypeValue(ASTtypevalue::QuotedString(format_str.to_string()));
+
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::CloseParen) {
             return Err(self.report_error(
@@ -743,7 +742,6 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Consume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
             return Err(self.report_error(
@@ -755,7 +753,6 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Return the AST for println with the formatted string
         Ok(AST::Statement(ASTstatement::Print {
             value: Box::new(value),
             args,
@@ -788,15 +785,13 @@ impl<'a> Parser<'a> {
                 ))
             }
         };
-        let value = self.parse_expression()?;
-        // Parse arguments
+        self.next_token(); // Consume the format string token
         let mut args = Vec::new();
         while self.peek_token().token_type == TokenType::Symbol(Symbol::Comma) {
             self.next_token(); // Consume the comma
             args.push(self.parse_expression()?);
         }
 
-        // Check if the number of `{}` in the format string matches the number of arguments
         let placeholders = format_str.matches("{}").count();
         if placeholders != args.len() {
             return Err(self.report_error(
@@ -805,7 +800,8 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Consume the closing parenthesis
+        let value = AST::TypeValue(ASTtypevalue::QuotedString(format_str.to_string()));
+
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::CloseParen) {
             return Err(self.report_error(
@@ -817,7 +813,6 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Consume the semicolon
         let cur_token = self.next_token();
         if cur_token.token_type != TokenType::Symbol(Symbol::Semicolon) {
             return Err(self.report_error(
@@ -829,7 +824,6 @@ impl<'a> Parser<'a> {
             ));
         }
 
-        // Return the AST for println with the formatted string
         Ok(AST::Statement(ASTstatement::Println {
             value: Box::new(value),
             args,
@@ -1143,5 +1137,49 @@ impl<'a> Parser<'a> {
     #[allow(dead_code)]
     pub fn get_asts(&self) -> &Vec<AST> {
         &self.asts
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Parser;
+    use lexer::frontend::Lexer;
+    use std::path::Path;
+
+    fn parse_source(source: &str) -> Result<Vec<crate::AST>, String> {
+        let mut lexer = Lexer::new(Path::new("test.nk").to_path_buf(), source);
+        lexer.run().map_err(|e| format!("lexer failed: {}", e))?;
+        let tokens = lexer.tokens().to_vec();
+        let mut parser = Parser::new(&tokens, Path::new("test.nk").to_path_buf(), source);
+        parser.run().map_err(|e| format!("{}", e.to_diagnostic()))?;
+        Ok(parser.get_asts().to_vec())
+    }
+
+    #[test]
+    fn unexpected_token_in_let() {
+        let source = "fn main() -> Void { let: i32 = 5; }";
+        let err_msg = match parse_source(source) {
+            Err(e) => e.to_string(),
+            Ok(_) => panic!("expected parse error"),
+        };
+        assert!(
+            err_msg.contains("NK-PARSE") || err_msg.contains("Error"),
+            "expected parse error, got: {}",
+            err_msg
+        );
+    }
+
+    #[test]
+    fn invalid_number_format_in_for() {
+        let source = "fn main() -> Void { for (a :: not_a_number) { } }";
+        let err_msg = match parse_source(source) {
+            Err(e) => e.to_string(),
+            Ok(_) => panic!("expected parse error"),
+        };
+        assert!(
+            err_msg.contains("NK-PARSE") || err_msg.contains("Error"),
+            "expected parse error, got: {}",
+            err_msg
+        );
     }
 }

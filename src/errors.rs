@@ -1,5 +1,6 @@
 use std::fmt;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum RuntimeError {
     Unknownformat { format: String },
@@ -8,7 +9,9 @@ pub enum RuntimeError {
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuntimeError::Unknownformat { format } => write!(f, "Unknown file extention `{}`", format),
+            RuntimeError::Unknownformat { format } => {
+                write!(f, "Unknown file extention `{}`", format)
+            }
         }
     }
 }

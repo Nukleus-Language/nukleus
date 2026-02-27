@@ -752,7 +752,6 @@ impl<'a> Parser<'a> {
                 }
                 (TokenType::Symbol(Symbol::Semicolon), 6) => {
                     self.next_token();
-                    println!("End of `let` statement");
                     break;
                 }
                 _ => {

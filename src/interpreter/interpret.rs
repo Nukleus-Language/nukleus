@@ -1,3 +1,12 @@
+// Legacy interpreter; scheduled for isolation per plan.md Phase 5.
+#![allow(
+    dead_code,
+    clippy::cognitive_complexity,
+    clippy::unwrap_used,
+    clippy::useless_conversion,
+    irrefutable_let_patterns
+)]
+
 use std::collections::HashMap;
 use std::convert::TryInto;
 use std::io::{self, Write};
@@ -131,7 +140,6 @@ impl Interpreter {
                 Err(e) => {
                     println!("Error: {:?}", e);
                 }
-                _ => println!("Unknown Error occured"),
             }
         }
     }

@@ -132,7 +132,8 @@ impl<'a> Lexer<'a> {
                 if !identifier::is_quote(c) {
                     continue;
                 } else {
-                    let string = &self.source[self.buffer_st + 1..self.buffer_ed];
+                    let end = self.buffer_ed - c.len_utf8();
+                    let string = &self.source[self.buffer_st + 1..end];
                     self.insert_token(TokenType::TypeValue(TypeValue::QuotedString(Cow::Owned(
                         string.to_owned(),
                     ))));
@@ -401,8 +402,6 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_numbers failed");
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_strings() {
@@ -413,8 +412,6 @@ mod test {
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         let result = lexer.run();
         assert!(result.is_ok(), "String lexing failed: {:?}", result);
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_comments() {
@@ -434,8 +431,6 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_comments failed");
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_string_assign() {
@@ -451,8 +446,6 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_string_assign failed");
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
     #[test]
     fn lexing_underbar_started_var() {
@@ -468,8 +461,6 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_underbar_started_var failed");
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
     /*#[test]
     fn lexing_negative_number_assign() {
@@ -554,9 +545,6 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_nested_expression failed");
-        for token in lexer.tokens.clone() {
-            eprintln!("{:?}", token);
-        }
         assert_eq!(lexer.tokens, ans);
     }
     #[test]
@@ -595,7 +583,5 @@ mod test {
         ];
         let mut lexer = Lexer::new(PathBuf::from("test"), code);
         assert!(lexer.run().is_ok(), "lexing_complex failed");
-        println!("{:?}", lexer.tokens);
-        // assert_eq!(lexer.tokens, ans);
     }
 }

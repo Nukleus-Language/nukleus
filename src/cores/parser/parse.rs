@@ -312,8 +312,6 @@ impl<'a> Parser<'a> {
         Ok(let_statement)
     }
     /*fn assign_parser(&mut self, variable_name: Token) -> Result<AST, AstParseError> {
-        println!("ASSIGN PARSER");
-        println!("{:?}", self.tokens.peek());
         self.expect(Token::Assign(Assign::Assign))?;
         self.consume(); // Consume Assign
 
