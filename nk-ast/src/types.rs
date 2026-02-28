@@ -1,30 +1,7 @@
-use crate::AST;
 use std::fmt;
-/*pub enum ASTtype{
-    TypeVoid
-    I8(i8),
-    I16(i16),
-    I32(i32),
-    I64(i64),
-    U8(u8),
-    U16(u16)
-    U32(u32),
-    U64(u64),
-    F32(f32),
-    F64(f64),
-    Bool(bool),
-    QuotedString(String),
-    Array(Vec<ASTtype>),
-    Identifier(String),
-    Argument{
-        type_name: ASTtypename,
-        identifier: ASTtype,
-    }
-    FunctionCall{
-        name: String,
-        args: Vec<ASTtype>,
-    },
-}*/
+
+use crate::AST;
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -48,6 +25,7 @@ pub enum ASTtypename {
     Argument,
     FunctionCall,
 }
+
 impl fmt::Display for ASTtypename {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -72,6 +50,7 @@ impl fmt::Display for ASTtypename {
         }
     }
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -85,16 +64,14 @@ pub enum ASTtypevalue {
     U16(u16),
     U32(u32),
     U64(u64),
-    //F32(f32),
-    //F64(f64),
     Bool(bool),
     QuotedString(String),
     Char(char),
     Identifier(String),
     Array(Vec<ASTtypevalue>),
     FunctionCall { name: String, args: Vec<AST> },
-    // FunctionCall(String),
 }
+
 impl fmt::Display for ASTtypevalue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -129,6 +106,7 @@ impl fmt::Display for ASTtypevalue {
         }
     }
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
@@ -139,6 +117,7 @@ pub enum ASTtypecomp {
         identifier: ASTtypevalue,
     },
 }
+
 impl fmt::Display for ASTtypecomp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

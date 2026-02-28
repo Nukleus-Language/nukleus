@@ -33,6 +33,7 @@ pub enum ASTOperator {
     BitOrAssign,
     BitXorAssign,
 }
+
 impl fmt::Display for ASTOperator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -76,6 +77,7 @@ pub enum ASTlogic {
         right: Box<AST>,
     },
 }
+
 impl fmt::Display for ASTlogic {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

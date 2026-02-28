@@ -1,21 +1,17 @@
 use std::fmt;
 
-use crate::ast::*;
+use crate::{AST, ASTOperator, ASTtypecomp, ASTtypename, ASTtypevalue};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum ASTmemoryspace {}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 #[allow(dead_code)]
 pub enum ASTstatement {
-    Import {
-        //path: String,
-        name: String,
-    },
-    // A node representing a statement
-    // A node representing a function definition
+    Import { name: String },
     Function {
         public: bool,
         name: String,
@@ -23,7 +19,6 @@ pub enum ASTstatement {
         statements: Vec<AST>,
         return_type: ASTtypename,
     },
-
     Let {
         name: String,
         type_name: Option<ASTtypename>,
@@ -47,7 +42,6 @@ pub enum ASTstatement {
     Else {
         statements: Vec<AST>,
     },
-
     For {
         start: ASTtypevalue,
         end: ASTtypevalue,
@@ -66,6 +60,7 @@ pub enum ASTstatement {
         value: Box<AST>,
     },
 }
+
 impl fmt::Display for ASTstatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

@@ -8,6 +8,7 @@ edition = "2024"
 [dependencies]
 lexer = { path = "../nk-lexer", package = "nk-lexer" }
 log = "0.4"
+nk-ast = { path = "../nk-ast" }
 nk-diagnostics = { path = "../nk-diagnostics" }
 
 [lints.clippy]

@@ -1,0 +1,10 @@
+[package]
+name = "nk-ast"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[lints.clippy]
+unwrap_used = "deny"
+cognitive_complexity = "deny"
