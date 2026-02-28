@@ -1,9 +1,9 @@
 use super::types::VarType;
 use astgen::ast::*;
 use std::collections::HashMap;
-use crate::asm_nukleus::x86;
-use crate::asm_nukleus::arm;
-use crate::asm_nukleus::CodegenError;
+use crate::legacy::asm_nukleus::x86;
+use crate::legacy::asm_nukleus::arm;
+use crate::legacy::asm_nukleus::CodegenError;
 use std::ptr;
 use super::types::RegisterSize;
 

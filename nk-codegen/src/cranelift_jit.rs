@@ -171,31 +171,10 @@ impl JIT {
             match ast {
                 AST::Statement(statement) => match statement {
                     ASTstatement::Import { name } => {
-                        // Resolve file path based on the operating system
-                        let resolved_path = resolve_file_path(&name, file_location)
-                            .map_err(CodegenError::CompilationError)?;
-                        let contents = std::fs::read_to_string(&resolved_path)
-                            .map_err(CodegenError::IoError)?;
-                        let mut lexer =
-                            lexer::frontend::Lexer::from_path(Path::new(&name), &contents);
-                        lexer
-                            .run()
-                            .map_err(|e| CodegenError::CompilationError(e.to_string()))?;
-                        let tokens = lexer.tokens().to_vec();
-
-                        let mut mid_ir = astgen::parser::Parser::new(
-                            &tokens,
-                            Path::new(&name).to_path_buf(),
-                            &contents,
-                        );
-                        mid_ir.run().map_err(|e| {
-                            CodegenError::CompilationError(e.to_diagnostic().to_string())
-                        })?;
-                        let ast_new = mid_ir.get_asts();
-                        let path_str = resolved_path.to_str().ok_or_else(|| {
-                            CodegenError::CompilationError("Invalid path".to_string())
-                        })?;
-                        let _ = self.compile(ast_new.clone(), path_str, true)?;
+                        return Err(CodegenError::CompilationError(format!(
+                            "Import '{}' not expanded. Driver must expand imports before codegen.",
+                            name
+                        )));
                     }
                     ASTstatement::Function {
                         public: _,

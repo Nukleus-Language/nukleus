@@ -1,4 +1,4 @@
-use crate::asm_nukleus::{
+use crate::legacy::asm_nukleus::{
     Architecture, AsmBuilder, CodegenError, Instruction, Register, RegisterSize,
 };
 

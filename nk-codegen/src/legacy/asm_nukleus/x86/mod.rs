@@ -1,10 +1,9 @@
 use core::arch::asm;
 use std::collections::HashMap;
-use crate::asm_nukleus::{
-    Architecture, AsmBuilder, Instruction, Register,
-    asm_nukleus::JumpCondition,
+use crate::legacy::asm_nukleus::{
+    asm_nukleus::JumpCondition, Architecture, AsmBuilder, Instruction, Register,
 };
-use crate::asm_nukleus::types::{CodegenError, RegisterSize};
+use crate::legacy::asm_nukleus::types::{CodegenError, RegisterSize};
 
 pub struct X86Generator {
     code: Vec<u8>,

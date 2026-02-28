@@ -1,9 +1,13 @@
+pub mod aot;
 #[cfg(feature = "jit")]
 mod context;
 #[cfg(feature = "jit")]
 pub mod cranelift_jit;
 pub mod error;
-pub mod lamina;
+#[cfg(feature = "legacy")]
+pub mod legacy;
+
+pub use aot::lamina;
 
 #[cfg(feature = "jit")]
 use cranelift_codegen::ir::Signature;
