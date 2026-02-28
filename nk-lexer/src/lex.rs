@@ -1,7 +1,8 @@
+// Legacy lexer; scheduled for removal per plan.md Phase 5.
+#![allow(deprecated)]
+
 use crate::LexerError;
 use crate::tokens_legacy::*;
-
-// Legacy lexer; scheduled for removal per plan.md Phase 5.
 #[allow(clippy::cognitive_complexity)]
 pub fn lexer(code: &str) -> Vec<Token> {
     let mut tokens = Vec::new();

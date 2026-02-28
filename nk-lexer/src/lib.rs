@@ -9,6 +9,7 @@ mod lex;
 /// Canonical token types.
 pub mod tokens;
 /// Legacy token model. Use `tokens` for new code.
+#[deprecated(since = "0.1.0", note = "Use `tokens` for new code. Legacy only for feature-gated interpreter/parser.")]
 pub mod tokens_legacy;
 
 pub use error::LexerError;

@@ -1,4 +1,5 @@
 use crate::legacy::cores::ast::{AST, AstParseError};
+#[allow(deprecated)]
 use lexer::tokens_legacy::{Assign, Statement, Symbol, Token, TypeName, TypeValue};
 
 //use lexer::Lexer;

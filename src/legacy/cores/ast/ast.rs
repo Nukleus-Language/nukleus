@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use lexer::tokens_legacy::Token;
 
 use std::collections::HashMap;

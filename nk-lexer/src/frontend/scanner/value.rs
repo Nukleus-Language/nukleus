@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use super::errors::{LexError, LexicalError};
-// use crate::tokens_new::{TokenType, TypeValue};
 use crate::tokens::{TokenType, TypeValue};
 
 #[allow(dead_code)]

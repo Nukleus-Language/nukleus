@@ -1,5 +1,4 @@
 use super::errors::{LexError, LexicalError};
-// use crate::tokens_new::{Statement, TokenType, TypeName};
 use crate::tokens::{Statement, TokenType, TypeName};
 
 #[allow(dead_code)]

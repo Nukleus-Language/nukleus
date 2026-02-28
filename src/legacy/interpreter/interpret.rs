@@ -14,6 +14,7 @@ use std::io::{self, Write};
 use crate::legacy::cores::ast::AST;
 use crate::legacy::cores::parser::parse::Parser;
 
+#[allow(deprecated)]
 use lexer::tokens_legacy::{Logical, Token, TypeName, TypeValue};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
