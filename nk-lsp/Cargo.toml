@@ -1,0 +1,21 @@
+[package]
+name = "nk-lsp"
+version = "0.1.0"
+edition = "2024"
+description = "Language Server Protocol implementation for Nukleus"
+license = "Apache-2.0"
+
+[[bin]]
+name = "nk-lsp"
+path = "src/main.rs"
+
+[dependencies]
+tower-lsp = "0.20"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-util", "io-std"] }
+nk-lexer = { path = "../nk-lexer" }
+astgen = { path = "../nk-astgen" }
+nk-diagnostics = { path = "../nk-diagnostics" }
+
+[lints.clippy]
+unwrap_used = "deny"
+cognitive_complexity = "deny"
