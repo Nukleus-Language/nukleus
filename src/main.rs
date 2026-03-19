@@ -18,7 +18,6 @@ fn main() {
 }
 
 fn run() -> Result<(), String> {
-    let args = cli::parse_args()?;
-    let command = cli::Command::from_args(args);
+    let command = cli::parse().map_err(|e| e.to_string())?;
     driver::run(&command)
 }

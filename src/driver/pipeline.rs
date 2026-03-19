@@ -7,6 +7,8 @@ use astgen::ast::AST;
 use super::compile;
 use codegen::lamina::LaminaBackend;
 
+use std::process::{Command as ProcessCommand, Stdio};
+
 use crate::aot;
 use crate::cli::Command;
 
@@ -35,7 +37,18 @@ fn read_file(filename: &str) -> Result<String, std::io::Error> {
 
 #[allow(clippy::needless_return)]
 pub fn run(command: &Command) -> Result<(), String> {
+    if let Command::Lsp = command {
+        let status = ProcessCommand::new("nk-lsp")
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit())
+            .status()
+            .map_err(|e| format!("Failed to run nk-lsp: {}. Ensure nk-lsp is in PATH (cargo install --path nk-lsp)", e))?;
+        std::process::exit(status.code().unwrap_or(1));
+    }
+
     let args = match command {
+        Command::Lsp => unreachable!("Lsp handled above"),
         Command::Repl => {
             #[cfg(feature = "legacy")]
             {
@@ -51,7 +64,7 @@ pub fn run(command: &Command) -> Result<(), String> {
                 );
             }
         }
-        Command::Compile(a) => a,
+        Command::Run(a) => a,
     };
 
     let input = &args.input;

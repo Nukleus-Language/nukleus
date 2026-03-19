@@ -44,6 +44,8 @@ pub fn double_symbol_to_token(
     match double_symbol {
         "==" => Ok(TokenType::Logical(Logical::Equals)),
         "!=" => Ok(TokenType::Logical(Logical::NotEquals)),
+        "<=" => Ok(TokenType::Logical(Logical::LessThanEquals)),
+        ">=" => Ok(TokenType::Logical(Logical::GreaterThanEquals)),
         "+=" => Ok(TokenType::Assign(Assign::AddAssign)),
         "-=" => Ok(TokenType::Assign(Assign::SubAssign)),
         "*=" => Ok(TokenType::Assign(Assign::MulAssign)),

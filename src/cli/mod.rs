@@ -1,5 +1,8 @@
 mod args;
-mod command;
+mod error;
+mod parse;
 
-pub use args::{Args, parse_args};
-pub use command::Command;
+pub use args::{Command, RunOpts};
+#[allow(unused_imports)]
+pub use error::CliError;
+pub use parse::parse;
